@@ -18,11 +18,6 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Vérifier la connexion internet
-RUN echo "Test de connexion Internet" && \
-    ping -c 2 google.com || echo "Échec du ping, mais on continue" && \
-    curl -I https://www.odoo.com || echo "Échec de curl, mais on continue"
-
 # Configurer le répertoire de travail
 WORKDIR /opt/odoo
 
