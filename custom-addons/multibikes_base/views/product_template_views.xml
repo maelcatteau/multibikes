@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Extension de la vue formulaire du produit -->
     <record id="view_product_template_caution_fields" model="ir.ui.view">
         <field name="name">product.template.rental.financial.guarantees</field>
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
-            <!-- Ajoute les champs à la fin du groupe group_general -->
+            <!-- Ajoute les champs de caution et de valeur en cas de vol à la fin du groupe general -->
+            <!-- Ces champs ne sont visibles que si le produit est disponible à la location (rent_ok) -->
             <xpath expr="//page[@name='general_information']//group/group[@name='group_general']" position="inside">
                 <field name="mb_caution" widget="monetary" invisible="not rent_ok"/>
                 <field name="mb_value_in_case_of_theft" widget="monetary" invisible="not rent_ok"/>

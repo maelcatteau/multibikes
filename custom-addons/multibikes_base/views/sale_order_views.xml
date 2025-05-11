@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Extension de la vue formulaire des commandes de vente -->
     <record id="view_sale_order_form_inherit_multibikes" model="ir.ui.view">
         <field name="name">sale.order.form.inherit.multibikes</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <!-- Ajout du champ de caution dans la vue de formulaire de commande -->
+            <!-- Ajout du champ de numéro de caution dans la section des détails du partenaire -->
+            <!-- Ce champ permet de faire le lien avec l'empreinte de carte' -->
             <xpath expr="//group[@name='partner_details']" position="inside">
                 <field name="mb_numero_de_caution"/>
             </xpath>

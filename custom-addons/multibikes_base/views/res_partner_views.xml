@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Extension de la vue formulaire du partenaire -->
     <record id="view_partner_form_inherit_multibikes" model="ir.ui.view">
         <field name="name">res.partner.form.inherit.multibikes</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <!-- Ajouter les champs après le champ email -->
+            <!-- Ajouter les champs d'identification après le champ email -->
             <field name="email" position="after">
                 <field name="mb_n_id" string="N° de carte d'identité" placeholder="ex : AA123456"/>
                 <field name="mb_nationalite" string="Nationalité" placeholder="ex : Française"/>
             </field>
             
-            <!-- Rendre invisibles les champs website et category_id si nécessaire -->
+            <!-- Masquer le champ site web car non utilisé dans le contexte de location -->
             <field name="website" position="attributes">
                 <attribute name="invisible">1</attribute>
             </field>
             
+            <!-- Masquer le champ catégories de partenaire pour simplifier l'interface -->
             <field name="category_id" position="attributes">
                 <attribute name="invisible">1</attribute>
             </field>

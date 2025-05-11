@@ -1,4 +1,5 @@
 {
+    # Informations générales sur le module
     'name': 'Multibikes base',
     'version': '1.0',
     'category': 'Sales/Rental',
@@ -10,12 +11,18 @@
         - Personnalisation des commandes
     """,
     'author': 'Maël CATTEAU',
+    
+    # Dépendances du module
     'depends': ['base', 'sale', 'sale_renting', 'website_sale_renting'],
+    
+    # Fichiers de données (vues, menus, actions, etc.)
     'data': [
         'views/product_template_views.xml',
         'views/res_partner_views.xml',
         'views/sale_order_views.xml'
     ],
+    
+    # Configuration d'installation
     'installable': True,
     'application': False,
     'auto_install': False,
