@@ -36,7 +36,7 @@ class SaleOrder(models.Model):
     )
     mb_extension_count = fields.Integer(
         string="Nombre de prolongations",
-        compute='_compute_extension_count',
+        compute='_compute_mb_extension_count',
         help="Nombre de prolongations liées à cette location"
     )
     mb_rental_extensions_ids = fields.One2many(
@@ -52,25 +52,24 @@ class SaleOrder(models.Model):
     )
     
     @api.depends('order_line.qty_delivered', 'order_line.qty_returned')
-    def _compute_has_rentable_lines(self):
+    def _compute_mb_has_rentable_lines(self):
         """
         Vérifie s'il reste des articles à prolonger (livrés mais pas encore totalement retournés)
         --------------------------------------------------------------------------------------
         Ce champ calculé est utilisé pour déterminer si le bouton de prolongation
         doit être affiché ou non dans l'interface.
-        
+    
         Optimisation: Utilise une requête SQL directe pour éviter de charger tous les objets
         en mémoire, ce qui améliore significativement les performances pour les grandes commandes.
         """
-        # Requête SQL pour identifier les commandes ayant des lignes avec qty_delivered > qty_returned
-        # et is_rental = True
+        # Initialiser toutes les commandes à False dès le début
+        for order in self:
+            order.mb_has_rentable_lines = False
+            
         if not self.ids:
             return
-            
-        _logger.debug("Calcul des commandes avec articles prolongeables pour %d commandes", len(self))
         
-        # Initialiser toutes les commandes à False
-        self.update({'has_rentable_lines': False})
+        _logger.debug("Calcul des commandes avec articles prolongeables pour %d commandes", len(self))
         
         # Exécuter une requête SQL directe pour identifier les commandes avec des articles prolongeables
         self.env.cr.execute("""
@@ -78,8 +77,8 @@ class SaleOrder(models.Model):
             FROM sale_order so
             JOIN sale_order_line sol ON sol.order_id = so.id
             WHERE so.id IN %s
-              AND sol.is_rental = TRUE
-              AND sol.qty_delivered > sol.qty_returned
+            AND sol.is_rental = TRUE
+            AND sol.qty_delivered > sol.qty_returned
             GROUP BY so.id
         """, (tuple(self.ids),))
         
@@ -93,11 +92,12 @@ class SaleOrder(models.Model):
             )
             
             # Mettre à jour uniquement les commandes qui ont des articles prolongeables
-            orders_with_rentable_lines = self.filtered(lambda o: o.id in order_ids_with_rentable_lines)
-            orders_with_rentable_lines.update({'has_rentable_lines': True})
-    
+            for order in self:
+                if order.id in order_ids_with_rentable_lines:
+                    order.mb_has_rentable_lines = True
+
     @api.depends('mb_rental_extensions_ids')
-    def _compute_extension_count(self):
+    def _compute_mb_extension_count(self):
         """
         Calcule le nombre de prolongations liées à cette location
         -------------------------------------------------------
@@ -106,7 +106,7 @@ class SaleOrder(models.Model):
         """
         for order in self:
             count = len(order.mb_rental_extensions_ids)
-            order.extension_count = count
+            order.mb_extension_count = count
             if count > 0:
                 _logger.debug(
                     "Commande %s: %d prolongation(s) trouvée(s)",

@@ -114,7 +114,7 @@ class TestRentalExtension(TransactionCase):
         que la commande de prolongation est correctement générée.
         """
         # Vérifier que la commande initiale n'a pas de prolongations
-        self.assertEqual(self.rental_order.extension_count, 0, "La commande ne devrait pas avoir de prolongations initialement")
+        self.assertEqual(self.rental_order.mb_extension_count, 0, "La commande ne devrait pas avoir de prolongations initialement")
         
         # Créer un assistant de prolongation
         wizard = self.env['rental.extension.wizard'].create({
@@ -139,7 +139,7 @@ class TestRentalExtension(TransactionCase):
         result = wizard.create_extension_order()
         
         # Vérifier que la commande de prolongation a été créée
-        self.assertEqual(self.rental_order.extension_count, 1, "Une prolongation devrait avoir été créée")
+        self.assertEqual(self.rental_order.mb_extension_count, 1, "Une prolongation devrait avoir été créée")
         
         # Récupérer la commande de prolongation
         extension_order = self.rental_order.mb_rental_extensions_ids[0]
@@ -293,7 +293,7 @@ class TestRentalExtension(TransactionCase):
         result2 = wizard2.create_extension_order()
         
         # Vérifier que la première prolongation a elle-même une prolongation
-        self.assertEqual(extension_order1.extension_count, 1, "La première prolongation devrait avoir une prolongation")
+        self.assertEqual(extension_order1.mb_extension_count, 1, "La première prolongation devrait avoir une prolongation")
         
         # Récupérer la deuxième prolongation
         extension_order2 = extension_order1.mb_rental_extensions_ids[0]
@@ -306,29 +306,29 @@ class TestRentalExtension(TransactionCase):
     
     def test_05_has_rentable_lines(self):
         """
-        Test du calcul de has_rentable_lines
+        Test du calcul de mb_has_rentable_lines
         ----------------------------------
-        Vérifie que le champ has_rentable_lines est correctement calculé
+        Vérifie que le champ mb_has_rentable_lines est correctement calculé
         dans différentes situations.
         """
         # Initialement, tous les articles sont livrés mais aucun n'est retourné
-        self.assertTrue(self.rental_order.has_rentable_lines, "La commande devrait avoir des articles prolongeables")
+        self.assertTrue(self.rental_order.mb_has_rentable_lines, "La commande devrait avoir des articles prolongeables")
         
         # Marquer tous les articles comme retournés
         for line in self.rental_order.order_line:
             line.qty_returned = line.qty_delivered
         
-        # Recalculer has_rentable_lines
+        # Recalculer mb_has_rentable_lines
         self.rental_order._compute_has_rentable_lines()
         
-        # Vérifier que has_rentable_lines est maintenant False
-        self.assertFalse(self.rental_order.has_rentable_lines, "La commande ne devrait plus avoir d'articles prolongeables")
+        # Vérifier que mb_has_rentable_lines est maintenant False
+        self.assertFalse(self.rental_order.mb_has_rentable_lines, "La commande ne devrait plus avoir d'articles prolongeables")
         
         # Marquer un seul article comme partiellement retourné
         self.rental_line_bike.qty_returned = 1.0  # Seulement 1 vélo sur 2 est retourné
         
-        # Recalculer has_rentable_lines
+        # Recalculer mb_has_rentable_lines
         self.rental_order._compute_has_rentable_lines()
         
-        # Vérifier que has_rentable_lines est à nouveau True
-        self.assertTrue(self.rental_order.has_rentable_lines, "La commande devrait avoir des articles prolongeables") 
+        # Vérifier que mb_has_rentable_lines est à nouveau True
+        self.assertTrue(self.rental_order.mb_has_rentable_lines, "La commande devrait avoir des articles prolongeables") 
