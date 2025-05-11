@@ -6,13 +6,45 @@ Ce projet contient les fichiers de configuration nécessaires pour déployer Odo
 
 ```
 .
-├── docker-compose.yml     # Configuration Docker Compose
-├── Dockerfile            # Image Docker personnalisée pour Odoo
-├── entrypoint.sh        # Script d'entrée du conteneur
-├── config/
-│   └── odoo.conf        # Fichier de configuration Odoo
-└── custom-addons/       # Modules personnalisés
-    └── multibikes_base  # Module de base MultiBikes
+├── Dockerfile                  # Image Docker personnalisée pour Odoo
+├── entrypoint.sh               # Script d'entrée du conteneur
+├── .gitignore                  # Fichiers ignorés par Git
+└── custom-addons/              # Modules personnalisés
+    ├── multibikes_base/        # Module de base MultiBikes
+    ├── multibikes_prolongation/# Module de prolongation de location
+    ├── multibikes_website_visibility/     # Module de visibilité sur le site web
+    └── multibikes_website_minimal_duration/# Module de durée minimale sur le site web
+```
+
+## Structure d'un module
+
+Chaque module personnalisé doit suivre une structure standard pour faciliter la maintenance et la compréhension du code :
+
+```
+multibikes_[nom_module]/
+├── __init__.py                 # Point d'entrée du module
+├── __manifest__.py             # Manifeste du module (métadonnées)
+├── README.md                   # Documentation du module
+├── models/                     # Définitions des modèles
+│   ├── __init__.py             # Import des modèles
+│   └── *.py                    # Fichiers Python définissant les modèles
+├── views/                      # Définitions des vues
+│   └── *.xml                   # Fichiers XML définissant les vues
+├── security/                   # Règles de sécurité et accès
+│   ├── ir.model.access.csv     # Droits d'accès aux modèles
+│   └── [module]_security.xml   # Règles de sécurité avancées
+├── data/                       # Données par défaut
+│   └── *.xml                   # Fichiers XML contenant les données
+├── static/                     # Fichiers statiques
+│   ├── description/            # Images pour la description du module
+│   ├── src/                    # Code source JS/CSS
+│   └── lib/                    # Bibliothèques externes
+├── wizards/                    # Assistants (wizards)
+│   ├── __init__.py
+│   └── *.py
+└── tests/                      # Tests unitaires
+    ├── __init__.py
+    └── test_*.py
 ```
 
 ## Prérequis
@@ -56,6 +88,18 @@ Le déploiement utilise les services suivants :
 ### multibikes_base
 
 Module de base contenant les personnalisations spécifiques à MultiBikes.
+
+### multibikes_prolongation
+
+Module permettant de prolonger les locations existantes en créant de nouvelles commandes liées.
+
+### multibikes_website_visibility
+
+Module gérant la visibilité des produits et catégories sur le site web.
+
+### multibikes_website_minimal_duration
+
+Module permettant de définir des durées minimales de location selon différentes périodes saisonnières.
 
 ## Maintenance
 
