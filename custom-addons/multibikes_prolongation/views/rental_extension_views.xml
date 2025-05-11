@@ -9,6 +9,7 @@
                 <field name="selected" widget="boolean_toggle"/>
                 <field name="product_id" readonly="1"/>
                 <field name="product_name" readonly="1"/>
+                <field name="available_qty" readonly="1"/>
                 <field name="quantity"/>
                 <field name="uom_id" readonly="1"/>
                 <field name="order_line_id" invisible="1"/>
