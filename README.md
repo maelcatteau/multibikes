@@ -83,7 +83,7 @@ Pour toute question ou problème, veuillez créer une issue dans le dépôt du p
 
 Nous suivons une convention spécifique pour les messages de commit afin de maintenir un historique clair et faciliter la génération de changelogs. Chaque message de commit doit suivre le format suivant :
 
-[TYPE] Description concise du changement
+[TYPE][DOMAINE] Description concise du changement
 
 
 ### Types de commits
@@ -96,13 +96,20 @@ Nous suivons une convention spécifique pour les messages de commit afin de main
 - **[TEST]** : Ajout ou modification de tests
 - **[CHORE]** : Modifications aux outils de build, dépendances, etc.
 
+### Domaines/Modules
+- **[BASE]** : Module multibikes_base
+- **[WEBVIS]** : Module multibikes_website_visibility
+- **[PROLONG]** : Module multibikes_prolongation
+- **[WEBMIN]** : Module multibikes_website_minimal_duration
+- **[GENERAL]** : Changement affectant la structure globale
+
 ### Exemples
 
-[FEAT] Ajoute l'authentification à deux facteurs
-[FIX] Résout le problème de chargement d'images sur Safari
-[DOCS] Met à jour les instructions d'installation
-[STYLE] Standardise l'indentation dans les fichiers CSS
-[REFACTOR] Simplifie la logique de validation des formulaires
-[PERF] Optimise les requêtes à la base de données
-[TEST] Ajoute des tests pour le module de paiement
-[CHORE] Met à jour les dépendances obsolètes
+[FEAT][BASE] Ajoute l'authentification à deux facteurs
+[FIX][WEBVIS] Résout le problème de chargement d'images sur Safari
+[DOCS][PROLONG] Met à jour la documentation du module de prolongation
+[STYLE][WEBMIN] Standardise l'indentation dans les fichiers CSS
+[REFACTOR][BASE] Simplifie la logique de validation des formulaires
+[PERF][WEBVIS] Optimise les requêtes à la base de données
+[TEST][PROLONG] Ajoute des tests unitaires pour le module de prolongation
+[CHORE][WEBMIN] Met à jour les dépendances obsolètes
