@@ -58,17 +58,43 @@ class SaleOrder(models.Model):
         --------------------------------------------------------------------------------------
         Ce champ calculé est utilisé pour déterminer si le bouton de prolongation
         doit être affiché ou non dans l'interface.
+        
+        Optimisation: Utilise une requête SQL directe pour éviter de charger tous les objets
+        en mémoire, ce qui améliore significativement les performances pour les grandes commandes.
         """
-        for order in self:
-            order.has_rentable_lines = False
-            for line in order.order_line.filtered(lambda l: l.is_rental):
-                if line.qty_delivered > line.qty_returned:
-                    _logger.debug(
-                        "Commande %s: article prolongeable trouvé (produit=%s, livré=%s, retourné=%s)",
-                        order.name, line.product_id.name, line.qty_delivered, line.qty_returned
-                    )
-                    order.has_rentable_lines = True
-                    break
+        # Requête SQL pour identifier les commandes ayant des lignes avec qty_delivered > qty_returned
+        # et is_rental = True
+        if not self.ids:
+            return
+            
+        _logger.debug("Calcul des commandes avec articles prolongeables pour %d commandes", len(self))
+        
+        # Initialiser toutes les commandes à False
+        self.update({'has_rentable_lines': False})
+        
+        # Exécuter une requête SQL directe pour identifier les commandes avec des articles prolongeables
+        self.env.cr.execute("""
+            SELECT so.id
+            FROM sale_order so
+            JOIN sale_order_line sol ON sol.order_id = so.id
+            WHERE so.id IN %s
+              AND sol.is_rental = TRUE
+              AND sol.qty_delivered > sol.qty_returned
+            GROUP BY so.id
+        """, (tuple(self.ids),))
+        
+        # Récupérer les IDs des commandes avec des articles prolongeables
+        order_ids_with_rentable_lines = [row[0] for row in self.env.cr.fetchall()]
+        
+        if order_ids_with_rentable_lines:
+            _logger.debug(
+                "Commandes avec articles prolongeables trouvées: %s", 
+                ", ".join(map(str, order_ids_with_rentable_lines))
+            )
+            
+            # Mettre à jour uniquement les commandes qui ont des articles prolongeables
+            orders_with_rentable_lines = self.filtered(lambda o: o.id in order_ids_with_rentable_lines)
+            orders_with_rentable_lines.update({'has_rentable_lines': True})
     
     @api.depends('rental_extensions_ids')
     def _compute_extension_count(self):
