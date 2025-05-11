@@ -1,11 +1,27 @@
 # -*- coding: utf-8 -*-
+"""
+Module de prolongation de location pour Multibikes - Modèle Sale Order
+--------------------------------------------------------------------
+Extension du modèle sale.order pour ajouter les fonctionnalités de prolongation
+de location. Ce module permet de lier les commandes de prolongation aux commandes
+de location d'origine et de suivre les prolongations.
+"""
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from datetime import datetime, timedelta
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class SaleOrder(models.Model):
+    """
+    Extension du modèle Sale Order pour la prolongation de location
+    -------------------------------------------------------------
+    Ajoute les champs et méthodes nécessaires pour gérer les prolongations
+    de location et les liens entre commandes originales et prolongations.
+    """
     _inherit = 'sale.order'
 
     is_rental_extension = fields.Boolean(
@@ -37,43 +53,102 @@ class SaleOrder(models.Model):
     
     @api.depends('order_line.qty_delivered', 'order_line.qty_returned')
     def _compute_has_rentable_lines(self):
-        """Vérifie s'il reste des articles à prolonger (livrés mais pas encore totalement retournés)"""
+        """
+        Vérifie s'il reste des articles à prolonger (livrés mais pas encore totalement retournés)
+        --------------------------------------------------------------------------------------
+        Ce champ calculé est utilisé pour déterminer si le bouton de prolongation
+        doit être affiché ou non dans l'interface.
+        """
         for order in self:
             order.has_rentable_lines = False
             for line in order.order_line.filtered(lambda l: l.is_rental):
                 if line.qty_delivered > line.qty_returned:
+                    _logger.debug(
+                        "Commande %s: article prolongeable trouvé (produit=%s, livré=%s, retourné=%s)",
+                        order.name, line.product_id.name, line.qty_delivered, line.qty_returned
+                    )
                     order.has_rentable_lines = True
                     break
     
     @api.depends('rental_extensions_ids')
     def _compute_extension_count(self):
+        """
+        Calcule le nombre de prolongations liées à cette location
+        -------------------------------------------------------
+        Ce champ est utilisé pour l'affichage dans l'interface et pour
+        déterminer si des prolongations existent pour cette commande.
+        """
         for order in self:
-            order.extension_count = len(order.rental_extensions_ids)
+            count = len(order.rental_extensions_ids)
+            order.extension_count = count
+            if count > 0:
+                _logger.debug(
+                    "Commande %s: %d prolongation(s) trouvée(s)",
+                    order.name, count
+                )
     
     def action_extend_rental(self):
-        """Ouvre un assistant pour prolonger la location"""
+        """
+        Ouvre un assistant pour prolonger la location
+        -------------------------------------------
+        Cette méthode est appelée lorsque l'utilisateur clique sur le bouton
+        "Prolonger la location" dans l'interface. Elle vérifie que la commande
+        est bien une location confirmée, puis ouvre l'assistant de prolongation.
+        
+        Returns:
+            dict: Action pour ouvrir l'assistant de prolongation
+            
+        Raises:
+            UserError: Si la commande n'est pas une location ou n'est pas confirmée
+        """
         self.ensure_one()
         
         # Vérifier que c'est bien une location
         if not self.is_rental_order:
-            raise UserError(_("Cette commande n'est pas une location."))
+            _logger.warning("Tentative de prolongation sur une commande non-location: %s", self.name)
+            raise UserError(_("Cette commande n'est pas une location. Seules les commandes de location peuvent être prolongées."))
         
         # Vérifier que la location est confirmée
         if self.state not in ['sale', 'done']:
-            raise UserError(_("La location doit être confirmée avant de pouvoir être prolongée."))
+            _logger.warning(
+                "Tentative de prolongation sur une commande non-confirmée: %s (état: %s)",
+                self.name, self.state
+            )
+            raise UserError(_(
+                "La location doit être confirmée avant de pouvoir être prolongée. "
+                "État actuel: %s"
+            ) % (dict(self._fields['state']._description_selection(self.env)).get(self.state)))
+        
+        _logger.info("Ouverture de l'assistant de prolongation pour la commande %s", self.name)
         
         # Préparer les lignes de l'assistant
         wizard_line_vals = []
         for line in self.order_line:
+            # Ne créer une ligne que si c'est un article de location
+            if not line.is_rental:
+                continue
+                
+            # Ne créer une ligne que s'il reste des articles à prolonger
+            available_qty = line.qty_delivered - line.qty_returned
+            if available_qty <= 0:
+                continue
+                
             # Créer une ligne pour chaque produit de la commande
             wizard_line_vals.append((0, 0, {
                 'order_line_id': line.id,
                 'product_id': line.product_id.id,
                 'product_name': line.name,
-                'quantity': line.product_uom_qty,
+                'quantity': available_qty,  # Par défaut, proposer la quantité disponible
                 'uom_id': line.product_uom.id,
                 'selected': True,  # Par défaut, tous les produits sont sélectionnés
             }))
+        
+        if not wizard_line_vals:
+            _logger.warning("Aucun article disponible pour prolongation dans la commande %s", self.name)
+            raise UserError(_(
+                "Aucun article n'est disponible pour prolongation. "
+                "Tous les articles ont déjà été retournés ou aucun n'a été livré."
+            ))
         
         # Créer et ouvrir l'assistant
         context = dict(
@@ -90,6 +165,8 @@ class SaleOrder(models.Model):
             'line_ids': wizard_line_vals,
         })
         
+        _logger.info("Assistant de prolongation créé pour la commande %s: wizard_id=%d", self.name, wizard.id)
+        
         return {
             'name': _('Prolonger la location'),
             'type': 'ir.actions.act_window',
@@ -102,8 +179,19 @@ class SaleOrder(models.Model):
         }
     
     def action_view_extensions(self):
-        """Affiche les prolongations liées à cette location"""
+        """
+        Affiche les prolongations liées à cette location
+        ----------------------------------------------
+        Cette méthode est appelée lorsque l'utilisateur clique sur le lien
+        pour voir les prolongations dans l'onglet "Prolongations".
+        
+        Returns:
+            dict: Action pour afficher la liste des prolongations
+        """
         self.ensure_one()
+        
+        _logger.debug("Affichage des prolongations pour la commande %s", self.name)
+        
         return {
             'name': _('Prolongations'),
             'type': 'ir.actions.act_window',
