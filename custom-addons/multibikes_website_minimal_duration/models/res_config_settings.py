@@ -27,9 +27,9 @@ class ResCompany(models.Model):
     renting_period3_end_date = fields.Date(string="Date fin période 3", default=lambda self: fields.Date.today().replace(month=8, day=31))
     renting_period3_minimal_time_duration = fields.Integer(string="Durée minimale période 3", default=3)
     renting_period3_minimal_time_unit = fields.Selection([
-        ('hour', 'Hours'),
-        ('day', 'Days'),
-        ('week', 'Weeks')], string="Unité de durée période 3", default='day')
+        ('hour', 'Heures'),
+        ('day', 'Jours'),
+        ('week', 'Semaine')], string="Unité de durée période 3", default='day')
 
     @api.model
     def get_minimal_rental_duration(self, rental_date):
