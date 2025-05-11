@@ -19,15 +19,15 @@
                             </div>
                             <div class="content-group">
                                 <div class="row mt16">
-                                    <label string="Du" for="renting_period1_start_date" class="col-lg-3 o_light_label"/>
-                                    <field name="renting_period1_start_date" class="col-lg-3"/>
-                                    <label string="au" for="renting_period1_end_date" class="col-lg-2 o_light_label"/>
-                                    <field name="renting_period1_end_date" class="col-lg-4"/>
+                                    <label string="Du" for="mb_renting_period1_start_date" class="col-lg-3 o_light_label"/>
+                                    <field name="mb_renting_period1_start_date" class="col-lg-3"/>
+                                    <label string="au" for="mb_renting_period1_end_date" class="col-lg-2 o_light_label"/>
+                                    <field name="mb_renting_period1_end_date" class="col-lg-4"/>
                                 </div>
                                 <div class="row mt16">
-                                    <label string="Durée minimum" for="renting_period1_minimal_time_duration" class="col-lg-3 o_light_label"/>
-                                    <field name="renting_period1_minimal_time_duration" class="col-lg-3"/>
-                                    <field name="renting_period1_minimal_time_unit" class="col-lg-6"/>
+                                    <label string="Durée minimum" for="mb_renting_period1_minimal_time_duration" class="col-lg-3 o_light_label"/>
+                                    <field name="mb_renting_period1_minimal_time_duration" class="col-lg-3"/>
+                                    <field name="mb_renting_period1_minimal_time_unit" class="col-lg-6"/>
                                 </div>
                             </div>
                         </div>
@@ -40,15 +40,15 @@
                             </div>
                             <div class="content-group">
                                 <div class="row mt16">
-                                    <label string="Du" for="renting_period2_start_date" class="col-lg-3 o_light_label"/>
-                                    <field name="renting_period2_start_date" class="col-lg-3"/>
-                                    <label string="au" for="renting_period2_end_date" class="col-lg-2 o_light_label"/>
-                                    <field name="renting_period2_end_date" class="col-lg-4"/>
+                                    <label string="Du" for="mb_renting_period2_start_date" class="col-lg-3 o_light_label"/>
+                                    <field name="mb_renting_period2_start_date" class="col-lg-3"/>
+                                    <label string="au" for="mb_renting_period2_end_date" class="col-lg-2 o_light_label"/>
+                                    <field name="mb_renting_period2_end_date" class="col-lg-4"/>
                                 </div>
                                 <div class="row mt16">
-                                    <label string="Durée minimum" for="renting_period2_minimal_time_duration" class="col-lg-3 o_light_label"/>
-                                    <field name="renting_period2_minimal_time_duration" class="col-lg-3"/>
-                                    <field name="renting_period2_minimal_time_unit" class="col-lg-6"/>
+                                    <label string="Durée minimum" for="mb_renting_period2_minimal_time_duration" class="col-lg-3 o_light_label"/>
+                                    <field name="mb_renting_period2_minimal_time_duration" class="col-lg-3"/>
+                                    <field name="mb_renting_period2_minimal_time_unit" class="col-lg-6"/>
                                 </div>
                             </div>
                         </div>
@@ -61,15 +61,15 @@
                             </div>
                             <div class="content-group">
                                 <div class="row mt16">
-                                    <label string="Du" for="renting_period3_start_date" class="col-lg-3 o_light_label"/>
-                                    <field name="renting_period3_start_date" class="col-lg-3"/>
-                                    <label string="au" for="renting_period3_end_date" class="col-lg-2 o_light_label"/>
-                                    <field name="renting_period3_end_date" class="col-lg-4"/>
+                                    <label string="Du" for="mb_renting_period3_start_date" class="col-lg-3 o_light_label"/>
+                                    <field name="mb_renting_period3_start_date" class="col-lg-3"/>
+                                    <label string="au" for="mb_renting_period3_end_date" class="col-lg-2 o_light_label"/>
+                                    <field name="mb_renting_period3_end_date" class="col-lg-4"/>
                                 </div>
                                 <div class="row mt16">
-                                    <label string="Durée minimum" for="renting_period3_minimal_time_duration" class="col-lg-3 o_light_label"/>
-                                    <field name="renting_period3_minimal_time_duration" class="col-lg-3"/>
-                                    <field name="renting_period3_minimal_time_unit" class="col-lg-6"/>
+                                    <label string="Durée minimum" for="mb_renting_period3_minimal_time_duration" class="col-lg-3 o_light_label"/>
+                                    <field name="mb_renting_period3_minimal_time_duration" class="col-lg-3"/>
+                                    <field name="mb_renting_period3_minimal_time_unit" class="col-lg-6"/>
                                 </div>
                             </div>
                         </div>
