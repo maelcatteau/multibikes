@@ -17,4 +17,6 @@
     'security/ir.model.access.csv',
     'views/rental_extension_views.xml',
     ],
+    'demo': [],
+    'test': [],
 }
