@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <!-- Ajout du champ de caution dans la vue de formulaire de commande -->
             <xpath expr="//group[@name='partner_details']" position="inside">
-                <field name="x_numero_de_caution"/>
+                <field name="mb_numero_de_caution"/>
             </xpath>
         </field>
     </record>

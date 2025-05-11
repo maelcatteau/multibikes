@@ -7,9 +7,9 @@
         <field name="arch" type="xml">
             <!-- Ajoute les champs à la fin du groupe group_general -->
             <xpath expr="//page[@name='general_information']//group/group[@name='group_general']" position="inside">
-                <field name="caution" widget="monetary" invisible="not rent_ok"/>
-                <field name="value_in_case_of_theft" widget="monetary" invisible="not rent_ok"/>
-                <field name="currency_id" invisible="1"/>
+                <field name="mb_caution" widget="monetary" invisible="not rent_ok"/>
+                <field name="mb_value_in_case_of_theft" widget="monetary" invisible="not rent_ok"/>
+                <field name="mb_currency_id" invisible="1"/>
             </xpath>
         </field>
     </record>
