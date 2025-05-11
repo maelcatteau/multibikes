@@ -79,6 +79,27 @@ Pour mettre à jour Odoo :
 
 Pour toute question ou problème, veuillez créer une issue dans le dépôt du projet.
 
+## Conventions de nommage
+
+Pour maintenir une cohérence dans la base de code et faciliter la maintenance, nous suivons des conventions de nommage strictes pour les modules et les champs.
+
+### Modules
+
+Tous les modules personnalisés doivent avoir un nom qui commence par `multibikes_` suivi d'un identifiant descriptif en minuscules. Par exemple :
+- `multibikes_base`
+- `multibikes_prolongation`
+- `multibikes_website_visibility`
+- `multibikes_website_minimal_duration`
+
+### Champs
+
+Tous les champs personnalisés définis dans les modèles doivent avoir un nom qui commence par le préfixe `mb_` pour éviter les conflits avec les modules standards d'Odoo et faciliter l'identification des champs personnalisés. Par exemple :
+- `mb_is_rental_extension`
+- `mb_original_rental_id`
+- `mb_renting_period1_start_date`
+
+Cette convention s'applique à tous les types de champs : Many2one, One2many, Many2many, Boolean, Integer, Float, Date, Datetime, etc.
+
 ## Conventions de nommage des commits
 
 Nous suivons une convention spécifique pour les messages de commit afin de maintenir un historique clair et faciliter la génération de changelogs. Chaque message de commit doit suivre le format suivant :
