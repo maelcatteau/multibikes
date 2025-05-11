@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_inherit_multibikes" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.multibikes</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Remplacer le champ site web par numéro d'identité -->
+            <field name="website" position="replace">
+                <field name="x_partner_n_id" string="N° de carte d'identité" placeholder="ex : AA123456"/>
+            </field>
+
+            <!-- Remplacer les étiquettes par la nationalité -->
+            <field name="category_id" position="replace">
+                <field name="x_partner_nationalite" string="Nationalité" placeholder="ex : Française"/>
+            </field>
+        </field>
+    </record>
+</odoo>

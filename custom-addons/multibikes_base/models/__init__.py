@@ -1,2 +1,2 @@
 from . import product_template
-from . import product_pricing
+from . import res_partner

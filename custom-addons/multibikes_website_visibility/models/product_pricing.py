@@ -5,6 +5,6 @@ class ProductPricing(models.Model):
     
     website_published = fields.Boolean(
         string='Visible sur le site web',
-        default=True,
+        default=False,
         help="When checked, this pricing will be visible on the website."
     )
