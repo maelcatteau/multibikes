@@ -27,28 +27,28 @@ class RentalExtensionWizard(models.TransientModel):
     _name = 'rental.extension.wizard'
     _description = "Assistant de prolongation de location"
 
-    order_id = fields.Many2one(
+    mb_order_id = fields.Many2one(
         'sale.order',
         string="Commande de location",
         required=True
     )
-    start_date = fields.Datetime(
+    mb_start_date = fields.Datetime(
         string="Date de début de la prolongation",
         required=True,
         help="Par défaut, la date de fin de la location actuelle"
     )
-    end_date = fields.Datetime(
+    mb_end_date = fields.Datetime(
         string="Nouvelle date de fin",
         required=True,
         help="Date de fin de la prolongation"
     )
-    line_ids = fields.One2many(
+    mb_line_ids = fields.One2many(
         'rental.extension.wizard.line',
-        'wizard_id',
+        'mb_wizard_id',
         string="Articles à prolonger"
     )
     
-    @api.onchange('end_date', 'start_date')
+    @api.onchange('mb_end_date', 'mb_start_date')
     def _onchange_dates(self):
         """
         Valide les dates de prolongation
@@ -56,19 +56,19 @@ class RentalExtensionWizard(models.TransientModel):
         - Vérifie que la date de fin est postérieure à la date de début
         - Vérifie que la date de début n'est pas dans le passé
         """
-        if self.end_date and self.start_date and self.end_date <= self.start_date:
+        if self.mb_end_date and self.mb_start_date and self.mb_end_date <= self.mb_start_date:
             _logger.warning(
                 "Tentative de prolongation avec date de fin (%s) <= date de début (%s)",
-                self.end_date, self.start_date
+                self.mb_end_date, self.mb_start_date
             )
             raise UserError(_("La date de fin de prolongation doit être postérieure à la date de début."))
         
         # Vérifier que la date de début n'est pas dans le passé
         now = fields.Datetime.now()
-        if self.start_date and self.start_date < now:
+        if self.mb_start_date and self.mb_start_date < now:
             _logger.warning(
                 "Tentative de prolongation avec date de début (%s) dans le passé (maintenant: %s)",
-                self.start_date, now
+                self.mb_start_date, now
             )
             raise UserError(_("La date de début de prolongation ne peut pas être dans le passé."))
     
@@ -82,11 +82,11 @@ class RentalExtensionWizard(models.TransientModel):
         Returns:
             dict: Valeurs pour la création de la commande de prolongation
         """
-        original_order = self.order_id
+        original_order = self.mb_order_id
         
         # Durée totale de location (original + prolongation)
         original_duration_days = (original_order.rental_return_date - original_order.rental_start_date).days
-        extension_duration_days = (self.end_date - self.start_date).days
+        extension_duration_days = (self.mb_end_date - self.mb_start_date).days
         total_duration_days = original_duration_days + extension_duration_days
         
         _logger.info(
@@ -101,11 +101,11 @@ class RentalExtensionWizard(models.TransientModel):
             'partner_invoice_id': original_order.partner_invoice_id.id,
             'partner_shipping_id': original_order.partner_shipping_id.id,
             'pricelist_id': original_order.pricelist_id.id,
-            'rental_start_date': self.start_date,
-            'rental_return_date': self.end_date,
+            'rental_start_date': self.mb_start_date,
+            'rental_return_date': self.mb_end_date,
             'is_rental_order': True,
-            'is_rental_extension': True,
-            'original_rental_id': original_order.id,
+            'mb_is_rental_extension': True,
+            'mb_original_rental_id': original_order.id,
             'company_id': original_order.company_id.id,
             'warehouse_id': original_order.warehouse_id.id,
             'client_order_ref': original_order.client_order_ref,
@@ -127,12 +127,12 @@ class RentalExtensionWizard(models.TransientModel):
         Returns:
             dict: Valeurs pour la création de la ligne de commande
         """
-        original_line = wizard_line.order_line_id
+        original_line = wizard_line.mb_order_line_id
         product = original_line.product_id
         
         # Calcul de la durée en jours
-        start_date = self.start_date
-        end_date = self.end_date
+        start_date = self.mb_start_date
+        end_date = self.mb_end_date
         duration_days = (end_date - start_date).days
         
         # Récupérer la catégorie du produit pour appliquer la bonne stratégie de tarification
@@ -144,15 +144,15 @@ class RentalExtensionWizard(models.TransientModel):
         _logger.info(
             "Préparation ligne de prolongation: produit=%s, quantité=%s, prix unitaire=%s, "
             "début=%s, fin=%s",
-            product.name, wizard_line.quantity, price_unit, 
+            product.name, wizard_line.mb_quantity, price_unit, 
             start_date.strftime('%d/%m/%Y %H:%M'), end_date.strftime('%d/%m/%Y %H:%M')
         )
         
         # Créer les valeurs de ligne sans inclure order_id si extension_order n'est pas encore créé
         line_vals = {
             'product_id': product.id,
-            'product_uom_qty': wizard_line.quantity,
-            'product_uom': wizard_line.uom_id.id,
+            'product_uom_qty': wizard_line.mb_quantity,
+            'product_uom': wizard_line.mb_uom_id.id,
             'price_unit': price_unit,
             'discount': 0,
             'name': _("%s - Prolongation du %s au %s") % (
@@ -186,7 +186,7 @@ class RentalExtensionWizard(models.TransientModel):
         Returns:
             float: Le prix unitaire à appliquer pour la prolongation
         """
-        original_order = self.order_id
+        original_order = self.mb_order_id
         original_duration_days = (original_order.rental_return_date - original_order.rental_start_date).days
         total_duration_days = original_duration_days + duration_days
         
@@ -253,13 +253,13 @@ class RentalExtensionWizard(models.TransientModel):
         )
         
         # Pour chaque ligne du wizard qui a été sélectionnée
-        for wizard_line in self.line_ids.filtered(lambda l: l.selected):
+        for wizard_line in self.mb_line_ids.filtered(lambda l: l.mb_selected):
             # 1. Marquer comme retourné dans la commande originale
-            original_line = wizard_line.order_line_id
+            original_line = wizard_line.mb_order_line_id
             if original_line:
                 # Mettre à jour qty_returned pour marquer uniquement la quantité prolongée comme retournée
                 # Attention: ne pas dépasser la quantité totale
-                prolonged_qty = min(wizard_line.quantity, original_line.product_uom_qty)
+                prolonged_qty = min(wizard_line.mb_quantity, original_line.product_uom_qty)
                 
                 # Si la ligne a déjà des retours partiels, on ajoute à la quantité déjà retournée
                 new_returned_qty = min(
@@ -309,22 +309,22 @@ class RentalExtensionWizard(models.TransientModel):
         
         _logger.info(
             "Création d'une prolongation pour la commande %s du %s au %s",
-            self.order_id.name, self.start_date, self.end_date
+            self.mb_order_id.name, self.mb_start_date, self.mb_end_date
         )
 
         # Validation supplémentaire des quantités
-        for wizard_line in self.line_ids.filtered(lambda l: l.selected):
-            available_qty = wizard_line.order_line_id.qty_delivered - wizard_line.order_line_id.qty_returned
-            if wizard_line.quantity > available_qty:
+        for wizard_line in self.mb_line_ids.filtered(lambda l: l.mb_selected):
+            available_qty = wizard_line.mb_order_line_id.qty_delivered - wizard_line.mb_order_line_id.qty_returned
+            if wizard_line.mb_quantity > available_qty:
                 _logger.warning(
                     "Tentative de prolongation avec quantité excessive: produit=%s, demandé=%s, disponible=%s",
-                    wizard_line.product_id.name, wizard_line.quantity, available_qty
+                    wizard_line.mb_product_id.name, wizard_line.mb_quantity, available_qty
                 )
                 raise UserError(_(
                     "Impossible de prolonger %s unités de l'article %s. "
                     "Seulement %s unités sont disponibles pour prolongation "
                     "(différence entre quantité livrée et retournée)."
-                ) % (wizard_line.quantity, wizard_line.product_id.name, available_qty))
+                ) % (wizard_line.mb_quantity, wizard_line.mb_product_id.name, available_qty))
         
         # Vérifier s'il y a des chevauchements avec d'autres prolongations
         self._check_extension_overlaps()
@@ -333,7 +333,7 @@ class RentalExtensionWizard(models.TransientModel):
         extension_order_vals = self._prepare_extension_order_values()
         extension_order_lines_vals = []
 
-        for wizard_line in self.line_ids.filtered(lambda l: l.selected):
+        for wizard_line in self.mb_line_ids.filtered(lambda l: l.mb_selected):
             # Ne pas passer None comme extension_order, car on n'a pas encore créé la commande
             # Stocker les valeurs sans order_id pour l'instant
             line_vals = self._prepare_extension_line_values(self.env['sale.order'], wizard_line)
@@ -351,7 +351,7 @@ class RentalExtensionWizard(models.TransientModel):
         _logger.info("Commande de prolongation créée: %s", extension_order.name)
 
         # Mettre à jour les quantités livrées/retournées et confirmer la commande
-        self._handle_pickings(self.order_id, extension_order)
+        self._handle_pickings(self.mb_order_id, extension_order)
 
         # Afficher la nouvelle commande
         return {
@@ -372,19 +372,19 @@ class RentalExtensionWizard(models.TransientModel):
         Raises:
             UserError: Si un chevauchement est détecté
         """
-        original_order = self.order_id
+        original_order = self.mb_order_id
         
         _logger.debug("Vérification des chevauchements de prolongation pour la commande %s", original_order.name)
         
         # Pour chaque ligne sélectionnée, vérifier les chevauchements potentiels
-        for wizard_line in self.line_ids.filtered(lambda l: l.selected):
-            product = wizard_line.product_id
+        for wizard_line in self.mb_line_ids.filtered(lambda l: l.mb_selected):
+            product = wizard_line.mb_product_id
             
             _logger.debug("Vérification des chevauchements pour le produit %s", product.name)
             
             # Chercher toutes les prolongations existantes pour la commande d'origine
             existing_extensions = self.env['sale.order'].search([
-                ('original_rental_id', '=', original_order.id),
+                ('mb_original_rental_id', '=', original_order.id),
                 ('state', 'not in', ['cancel', 'draft'])
             ])
             
@@ -392,7 +392,7 @@ class RentalExtensionWizard(models.TransientModel):
             child_extensions = self.env['sale.order']
             for ext in existing_extensions:
                 child_extensions |= self.env['sale.order'].search([
-                    ('original_rental_id', '=', ext.id),
+                    ('mb_original_rental_id', '=', ext.id),
                     ('state', 'not in', ['cancel', 'draft'])
                 ])
             
@@ -416,13 +416,13 @@ class RentalExtensionWizard(models.TransientModel):
                     
                 for ext_line in extension_lines:
                     # Vérifier le chevauchement de dates
-                    if (extension.rental_start_date <= self.end_date and 
-                        extension.rental_return_date >= self.start_date):
+                    if (extension.rental_start_date <= self.mb_end_date and 
+                        extension.rental_return_date >= self.mb_start_date):
                         
                         _logger.warning(
                             "Chevauchement détecté pour le produit %s entre %s-%s et la prolongation %s (%s-%s)",
                             product.name,
-                            self.start_date, self.end_date,
+                            self.mb_start_date, self.mb_end_date,
                             extension.name, extension.rental_start_date, extension.rental_return_date
                         )
                         
@@ -446,18 +446,18 @@ class RentalExtensionWizardLine(models.TransientModel):
     _name = 'rental.extension.wizard.line'
     _description = "Lignes de l'assistant de prolongation de location"
     
-    wizard_id = fields.Many2one('rental.extension.wizard', string="Assistant", required=True, ondelete='cascade')
-    order_line_id = fields.Many2one('sale.order.line', string="Ligne de commande originale", required=True)
-    product_id = fields.Many2one('product.product', string="Produit", required=True)
-    product_name = fields.Char(string="Description", required=True)
-    quantity = fields.Float(string="Quantité", required=True, default=1.0)
-    uom_id = fields.Many2one('uom.uom', string="Unité de mesure", required=True)
-    selected = fields.Boolean(string="Sélectionné", default=True, 
+    mb_wizard_id = fields.Many2one('rental.extension.wizard', string="Assistant", required=True, ondelete='cascade')
+    mb_order_line_id = fields.Many2one('sale.order.line', string="Ligne de commande originale", required=True)
+    mb_product_id = fields.Many2one('product.product', string="Produit", required=True)
+    mb_product_name = fields.Char(string="Description", required=True)
+    mb_quantity = fields.Float(string="Quantité", required=True, default=1.0)
+    mb_uom_id = fields.Many2one('uom.uom', string="Unité de mesure", required=True)
+    mb_selected = fields.Boolean(string="Sélectionné", default=True, 
                               help="Cochez cette case pour inclure ce produit dans la prolongation")
-    available_qty = fields.Float(string="Quantité disponible", compute='_compute_available_qty', 
+    mb_available_qty = fields.Float(string="Quantité disponible", compute='_compute_available_qty', 
                                help="Quantité disponible pour prolongation (livrée mais pas encore retournée)")
     
-    @api.depends('order_line_id')
+    @api.depends('mb_order_line_id')
     def _compute_available_qty(self):
         """
         Calcule la quantité disponible pour prolongation
@@ -466,17 +466,17 @@ class RentalExtensionWizardLine(models.TransientModel):
         et la quantité déjà retournée pour chaque ligne de commande.
         """
         for line in self:
-            if line.order_line_id:
-                line.available_qty = line.order_line_id.qty_delivered - line.order_line_id.qty_returned
+            if line.mb_order_line_id:
+                line.mb_available_qty = line.mb_order_line_id.qty_delivered - line.mb_order_line_id.qty_returned
                 _logger.debug(
                     "Calcul quantité disponible: produit=%s, ligne=%s, livrée=%s, retournée=%s, disponible=%s",
-                    line.product_id.name, line.order_line_id.id,
-                    line.order_line_id.qty_delivered, line.order_line_id.qty_returned, line.available_qty
+                    line.mb_product_id.name, line.mb_order_line_id.id,
+                    line.mb_order_line_id.qty_delivered, line.mb_order_line_id.qty_returned, line.mb_available_qty
                 )
             else:
-                line.available_qty = 0.0
+                line.mb_available_qty = 0.0
     
-    @api.onchange('quantity')
+    @api.onchange('mb_quantity')
     def _onchange_quantity(self):
         """
         Vérifie que la quantité ne dépasse pas la quantité disponible
@@ -488,12 +488,12 @@ class RentalExtensionWizardLine(models.TransientModel):
             UserError: Si la quantité saisie dépasse la quantité disponible
         """
         for line in self:
-            if line.quantity > line.available_qty:
+            if line.mb_quantity > line.mb_available_qty:
                 _logger.warning(
                     "Tentative de prolongation avec quantité excessive: produit=%s, demandé=%s, disponible=%s",
-                    line.product_id.name, line.quantity, line.available_qty
+                    line.mb_product_id.name, line.mb_quantity, line.mb_available_qty
                 )
                 raise UserError(_(
                     "Vous ne pouvez pas prolonger plus de %s unités pour l'article %s. "
                     "Cette quantité correspond aux articles actuellement en location (non retournés)."
-                ) % (line.available_qty, line.product_id.name))
+                ) % (line.mb_available_qty, line.mb_product_id.name))

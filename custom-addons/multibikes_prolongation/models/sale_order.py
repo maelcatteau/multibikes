@@ -24,28 +24,28 @@ class SaleOrder(models.Model):
     """
     _inherit = 'sale.order'
 
-    is_rental_extension = fields.Boolean(
+    mb_is_rental_extension = fields.Boolean(
         string="Est une prolongation",
         default=False,
         help="Indique si cette commande est une prolongation d'une location existante"
     )
-    original_rental_id = fields.Many2one(
+    mb_original_rental_id = fields.Many2one(
         'sale.order',
         string="Location d'origine",
         help="La commande de location d'origine dont celle-ci est une prolongation"
     )
-    extension_count = fields.Integer(
+    mb_extension_count = fields.Integer(
         string="Nombre de prolongations",
         compute='_compute_extension_count',
         help="Nombre de prolongations liées à cette location"
     )
-    rental_extensions_ids = fields.One2many(
+    mb_rental_extensions_ids = fields.One2many(
         'sale.order',
-        'original_rental_id',
+        'mb_original_rental_id',
         string="Prolongations de location",
         help="Liste des prolongations liées à cette location"
     )
-    has_rentable_lines = fields.Boolean(
+    mb_has_rentable_lines = fields.Boolean(
         string="A des articles prolongeables",
         compute='_compute_has_rentable_lines',
         help="Indique s'il reste des articles qui peuvent être prolongés (livrés mais pas encore retournés)"
@@ -96,7 +96,7 @@ class SaleOrder(models.Model):
             orders_with_rentable_lines = self.filtered(lambda o: o.id in order_ids_with_rentable_lines)
             orders_with_rentable_lines.update({'has_rentable_lines': True})
     
-    @api.depends('rental_extensions_ids')
+    @api.depends('mb_rental_extensions_ids')
     def _compute_extension_count(self):
         """
         Calcule le nombre de prolongations liées à cette location
@@ -105,7 +105,7 @@ class SaleOrder(models.Model):
         déterminer si des prolongations existent pour cette commande.
         """
         for order in self:
-            count = len(order.rental_extensions_ids)
+            count = len(order.mb_rental_extensions_ids)
             order.extension_count = count
             if count > 0:
                 _logger.debug(
@@ -161,12 +161,12 @@ class SaleOrder(models.Model):
                 
             # Créer une ligne pour chaque produit de la commande
             wizard_line_vals.append((0, 0, {
-                'order_line_id': line.id,
-                'product_id': line.product_id.id,
-                'product_name': line.name,
-                'quantity': available_qty,  # Par défaut, proposer la quantité disponible
-                'uom_id': line.product_uom.id,
-                'selected': True,  # Par défaut, tous les produits sont sélectionnés
+                'mb_order_line_id': line.id,
+                'mb_product_id': line.product_id.id,
+                'mb_product_name': line.name,
+                'mb_quantity': available_qty,  # Par défaut, proposer la quantité disponible
+                'mb_uom_id': line.product_uom.id,
+                'mb_selected': True,  # Par défaut, tous les produits sont sélectionnés
             }))
         
         if not wizard_line_vals:
@@ -179,16 +179,16 @@ class SaleOrder(models.Model):
         # Créer et ouvrir l'assistant
         context = dict(
             self.env.context,
-            default_order_id=self.id,
-            default_start_date=self.rental_return_date,  # Date de fin actuelle comme date de début de prolongation
+            default_mb_order_id=self.id,
+            default_mb_start_date=self.rental_return_date,  # Date de fin actuelle comme date de début de prolongation
         )
         
         # Créer le wizard
         wizard = self.env['rental.extension.wizard'].create({
-            'order_id': self.id,
-            'start_date': self.rental_return_date,
-            'end_date': self.rental_return_date + timedelta(days=1),  # Par défaut, prolongation d'un jour
-            'line_ids': wizard_line_vals,
+            'mb_order_id': self.id,
+            'mb_start_date': self.rental_return_date,
+            'mb_end_date': self.rental_return_date + timedelta(days=1),  # Par défaut, prolongation d'un jour
+            'mb_line_ids': wizard_line_vals,
         })
         
         _logger.info("Assistant de prolongation créé pour la commande %s: wizard_id=%d", self.name, wizard.id)
@@ -223,7 +223,7 @@ class SaleOrder(models.Model):
             'type': 'ir.actions.act_window',
             'view_mode': 'tree,form',
             'res_model': 'sale.order',
-            'domain': [('original_rental_id', '=', self.id)],
+            'domain': [('mb_original_rental_id', '=', self.id)],
             'context': {'create': False}
         }
 

@@ -6,14 +6,14 @@
         <field name="model">rental.extension.wizard.line</field>
         <field name="arch" type="xml">
             <list editable="bottom">
-                <field name="selected" widget="boolean_toggle"/>
-                <field name="product_id" readonly="1"/>
-                <field name="product_name" readonly="1"/>
-                <field name="available_qty" readonly="1"/>
-                <field name="quantity"/>
-                <field name="uom_id" readonly="1"/>
-                <field name="order_line_id" invisible="1"/>
-                <field name="wizard_id" invisible="1"/>
+                <field name="mb_selected" widget="boolean_toggle"/>
+                <field name="mb_product_id" readonly="1"/>
+                <field name="mb_product_name" readonly="1"/>
+                <field name="mb_available_qty" readonly="1"/>
+                <field name="mb_quantity"/>
+                <field name="mb_uom_id" readonly="1"/>
+                <field name="mb_order_line_id" invisible="1"/>
+                <field name="mb_wizard_id" invisible="1"/>
             </list>
         </field>
     </record>
@@ -26,13 +26,13 @@
                 <sheet>
                     <group>
                         <group>
-                            <field name="order_id" readonly="1"/>
-                            <field name="start_date" required="1"/>
-                            <field name="end_date" required="1"/>
+                            <field name="mb_order_id" readonly="1"/>
+                            <field name="mb_start_date" required="1"/>
+                            <field name="mb_end_date" required="1"/>
                         </group>
                     </group>
                     <group string="Articles à prolonger">
-                        <field name="line_ids" nolabel="1" view_mode="tree" views="view_rental_extension_wizard_line_tree,tree"/>
+                        <field name="mb_line_ids" nolabel="1" view_mode="tree" views="view_rental_extension_wizard_line_tree,tree"/>
                     </group>
                     <div class="alert alert-info" role="alert">
                         <p>
@@ -65,23 +65,23 @@
                 <button name="action_extend_rental" type="object" 
                         string="Prolonger" 
                         class="btn-primary"
-                        invisible="is_rental_order == False or state not in ('sale', 'done') or not has_rentable_lines"
+                        invisible="is_rental_order == False or state not in ('sale', 'done') or not mb_has_rentable_lines"
                         groups="sales_team.group_sale_salesman"/>
             </xpath>
             
             <!-- Ajout de l'onglet Prolongations -->
             <xpath expr="//notebook" position="inside">
                 <page string="Prolongations" invisible="is_rental_order == False">
-                    <field name="is_rental_extension" invisible="1"/>
-                    <field name="original_rental_id" readonly="1" invisible="is_rental_extension == False"/>
+                    <field name="mb_is_rental_extension" invisible="1"/>
+                    <field name="mb_original_rental_id" readonly="1" invisible="mb_is_rental_extension == False"/>
                     
-                    <group invisible="is_rental_extension == True">
-                        <field name="extension_count" readonly="1"/>
+                    <group invisible="mb_is_rental_extension == True">
+                        <field name="mb_extension_count" readonly="1"/>
                         <button name="action_view_extensions" type="object" 
                                 string="Voir les prolongations" 
                                 class="oe_highlight"
-                                invisible="extension_count == 0"/>
-                        <field name="rental_extensions_ids" nolabel="1" readonly="1" invisible="extension_count == 0"/>
+                                invisible="mb_extension_count == 0"/>
+                        <field name="mb_rental_extensions_ids" nolabel="1" readonly="1" invisible="mb_extension_count == 0"/>
                     </group>
                 </page>
             </xpath>
@@ -95,8 +95,8 @@
         <field name="inherit_id" ref="sale_renting.rental_order_view_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='amount_total']" position="after">
-                <field name="is_rental_extension"/>
-                <field name="original_rental_id" optional="hide"/>
+                <field name="mb_is_rental_extension"/>
+                <field name="mb_original_rental_id" optional="hide"/>
             </xpath>
         </field>
     </record>
@@ -108,7 +108,7 @@
         <field name="inherit_id" ref="sale_renting.rental_order_view_search"/>
         <field name="arch" type="xml">
             <xpath expr="//search" position="inside">
-                <filter string="Prolongations de location" name="rental_extension" domain="[('is_rental_extension', '=', True)]"/>
+                <filter string="Prolongations de location" name="rental_extension" domain="[('mb_is_rental_extension', '=', True)]"/>
             </xpath>
         </field>
     </record>

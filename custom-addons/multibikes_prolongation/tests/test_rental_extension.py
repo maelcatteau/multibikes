@@ -118,21 +118,21 @@ class TestRentalExtension(TransactionCase):
         
         # Créer un assistant de prolongation
         wizard = self.env['rental.extension.wizard'].create({
-            'order_id': self.rental_order.id,
-            'start_date': self.in_three_days,
-            'end_date': self.in_three_days + timedelta(days=2),
+            'mb_order_id': self.rental_order.id,
+            'mb_start_date': self.in_three_days,
+            'mb_end_date': self.in_three_days + timedelta(days=2),
         })
         
         # Créer des lignes pour l'assistant (tous les articles)
         for line in self.rental_order.order_line:
             self.env['rental.extension.wizard.line'].create({
-                'wizard_id': wizard.id,
-                'order_line_id': line.id,
-                'product_id': line.product_id.id,
-                'product_name': line.name,
-                'quantity': line.product_uom_qty,
-                'uom_id': line.product_uom.id,
-                'selected': True,
+                'mb_wizard_id': wizard.id,
+                'mb_order_line_id': line.id,
+                'mb_product_id': line.product_id.id,
+                'mb_product_name': line.name,
+                'mb_quantity': line.product_uom_qty,
+                'mb_uom_id': line.product_uom.id,
+                'mb_selected': True,
             })
         
         # Créer la commande de prolongation
@@ -142,13 +142,13 @@ class TestRentalExtension(TransactionCase):
         self.assertEqual(self.rental_order.extension_count, 1, "Une prolongation devrait avoir été créée")
         
         # Récupérer la commande de prolongation
-        extension_order = self.rental_order.rental_extensions_ids[0]
+        extension_order = self.rental_order.mb_rental_extensions_ids[0]
         
         # Vérifier les propriétés de la commande de prolongation
-        self.assertTrue(extension_order.is_rental_extension, "La commande devrait être marquée comme prolongation")
-        self.assertEqual(extension_order.original_rental_id.id, self.rental_order.id, "La commande devrait référencer la commande d'origine")
-        self.assertEqual(extension_order.rental_start_date, self.in_three_days, "La date de début devrait correspondre")
-        self.assertEqual(extension_order.rental_return_date, self.in_three_days + timedelta(days=2), "La date de fin devrait correspondre")
+        self.assertTrue(extension_order.mb_is_rental_extension, "La commande devrait être marquée comme prolongation")
+        self.assertEqual(extension_order.mb_original_rental_id.id, self.rental_order.id, "La commande devrait référencer la commande d'origine")
+        self.assertEqual(extension_order.mb_rental_start_date, self.in_three_days, "La date de début devrait correspondre")
+        self.assertEqual(extension_order.mb_rental_return_date, self.in_three_days + timedelta(days=2), "La date de fin devrait correspondre")
         
         # Vérifier que les articles ont été correctement ajoutés
         self.assertEqual(len(extension_order.order_line), 2, "La commande de prolongation devrait avoir 2 lignes")
@@ -166,27 +166,27 @@ class TestRentalExtension(TransactionCase):
         """
         # Créer un assistant de prolongation
         wizard = self.env['rental.extension.wizard'].create({
-            'order_id': self.rental_order.id,
-            'start_date': self.in_three_days,
-            'end_date': self.in_three_days + timedelta(days=1),
+            'mb_order_id': self.rental_order.id,
+            'mb_start_date': self.in_three_days,
+            'mb_end_date': self.in_three_days + timedelta(days=1),
         })
         
         # Créer une seule ligne pour l'assistant (uniquement le vélo)
         self.env['rental.extension.wizard.line'].create({
-            'wizard_id': wizard.id,
-            'order_line_id': self.rental_line_bike.id,
-            'product_id': self.product_bike.id,
-            'product_name': self.rental_line_bike.name,
-            'quantity': 1.0,  # Seulement 1 vélo sur les 2
-            'uom_id': self.rental_line_bike.product_uom.id,
-            'selected': True,
+            'mb_wizard_id': wizard.id,
+            'mb_order_line_id': self.rental_line_bike.id,
+            'mb_product_id': self.product_bike.id,
+            'mb_product_name': self.rental_line_bike.name,
+            'mb_quantity': 1.0,  # Seulement 1 vélo sur les 2
+            'mb_uom_id': self.rental_line_bike.product_uom.id,
+            'mb_selected': True,
         })
         
         # Créer la commande de prolongation
         result = wizard.create_extension_order()
         
         # Vérifier que la commande de prolongation a été créée
-        extension_order = self.rental_order.rental_extensions_ids[0]
+        extension_order = self.rental_order.mb_rental_extensions_ids[0]
         
         # Vérifier qu'il n'y a qu'une seule ligne dans la prolongation
         self.assertEqual(len(extension_order.order_line), 1, "La commande de prolongation devrait avoir 1 ligne")
@@ -209,9 +209,9 @@ class TestRentalExtension(TransactionCase):
         """
         # Test 1: Date de fin avant la date de début
         wizard = self.env['rental.extension.wizard'].create({
-            'order_id': self.rental_order.id,
-            'start_date': self.in_three_days,
-            'end_date': self.in_three_days - timedelta(days=1),  # Date de fin avant la date de début
+            'mb_order_id': self.rental_order.id,
+            'mb_start_date': self.in_three_days,
+            'mb_end_date': self.in_three_days - timedelta(days=1),  # Date de fin avant la date de début
         })
         
         # La validation devrait lever une erreur
@@ -220,20 +220,20 @@ class TestRentalExtension(TransactionCase):
         
         # Test 2: Quantité excessive
         wizard = self.env['rental.extension.wizard'].create({
-            'order_id': self.rental_order.id,
-            'start_date': self.in_three_days,
-            'end_date': self.in_three_days + timedelta(days=1),
+            'mb_order_id': self.rental_order.id,
+            'mb_start_date': self.in_three_days,
+            'mb_end_date': self.in_three_days + timedelta(days=1),
         })
         
         # Créer une ligne avec une quantité excessive
         wizard_line = self.env['rental.extension.wizard.line'].create({
-            'wizard_id': wizard.id,
-            'order_line_id': self.rental_line_bike.id,
-            'product_id': self.product_bike.id,
-            'product_name': self.rental_line_bike.name,
-            'quantity': 3.0,  # Plus que les 2 vélos loués
-            'uom_id': self.rental_line_bike.product_uom.id,
-            'selected': True,
+            'mb_wizard_id': wizard.id,
+            'mb_order_line_id': self.rental_line_bike.id,
+            'mb_product_id': self.product_bike.id,
+            'mb_product_name': self.rental_line_bike.name,
+            'mb_quantity': 3.0,  # Plus que les 2 vélos loués
+            'mb_uom_id': self.rental_line_bike.product_uom.id,
+            'mb_selected': True,
         })
         
         # La validation devrait lever une erreur
@@ -249,44 +249,44 @@ class TestRentalExtension(TransactionCase):
         """
         # Première prolongation
         wizard1 = self.env['rental.extension.wizard'].create({
-            'order_id': self.rental_order.id,
-            'start_date': self.in_three_days,
-            'end_date': self.in_three_days + timedelta(days=2),
+            'mb_order_id': self.rental_order.id,
+            'mb_start_date': self.in_three_days,
+            'mb_end_date': self.in_three_days + timedelta(days=2),
         })
         
         # Créer des lignes pour l'assistant (tous les articles)
         for line in self.rental_order.order_line:
             self.env['rental.extension.wizard.line'].create({
-                'wizard_id': wizard1.id,
-                'order_line_id': line.id,
-                'product_id': line.product_id.id,
-                'product_name': line.name,
-                'quantity': line.product_uom_qty,
-                'uom_id': line.product_uom.id,
-                'selected': True,
+                'mb_wizard_id': wizard1.id,
+                'mb_order_line_id': line.id,
+                'mb_product_id': line.product_id.id,
+                'mb_product_name': line.name,
+                'mb_quantity': line.product_uom_qty,
+                'mb_uom_id': line.product_uom.id,
+                'mb_selected': True,
             })
         
         # Créer la première prolongation
         result1 = wizard1.create_extension_order()
-        extension_order1 = self.rental_order.rental_extensions_ids[0]
+        extension_order1 = self.rental_order.mb_rental_extensions_ids[0]
         
         # Deuxième prolongation (à partir de la première)
         wizard2 = self.env['rental.extension.wizard'].create({
-            'order_id': extension_order1.id,
-            'start_date': extension_order1.rental_return_date,
-            'end_date': extension_order1.rental_return_date + timedelta(days=1),
+            'mb_order_id': extension_order1.id,
+            'mb_start_date': extension_order1.rental_return_date,
+            'mb_end_date': extension_order1.rental_return_date + timedelta(days=1),
         })
         
         # Créer des lignes pour l'assistant (tous les articles)
         for line in extension_order1.order_line:
             self.env['rental.extension.wizard.line'].create({
-                'wizard_id': wizard2.id,
-                'order_line_id': line.id,
-                'product_id': line.product_id.id,
-                'product_name': line.name,
-                'quantity': line.product_uom_qty,
-                'uom_id': line.product_uom.id,
-                'selected': True,
+                'mb_wizard_id': wizard2.id,
+                'mb_order_line_id': line.id,
+                'mb_product_id': line.product_id.id,
+                'mb_product_name': line.name,
+                'mb_quantity': line.product_uom_qty,
+                'mb_uom_id': line.product_uom.id,
+                'mb_selected': True,
             })
         
         # Créer la deuxième prolongation
@@ -296,13 +296,13 @@ class TestRentalExtension(TransactionCase):
         self.assertEqual(extension_order1.extension_count, 1, "La première prolongation devrait avoir une prolongation")
         
         # Récupérer la deuxième prolongation
-        extension_order2 = extension_order1.rental_extensions_ids[0]
+        extension_order2 = extension_order1.mb_rental_extensions_ids[0]
         
         # Vérifier les propriétés de la deuxième prolongation
-        self.assertTrue(extension_order2.is_rental_extension, "La commande devrait être marquée comme prolongation")
-        self.assertEqual(extension_order2.original_rental_id.id, extension_order1.id, "La commande devrait référencer la première prolongation")
-        self.assertEqual(extension_order2.rental_start_date, extension_order1.rental_return_date, "La date de début devrait correspondre")
-        self.assertEqual(extension_order2.rental_return_date, extension_order1.rental_return_date + timedelta(days=1), "La date de fin devrait correspondre")
+        self.assertTrue(extension_order2.mb_is_rental_extension, "La commande devrait être marquée comme prolongation")
+        self.assertEqual(extension_order2.mb_original_rental_id.id, extension_order1.id, "La commande devrait référencer la première prolongation")
+        self.assertEqual(extension_order2.mb_rental_start_date, extension_order1.rental_return_date, "La date de début devrait correspondre")
+        self.assertEqual(extension_order2.mb_rental_return_date, extension_order1.rental_return_date + timedelta(days=1), "La date de fin devrait correspondre")
     
     def test_05_has_rentable_lines(self):
         """
