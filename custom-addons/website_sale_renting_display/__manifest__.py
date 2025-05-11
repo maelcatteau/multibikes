@@ -7,7 +7,7 @@
         This module extends the website rental functionality to allow control over 
         which pricing rules are displayed on the website. Pricing rules can be 
         published or unpublished independently.
-    """
+    """,
     'category': 'Website/Website',
     'author': 'Maël CATTEAU',
     'license': 'LGPL-3',

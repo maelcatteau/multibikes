@@ -29,6 +29,21 @@ class SaleOrder(models.Model):
         string="Prolongations de location",
         help="Liste des prolongations liées à cette location"
     )
+    has_rentable_lines = fields.Boolean(
+        string="A des articles prolongeables",
+        compute='_compute_has_rentable_lines',
+        help="Indique s'il reste des articles qui peuvent être prolongés (livrés mais pas encore retournés)"
+    )
+    
+    @api.depends('order_line.qty_delivered', 'order_line.qty_returned')
+    def _compute_has_rentable_lines(self):
+        """Vérifie s'il reste des articles à prolonger (livrés mais pas encore totalement retournés)"""
+        for order in self:
+            order.has_rentable_lines = False
+            for line in order.order_line.filtered(lambda l: l.is_rental):
+                if line.qty_delivered > line.qty_returned:
+                    order.has_rentable_lines = True
+                    break
     
     @api.depends('rental_extensions_ids')
     def _compute_extension_count(self):
