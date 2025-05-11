@@ -81,7 +81,7 @@ class SaleOrder(models.Model):
             'view_mode': 'form',
             'res_model': 'rental.extension.wizard',
             'res_id': wizard.id,
-            'view_id': self.env.ref('multibikes_base.view_rental_extension_wizard_form').id,
+            'view_id': self.env.ref('multibikes_prolongation.view_rental_extension_wizard_form').id,
             'target': 'new',
             'context': context,
         }

@@ -46,7 +46,7 @@
                     </div>
                 </sheet>
                 <footer>
-                    <button name="action_extend_rental" string="Prolonger" type="object" class="btn-primary"/>
+                    <button name="create_extension_order" string="Prolonger" type="object" class="btn-primary"/>
                     <button string="Annuler" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>

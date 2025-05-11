@@ -80,8 +80,8 @@ class RentalExtensionWizard(models.TransientModel):
         # Cette logique devra être adaptée selon vos besoins spécifiques
         price_unit = self._calculate_extension_price(product, original_line, duration_days)
         
-        return {
-            'order_id': extension_order.id,
+        # Créer les valeurs de ligne sans inclure order_id si extension_order n'est pas encore créé
+        line_vals = {
             'product_id': product.id,
             'product_uom_qty': wizard_line.quantity,
             'product_uom': wizard_line.uom_id.id,
@@ -96,6 +96,12 @@ class RentalExtensionWizard(models.TransientModel):
             'return_date': end_date,
             'is_rental': True,
         }
+        
+        # Ajouter order_id uniquement si extension_order existe et a un ID
+        if extension_order and extension_order.id:
+            line_vals['order_id'] = extension_order.id
+            
+        return line_vals
     
     def _calculate_extension_price(self, product, original_line, duration_days):
         """
@@ -126,76 +132,68 @@ class RentalExtensionWizard(models.TransientModel):
             return original_line.price_unit
     
     def _handle_pickings(self, original_order, extension_order):
-        """Gère les mouvements de stock pour la prolongation"""
-        # Récupérer les pickings originaux
-        return_pickings = original_order.picking_ids.filtered(
-            lambda p: p.picking_type_code == 'outgoing' and p.state not in ['done', 'cancel'] and 
-            p.rental_operation == 'return'
-        )
-        
-        if not return_pickings:
-            raise UserError(_("Aucun bon de retour en attente trouvé pour cette location."))
-        
-        # 1. Modifier la date de retour prévisionnelle pour les pickings de retour existants
-        for picking in return_pickings:
-            picking.scheduled_date = self.start_date
-            # Confirmer si nécessaire
-            if picking.state == 'draft':
-                picking.action_confirm()
-        
-        # 2. S'assurer que les pickings de livraison pour la prolongation sont créés
-        extension_order.action_confirm()
-        
-        # 3. Ajuster les dates des nouveaux pickings
-        extension_pickings = extension_order.picking_ids
-        for picking in extension_pickings:
-            if picking.picking_type_code == 'outgoing' and picking.rental_operation == 'pickup':
-                picking.scheduled_date = self.start_date
-            elif picking.picking_type_code == 'outgoing' and picking.rental_operation == 'return':
-                picking.scheduled_date = self.end_date
-    
-    def action_extend_rental(self):
-        """Crée la commande de prolongation de location"""
+        """
+        Met à jour les quantités retournées et livrées des lignes de commande
+        sans manipuler les bons de livraison/retour
+        """
+        # Pour chaque ligne du wizard qui a été sélectionnée
+        for wizard_line in self.line_ids.filtered(lambda l: l.selected):
+            # 1. Marquer comme retourné dans la commande originale
+            original_line = wizard_line.order_line_id
+            if original_line:
+                # Mettre à jour qty_returned pour marquer uniquement la quantité prolongée comme retournée
+                # Attention: ne pas dépasser la quantité totale
+                prolonged_qty = min(wizard_line.quantity, original_line.product_uom_qty)
+                
+                # Si la ligne a déjà des retours partiels, on ajoute à la quantité déjà retournée
+                new_returned_qty = min(
+                    original_line.qty_returned + prolonged_qty,
+                    original_line.product_uom_qty
+                )
+                original_line.qty_returned = new_returned_qty
+                
+        # 2. Marquer comme livré dans la nouvelle commande de prolongation
+        for extension_line in extension_order.order_line:
+            # Marquer tous les articles de la prolongation comme livrés
+            extension_line.qty_delivered = extension_line.product_uom_qty
+            
+        # 3. Confirmer la commande de prolongation si elle n'est pas déjà confirmée
+        if extension_order.state in ['draft', 'sent']:
+            extension_order.action_confirm()
+
+    def create_extension_order(self):
+        """Crée la commande de prolongation et met à jour les quantités livrées/retournées."""
         self.ensure_one()
-        original_order = self.order_id
+
+        # Préparer les valeurs pour la nouvelle commande
+        extension_order_vals = self._prepare_extension_order_values()
+        extension_order_lines_vals = []
+
+        for wizard_line in self.line_ids.filtered(lambda l: l.selected):
+            # Ne pas passer None comme extension_order, car on n'a pas encore créé la commande
+            # Stocker les valeurs sans order_id pour l'instant
+            line_vals = self._prepare_extension_line_values(self.env['sale.order'], wizard_line)
+            extension_order_lines_vals.append((0, 0, line_vals))
+
+        if not extension_order_lines_vals:
+            raise UserError(_("Aucun article n'a été sélectionné pour la prolongation."))
+
+        extension_order_vals['order_line'] = extension_order_lines_vals
         
-        # Vérifier que c'est une location
-        if not original_order.is_rental_order:
-            raise UserError(_("Cette commande n'est pas une location."))
-        
-        # Vérifier qu'au moins une ligne est sélectionnée
-        selected_lines = self.line_ids.filtered(lambda l: l.selected)
-        if not selected_lines:
-            raise UserError(_("Veuillez sélectionner au moins un article à prolonger."))
-        
-        # Créer la nouvelle commande
-        extension_vals = self._prepare_extension_order_values()
-        extension_order = self.env['sale.order'].create(extension_vals)
-        
-        # Créer les lignes de commande pour chaque produit sélectionné
-        for wizard_line in selected_lines:
-            line_vals = self._prepare_extension_line_values(extension_order, wizard_line)
-            self.env['sale.order.line'].create(line_vals)
-        
-        # Confirmer la nouvelle commande
-        extension_order.action_confirm()
-        
-        # Gérer les mouvements de stock (toujours activé)
-        self._handle_pickings(original_order, extension_order)
-        
-        # Afficher un message de succès
-        view_id = self.env.ref('sale.view_order_form').id
+        # Créer la nouvelle commande de prolongation
+        extension_order = self.env['sale.order'].create(extension_order_vals)
+
+        # Mettre à jour les quantités livrées/retournées et confirmer la commande
+        self._handle_pickings(self.order_id, extension_order)
+
+        # Afficher la nouvelle commande
         return {
-            'name': _('Prolongation de location créée'),
             'type': 'ir.actions.act_window',
-            'view_mode': 'form',
             'res_model': 'sale.order',
-            'views': [(view_id, 'form')],
+            'view_mode': 'form',
             'res_id': extension_order.id,
             'target': 'current',
-            'context': {'form_view_initial_mode': 'edit'},
         }
-
 
 class RentalExtensionWizardLine(models.TransientModel):
     _name = 'rental.extension.wizard.line'
