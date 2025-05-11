@@ -78,3 +78,31 @@ Pour mettre à jour Odoo :
 ## Support
 
 Pour toute question ou problème, veuillez créer une issue dans le dépôt du projet.
+
+## Conventions de nommage des commits
+
+Nous suivons une convention spécifique pour les messages de commit afin de maintenir un historique clair et faciliter la génération de changelogs. Chaque message de commit doit suivre le format suivant :
+
+[TYPE] Description concise du changement
+
+
+### Types de commits
+- **[FEAT]** : Nouvelle fonctionnalité
+- **[FIX]** : Correction de bug
+- **[DOCS]** : Modifications de la documentation
+- **[STYLE]** : Changements de formatage qui n'affectent pas le fonctionnement du code
+- **[REFACTOR]** : Restructuration du code sans changement de fonctionnalité
+- **[PERF]** : Améliorations de performance
+- **[TEST]** : Ajout ou modification de tests
+- **[CHORE]** : Modifications aux outils de build, dépendances, etc.
+
+### Exemples
+
+[FEAT] Ajoute l'authentification à deux facteurs
+[FIX] Résout le problème de chargement d'images sur Safari
+[DOCS] Met à jour les instructions d'installation
+[STYLE] Standardise l'indentation dans les fichiers CSS
+[REFACTOR] Simplifie la logique de validation des formulaires
+[PERF] Optimise les requêtes à la base de données
+[TEST] Ajoute des tests pour le module de paiement
+[CHORE] Met à jour les dépendances obsolètes
