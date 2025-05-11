@@ -6,11 +6,11 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <!-- Ajouter les champs d'identification après le champ email -->
-            <field name="email" position="after">
-                <field name="mb_n_id" string="N° de carte d'identité" placeholder="ex : AA123456"/>
-                <field name="mb_nationalite" string="Nationalité" placeholder="ex : Française"/>
-            </field>
+            <!-- Ajouter les champs d'identification dans le groupe contenant email/téléphone -->
+            <xpath expr="//field[@name='email']/../.." position="inside">
+                <field name="mb_n_id" placeholder="Numéro de pièce d'identité"/>
+                <field name="mb_nationalite" placeholder="Nationalité"/>
+            </xpath>
             
             <!-- Masquer le champ site web car non utilisé dans le contexte de location -->
             <field name="website" position="attributes">
