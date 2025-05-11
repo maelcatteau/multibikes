@@ -11,7 +11,7 @@ class ProductTemplate(models.Model):
     def _get_additionnal_combination_info(self, product_or_template, quantity, date, website):
         """
         Surcharge de la méthode pour filtrer les tarifs affichés dans la pricing_table
-        en fonction du champ website_published
+        en fonction du champ mb_website_published
         """
         res = super()._get_additionnal_combination_info(product_or_template, quantity, date, website)
 
@@ -23,7 +23,7 @@ class ProductTemplate(models.Model):
         pricelist = website.pricelist_id
         ProductPricing = self.env['product.pricing']
 
-        # Obtenir tous les tarifs disponibles (sans filtrer par website_published)
+        # Obtenir tous les tarifs disponibles (sans filtrer par mb_website_published)
         pricing = ProductPricing._get_first_suitable_pricing(product_or_template, pricelist)
         if not pricing:
             return res
@@ -77,7 +77,7 @@ class ProductTemplate(models.Model):
         all_suitable_pricings = ProductPricing._get_suitable_pricings(product_or_template, pricelist)
         
         # Filtrer pour la pricing_table uniquement
-        published_pricings = all_suitable_pricings.filtered(lambda p: p.website_published)
+        published_pricings = all_suitable_pricings.filtered(lambda p: p.mb_website_published)
 
         # Si aucun tarif n'est publié, ne pas afficher de tableau de prix
         if not published_pricings:
