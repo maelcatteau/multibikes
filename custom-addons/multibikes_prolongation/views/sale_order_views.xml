@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Modification de la vue formulaire des commandes pour ajouter le bouton et les champs -->
+    <record id="view_order_form_inherit_rental_extension" model="ir.ui.view">
+        <field name="name">sale.order.form.rental.extension</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_renting.rental_order_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Ajout du bouton de prolongation dans le header -->
+            <xpath expr="//button[@name='action_confirm']" position="after">
+                <button name="action_extend_rental" type="object" 
+                        string="Prolonger" 
+                        class="btn-primary"
+                        invisible="is_rental_order == False or state not in ('sale', 'done') or not mb_has_rentable_lines or mb_is_rental_extension"
+                        groups="sales_team.group_sale_salesman"/>
+            </xpath>
+            
+            <!-- Ajout de l'onglet Prolongations -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Prolongations" invisible="is_rental_order == False">
+                    <field name="mb_is_rental_extension" invisible="1"/>
+                    <field name="mb_original_rental_id" readonly="1" invisible="mb_is_rental_extension == False"/>
+                    
+                    <group invisible="mb_is_rental_extension == True">
+                        <field name="mb_extension_count" readonly="1"/>
+                        <button name="action_view_extensions" type="object" 
+                                string="Voir les prolongations" 
+                                class="oe_highlight"
+                                invisible="mb_extension_count == 0"/>
+                        <field name="mb_rental_extensions_ids" nolabel="1" readonly="1" invisible="mb_extension_count == 0">
+                            <list>
+                                <field name="name"/>
+                                <field name="date_order"/>
+                                <field name="partner_id"/>
+                                <field name="amount_total"/>
+                                <field name="state"/>
+                            </list>
+                        </field>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Ajout à la vue liste des commandes de location -->
+    <record id="view_rental_order_tree_inherit" model="ir.ui.view">
+        <field name="name">sale.order.tree.rental.extension</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_renting.rental_order_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_total']" position="after">
+                <field name="mb_is_rental_extension" widget="boolean_toggle" readonly="1"/>
+                <field name="mb_extension_count" string="Nbre prolongations"/>
+                <field name="mb_original_rental_id" optional="hide"/>
+            </xpath>
+            <xpath expr="//list" position="attributes">
+                <attribute name="decoration-info">mb_is_rental_extension == True</attribute>
+                <attribute name="decoration-success">mb_extension_count > 0 and not mb_is_rental_extension</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Ajout à la vue liste standard des commandes -->
+    <record id="view_order_tree_inherit" model="ir.ui.view">
+        <field name="name">sale.order.tree.standard.rental.extension</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_quotation_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="mb_is_rental_extension" invisible="1"/>
+                <field name="mb_extension_count" invisible="1"/>
+            </xpath>
+            <xpath expr="//list" position="attributes">
+                <attribute name="decoration-info">mb_is_rental_extension == True</attribute>
+                <attribute name="decoration-success">mb_extension_count > 0 and not mb_is_rental_extension</attribute>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="before">
+                <field name="mb_is_rental_extension" string="Prolongation" widget="boolean_toggle" readonly="1" optional="show"/>
+                <field name="mb_extension_count" string="Nbre prolongations" optional="show"/>
+                <field name="mb_original_rental_id" string="Location d'origine" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Ajout à la vue liste des devis -->
+    <record id="view_quotation_tree_inherit" model="ir.ui.view">
+        <field name="name">sale.order.tree.quotation.rental.extension</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="mb_is_rental_extension" invisible="1"/>
+                <field name="mb_extension_count" invisible="1"/>
+            </xpath>
+            <xpath expr="//list" position="attributes">
+                <attribute name="decoration-info">mb_is_rental_extension == True</attribute>
+                <attribute name="decoration-success">mb_extension_count > 0 and not mb_is_rental_extension</attribute>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="before">
+                <field name="mb_is_rental_extension" string="Prolongation" widget="boolean_toggle" readonly="1" optional="show"/>
+                <field name="mb_extension_count" string="Nbre prolongations" optional="show"/>
+                <field name="mb_original_rental_id" string="Location d'origine" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Ajout d'un filtre pour trouver facilement les prolongations -->
+    <record id="view_rental_order_search_inherit" model="ir.ui.view">
+        <field name="name">sale.order.search.rental.extension</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_renting.rental_order_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <filter string="Prolongations de location" name="rental_extension" domain="[('mb_is_rental_extension', '=', True)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Ajout d'un filtre pour trouver facilement les prolongations dans la vue standard -->
+    <record id="view_order_search_inherit" model="ir.ui.view">
+        <field name="name">sale.order.search.standard.rental.extension</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='my_sale_orders_filter']" position="after">
+                <separator/>
+                <filter string="Prolongations" name="rental_extension" domain="[('mb_is_rental_extension', '=', True)]"/>
+                <filter string="Commandes avec prolongations" name="has_extensions" domain="[('mb_rental_extensions_ids', '!=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+</odoo> 

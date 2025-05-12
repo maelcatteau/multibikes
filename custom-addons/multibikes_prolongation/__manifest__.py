@@ -18,6 +18,7 @@
         'security/ir.model.access.csv',
         'views/rental_extension_wizard_line_views.xml',
         'views/rental_extension_views.xml',
+        'views/sale_order_views.xml',
     ],
     'demo': [],
     'test': [],
