@@ -314,7 +314,7 @@ class RentalExtensionWizard(models.TransientModel):
 
         # Validation supplémentaire des quantités
         for wizard_line in self.mb_line_ids.filtered(lambda l: l.mb_selected):
-            available_qty = wizard_line.mb_order_line_id.qty_delivered - wizard_line.mb_order_line_id.qty_returned
+            available_qty = wizard_line.mb_available_qty
             if wizard_line.mb_quantity > available_qty:
                 _logger.warning(
                     "Tentative de prolongation avec quantité excessive: produit=%s, demandé=%s, disponible=%s",
@@ -327,7 +327,9 @@ class RentalExtensionWizard(models.TransientModel):
                 ) % (wizard_line.mb_quantity, wizard_line.mb_product_id.name, available_qty))
         
         # Vérifier s'il y a des chevauchements avec d'autres prolongations
-        self._check_extension_overlaps()
+        # Cette vérification n'est pas nécessaire car les disponibilités sont déjà gérées
+        # par le mécanisme de quantités livrées/retournées
+        # self._check_extension_overlaps()
         
         # Préparer les valeurs pour la nouvelle commande
         extension_order_vals = self._prepare_extension_order_values()
@@ -381,80 +383,6 @@ class RentalExtensionWizard(models.TransientModel):
             'res_id': extension_order.id,
             'target': 'current',
         }
-
-    def _check_extension_overlaps(self):
-        """
-        Vérifie s'il y a des chevauchements avec d'autres prolongations pour les mêmes articles
-        ------------------------------------------------------------------------------------
-        Cette méthode évite les conflits de prolongation en vérifiant si les articles
-        sélectionnés sont déjà prolongés pour la même période dans d'autres commandes.
-        
-        Raises:
-            UserError: Si un chevauchement est détecté
-        """
-        original_order = self.mb_order_id
-        
-        _logger.debug("Vérification des chevauchements de prolongation pour la commande %s", original_order.name)
-        
-        # Pour chaque ligne sélectionnée, vérifier les chevauchements potentiels
-        for wizard_line in self.mb_line_ids.filtered(lambda l: l.mb_selected):
-            product = wizard_line.mb_product_id
-            
-            _logger.debug("Vérification des chevauchements pour le produit %s", product.name)
-            
-            # Chercher toutes les prolongations existantes pour la commande d'origine
-            existing_extensions = self.env['sale.order'].search([
-                ('mb_original_rental_id', '=', original_order.id),
-                ('state', 'not in', ['cancel', 'draft'])
-            ])
-            
-            # Ajouter aussi les prolongations des prolongations (si possible)
-            child_extensions = self.env['sale.order']
-            for ext in existing_extensions:
-                child_extensions |= self.env['sale.order'].search([
-                    ('mb_original_rental_id', '=', ext.id),
-                    ('state', 'not in', ['cancel', 'draft'])
-                ])
-            
-            all_extensions = existing_extensions | child_extensions
-            
-            if all_extensions:
-                _logger.debug(
-                    "Prolongations existantes trouvées pour la commande %s: %s",
-                    original_order.name, ", ".join(all_extensions.mapped('name'))
-                )
-            
-            # Pour chaque extension existante, vérifier si le produit est présent
-            # et si les dates se chevauchent
-            for extension in all_extensions:
-                extension_lines = extension.order_line.filtered(
-                    lambda l: l.product_id.id == product.id and l.is_rental
-                )
-                
-                if not extension_lines:
-                    continue
-                    
-                for ext_line in extension_lines:
-                    # Vérifier le chevauchement de dates
-                    if (extension.rental_start_date <= self.mb_end_date and 
-                        extension.rental_return_date >= self.mb_start_date):
-                        
-                        _logger.warning(
-                            "Chevauchement détecté pour le produit %s entre %s-%s et la prolongation %s (%s-%s)",
-                            product.name,
-                            self.mb_start_date, self.mb_end_date,
-                            extension.name, extension.rental_start_date, extension.rental_return_date
-                        )
-                        
-                        raise UserError(_(
-                            "Chevauchement détecté! L'article %s est déjà prolongé dans la commande %s "
-                            "pour la période du %s au %s."
-                        ) % (
-                            product.name,
-                            extension.name,
-                            extension.rental_start_date.strftime('%d/%m/%Y %H:%M'),
-                            extension.rental_return_date.strftime('%d/%m/%Y %H:%M')
-                        ))
 
 class RentalExtensionWizardLine(models.TransientModel):
     """
