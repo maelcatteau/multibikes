@@ -4,32 +4,55 @@ from odoo import models, fields, api
 from odoo.tools import format_amount
 from math import ceil
 from odoo.http import request
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
     def _get_additionnal_combination_info(self, product_or_template, quantity, date, website):
         """
-        Surcharge de la méthode pour filtrer les tarifs affichés dans la pricing_table
-        en fonction du champ mb_website_published
+        Surcharge de la méthode pour :
+        1. Filtrer les tarifs affichés dans la pricing_table en fonction de mb_website_published
+        2. Ajouter la durée minimale dynamique basée sur la date
         """
         res = super()._get_additionnal_combination_info(product_or_template, quantity, date, website)
 
         if not product_or_template.rent_ok:
             return res
 
-        # La logique reste identique à la fonction d'origine
+        # Récupération des objets
         currency = website.currency_id
         pricelist = website.pricelist_id
         ProductPricing = self.env['product.pricing']
 
-        # Obtenir tous les tarifs disponibles (sans filtrer par mb_website_published)
+        # Récupérer les dates du contexte ou de la commande
+        order = website.sale_get_order() if website and request else self.env['sale.order']
+        start_date_str = self.env.context.get('start_date')
+        start_date = start_date_str or order.rental_start_date
+
+        _logger.info("Calcul de la durée minimale pour date: %s", start_date)
+
+        # Calcul de la durée minimale dynamique
+        if start_date:
+            try:
+                if isinstance(start_date, str):
+                    from datetime import datetime
+                    start_date = datetime.strptime(start_date.split(" ")[0], "%Y-%m-%d").date()
+                minimal_duration, minimal_unit = self.env.company.get_dynamic_renting_minimal_duration(start_date)
+                _logger.info("Durée minimale calculée: %s %s", minimal_duration, minimal_unit)
+                res['renting_minimal_duration'] = minimal_duration
+                res['renting_minimal_unit'] = minimal_unit
+            except Exception as e:
+                _logger.error("Erreur lors du calcul de la durée minimale: %s", e)
+
+        # Obtenir le tarif par défaut
         pricing = ProductPricing._get_first_suitable_pricing(product_or_template, pricelist)
         if not pricing:
             return res
 
-        # Compute best pricing rule or set default
-        order = website.sale_get_order() if website and request else self.env['sale.order']
+        # Détermination des dates et de la durée de location
         start_date = self.env.context.get('start_date') or order.rental_start_date
         end_date = self.env.context.get('end_date') or order.rental_return_date
         if start_date and end_date:
@@ -40,15 +63,13 @@ class ProductTemplate(models.Model):
                 currency=currency,
             )
             current_unit = current_pricing.recurrence_id.unit
-            current_duration = ProductPricing._compute_duration_vals(
-                start_date, end_date
-            )[current_unit]
+            current_duration = ProductPricing._compute_duration_vals(start_date, end_date)[current_unit]
         else:
             current_unit = pricing.recurrence_id.unit
             current_duration = pricing.recurrence_id.duration
             current_pricing = pricing
 
-        # Compute current price (sans filtrer)
+        # Calcul du prix courant
         current_price = pricelist._get_product_price(
             product=product_or_template,
             quantity=quantity,
@@ -66,53 +87,48 @@ class ProductTemplate(models.Model):
         if current_unit != pricing.recurrence_id.unit:
             ratio *= PERIOD_RATIO[current_unit] / PERIOD_RATIO[pricing.recurrence_id.unit]
 
-        # apply taxes
+        # Application des taxes
         product_taxes = res['product_taxes']
         if product_taxes:
             current_price = self.env['product.template']._apply_taxes_to_price(
                 current_price, currency, product_taxes, res['taxes'], product_or_template,
             )
 
-        # Obtenir tous les tarifs candidats
+        # Filtrer les tarifs publiés
         all_suitable_pricings = ProductPricing._get_suitable_pricings(product_or_template, pricelist)
-        
-        # Filtrer pour la pricing_table uniquement
         published_pricings = all_suitable_pricings.filtered(lambda p: p.mb_website_published)
 
-        # Si aucun tarif n'est publié, ne pas afficher de tableau de prix
         if not published_pricings:
             pricing_table = []
         else:
-            # If there are multiple pricings with the same recurrence, we only keep the cheapest ones
+            # Garder le tarif le plus bas par recurrence
             best_pricings = {}
             for p in published_pricings:
-                if p.recurrence_id not in best_pricings:
-                    best_pricings[p.recurrence_id] = p
-                elif best_pricings[p.recurrence_id].price > p.price:
+                if p.recurrence_id not in best_pricings or best_pricings[p.recurrence_id].price > p.price:
                     best_pricings[p.recurrence_id] = p
 
             published_pricings = best_pricings.values()
+
             def _pricing_price(pricing):
-                if product_taxes:
-                    price = self.env['product.template']._apply_taxes_to_price(
-                        pricing.price, currency, product_taxes, res['taxes'], product_or_template
-                    )
-                else:
-                    price = pricing.price
+                price = self.env['product.template']._apply_taxes_to_price(
+                    pricing.price, currency, product_taxes, res['taxes'], product_or_template
+                ) if product_taxes else pricing.price
+
                 if pricing.currency_id == currency:
                     return price
+
                 return pricing.currency_id._convert(
                     from_amount=price,
                     to_currency=currency,
                     company=self.env.company,
                     date=date,
                 )
-            
+
             pricing_table = [
                 (p.name, format_amount(self.env, _pricing_price(p), currency))
                 for p in published_pricings
             ]
-        
+
         recurrence = pricing.recurrence_id
 
         return {
@@ -130,7 +146,5 @@ class ProductTemplate(models.Model):
             'base_unit_price': 0,
             'base_unit_name': False,
             'pricing_table': pricing_table,
-            'prevent_zero_price_sale': website.prevent_zero_price_sale and currency.is_zero(
-                current_price,
-            ),
+            'prevent_zero_price_sale': website.prevent_zero_price_sale and currency.is_zero(current_price),
         }
