@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 {
     'name': 'Multibikes prolongation',
     'summary': 'Module de prolongation de location pour Multibikes',
@@ -14,8 +15,9 @@
     'auto_install': False,
     'license': 'LGPL-3',
     'data': [
-    'security/ir.model.access.csv',
-    'views/rental_extension_views.xml',
+        'security/ir.model.access.csv',
+        'views/rental_extension_wizard_line_views.xml',
+        'views/rental_extension_views.xml',
     ],
     'demo': [],
     'test': [],

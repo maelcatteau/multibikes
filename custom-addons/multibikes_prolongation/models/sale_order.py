@@ -47,7 +47,7 @@ class SaleOrder(models.Model):
     )
     mb_has_rentable_lines = fields.Boolean(
         string="A des articles prolongeables",
-        compute='_compute_has_rentable_lines',
+        compute='_compute_mb_has_rentable_lines',
         help="Indique s'il reste des articles qui peuvent être prolongés (livrés mais pas encore retournés)"
     )
     

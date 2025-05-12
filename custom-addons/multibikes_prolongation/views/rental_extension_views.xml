@@ -1,22 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vue pour les lignes du wizard -->
-    <record id="view_rental_extension_wizard_line_tree" model="ir.ui.view">
-        <field name="name">rental.extension.wizard.line.tree</field>
-        <field name="model">rental.extension.wizard.line</field>
-        <field name="arch" type="xml">
-            <list editable="bottom">
-                <field name="mb_selected" widget="boolean_toggle"/>
-                <field name="mb_product_id" readonly="1"/>
-                <field name="mb_product_name" readonly="1"/>
-                <field name="mb_available_qty" readonly="1"/>
-                <field name="mb_quantity"/>
-                <field name="mb_uom_id" readonly="1"/>
-                <field name="mb_order_line_id" invisible="1"/>
-                <field name="mb_wizard_id" invisible="1"/>
-            </list>
-        </field>
-    </record>
     <!-- Formulaire pour l'assistant de prolongation avec sélection d'articles -->
     <record id="view_rental_extension_wizard_form" model="ir.ui.view">
         <field name="name">rental.extension.wizard.form</field>
@@ -32,7 +15,7 @@
                         </group>
                     </group>
                     <group string="Articles à prolonger">
-                        <field name="mb_line_ids" nolabel="1" view_mode="tree" views="view_rental_extension_wizard_line_tree,tree"/>
+                        <field name="mb_line_ids" nolabel="1" view_mode="tree" views="multibikes_prolongation.view_rental_extension_wizard_line_tree,tree"/>
                     </group>
                     <div class="alert alert-info" role="alert">
                         <p>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue pour les lignes du wizard -->
+    <record id="view_rental_extension_wizard_line_tree" model="ir.ui.view">
+        <field name="name">rental.extension.wizard.line.tree</field>
+        <field name="model">rental.extension.wizard.line</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="mb_selected" widget="boolean_toggle"/>
+                <field name="mb_product_id" readonly="1"/>
+                <field name="mb_product_name" readonly="1"/>
+                <field name="mb_available_qty" readonly="1"/>
+                <field name="mb_quantity"/>
+                <field name="mb_uom_id" readonly="1"/>
+                <field name="mb_order_line_id" invisible="1"/>
+                <field name="mb_wizard_id" invisible="1"/>
+            </list>
+        </field>
+    </record>
+</odoo> 
