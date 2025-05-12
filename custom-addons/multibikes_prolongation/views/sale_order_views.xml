@@ -22,20 +22,16 @@
                     <field name="mb_original_rental_id" readonly="1" invisible="mb_is_rental_extension == False"/>
                     
                     <group invisible="mb_is_rental_extension == True">
-                        <field name="mb_extension_count" readonly="1"/>
-                        <button name="action_view_extensions" type="object" 
-                                string="Voir les prolongations" 
-                                class="oe_highlight"
-                                invisible="mb_extension_count == 0"/>
                         <field name="mb_rental_extensions_ids" nolabel="1" readonly="1" invisible="mb_extension_count == 0">
-                            <list>
+                            <list> 
                                 <field name="name"/>
-                                <field name="date_order"/>
-                                <field name="partner_id"/>
-                                <field name="amount_total"/>
-                                <field name="state"/>
+                                <field name="date_order" string="Date de la commande"/>
+                                <field name="partner_id" string="Client"/>
+                                <field name="amount_total" string="Total"/>
+                                <field name="state" string="Statut"/>
                             </list>
                         </field>
+                        <field name="mb_extension_count" readonly="1" string="Nombre de prolongations"/>
                     </group>
                 </page>
             </xpath>
