@@ -48,7 +48,7 @@
                 <button name="action_extend_rental" type="object" 
                         string="Prolonger" 
                         class="btn-primary"
-                        invisible="is_rental_order == False or state not in ('sale', 'done') or not mb_has_rentable_lines"
+                        invisible="is_rental_order == False or state not in ('sale', 'done') or not mb_has_rentable_lines or mb_is_rental_extension"
                         groups="sales_team.group_sale_salesman"/>
             </xpath>
             

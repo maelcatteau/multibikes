@@ -126,6 +126,7 @@ class SaleOrder(models.Model):
             
         Raises:
             UserError: Si la commande n'est pas une location ou n'est pas confirmée
+                       ou est déjà une prolongation
         """
         self.ensure_one()
         
@@ -145,6 +146,17 @@ class SaleOrder(models.Model):
                 "État actuel: %s"
             ) % (dict(self._fields['state']._description_selection(self.env)).get(self.state)))
         
+        # Vérifier que la commande n'est pas déjà une prolongation
+        if self.mb_is_rental_extension:
+            _logger.warning(
+                "Tentative de prolongation sur une commande qui est déjà une prolongation: %s",
+                self.name
+            )
+            raise UserError(_(
+                "Impossible de prolonger cette commande car il s'agit déjà d'une prolongation. "
+                "Veuillez prolonger la commande d'origine à la place."
+            ))
+
         _logger.info("Ouverture de l'assistant de prolongation pour la commande %s", self.name)
         
         # Préparer les lignes de l'assistant
