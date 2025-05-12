@@ -1,0 +1,65 @@
+graph TD
+    subgraph "Interface Utilisateur"
+        A[Bouton Prolonger la location] --> B[Assistant de prolongation]
+    end
+
+    subgraph "Assistant Prolongation"
+        B --> C[Saisie nouvelle date de retour]
+        C --> D[Calcul prolongation]
+        D --> E[Confirmation]
+    end
+
+    subgraph "Logique de Validation"
+        E --> F{"Matériel enlevé?\n(picking_state == 'done')"}
+        F -->|Non| G[Erreur: Impossible de prolonger\nmatériel non enlevé]
+        F -->|Oui| H{"Ligne facturée?\n(invoice_status == 'invoiced')"}
+        H -->|Non| I[Erreur: Impossible de prolonger\nmatériel non facturé]
+        H -->|Oui| J[Créer prolongation]
+    end
+
+    subgraph "Calcul de Prix"
+        J --> K[Récupérer données initiales]
+        K --> L[Calculer prix prolongation]
+    end
+
+    subgraph "Création Commande"
+        L --> M[Créer nouvelle ligne de commande]
+        M --> N[Mettre à jour dates\nde la ligne originale]
+        N --> O[Recalculer prix et dates]
+        O --> P[Facturer prolongation]
+    end
+
+    subgraph "Champs et Modèles Utilisés"
+        Q[SaleOrderLine]
+        Q --> Q1[is_rental: boolean]
+        Q --> Q2[rental_start_date: datetime]
+        Q --> Q3[rental_return_date: datetime]
+        Q --> Q4[price_unit: float]
+        Q --> Q5[invoice_status: selection]
+        Q --> Q6[product_id: many2one]
+        
+        R[SaleOrder]
+        R --> R1[order_line: one2many]
+        R --> R2[picking_ids: many2many]
+        
+        S[StockPicking]
+        S --> S1[state: selection]
+        
+        T[Product.Product]
+        T --> T1[rent_ok: boolean]
+        T --> T2[detailed_type: selection]
+        
+        U[Extension Wizard]
+        U --> U1[initial_end_date: datetime]
+        U --> U2[new_end_date: datetime]
+        U --> U3[extension_price: float]
+        U --> U4[order_line_id: many2one]
+    end
+
+    subgraph "Méthodes Clés"
+        V[_check_rental_availability]
+        W[_compute_extension_price]
+        X[create_extension_order]
+        Y[_recompute_rental_prices]
+        Z[_prepare_invoice]
+    end

@@ -1,0 +1,69 @@
+graph TD
+    subgraph "Création Ligne de Commande Location"
+        A[Ajout produit location au panier] --> B[Définir dates location]
+        B --> C["_onchange_rental_info()"]
+    end
+
+    subgraph "Calcul du Prix Initial"
+        C --> D["_compute_price_unit()"]
+        D --> E["product_id_change()"]
+        E --> F["_get_pricelist_price()"]
+    end
+
+    subgraph "Détermination du Prix"
+        F --> G{"is_rental == True?"}
+        G -->|Non| H["Prix standard du produit"]
+        G -->|Oui| I["Calculer durée location"]
+        I --> J["Chercher règle tarifaire appropriée"]
+        J --> K["Appliquer tarif selon durée"]
+    end
+
+    subgraph "Mise à Jour des Prix"
+        K --> L["_recompute_rental_prices()"]
+        L --> M["_compute_amount()"]
+    end
+
+    subgraph "Confirmation et Exécution"
+        N["Confirmation commande"] --> O["Création picking"]
+        O --> P["Enlèvement matériel"]
+        P --> Q["Retour matériel"]
+    end
+
+    subgraph "Facturation Location"
+        N --> R["Création facture"]
+        R --> S["Facturation selon prix calculé"]
+    end
+
+    subgraph "Méthodes Clés"
+        T["_get_pricelist_price()"]
+        T --> T1["Calcul prix selon pricelist"]
+        T --> T2["Gestion cas spéciaux location"]
+        
+        U["_recompute_rental_prices()"]
+        U --> U1["Recalcul prix si dates changent"]
+        
+        V["_get_rental_pricing()"]
+        V --> V1["Recherche règle tarif applicable"]
+    end
+
+    subgraph "Champs et Modèles"
+        W[SaleOrderLine]
+        W --> W1["is_rental: boolean"]
+        W --> W2["rental_start_date: datetime"]
+        W --> W3["rental_return_date: datetime"]
+        W --> W4["price_unit: float"]
+        W --> W5["product_uom_qty: float"]
+        
+        X[ProductPricing]
+        X --> X1["recurrence_id: many2one"]
+        X --> X2["price: float"]
+        X --> X3["duration: integer"]
+        
+        Y[SaleOrderRecurrence]
+        Y --> Y1["unit: selection"]
+        Y --> Y2["duration: integer"]
+        
+        Z[ProductTemplate]
+        Z --> Z1["rental_pricing_ids: one2many"]
+        Z --> Z2["rent_ok: boolean"]
+    end
