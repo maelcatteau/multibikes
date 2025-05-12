@@ -4,8 +4,10 @@
 Le module `multibikes_base` est un module Odoo personnalisé qui ajoute des fonctionnalités spécifiques pour la gestion des informations liées aux produits, aux partenaires et aux ventes. Il est conçu pour répondre aux besoins spécifiques de gestion des cautions et des informations d'identité.
 
 ## Fonctionnalités
-1. **Ajout d'un champ "Numéro de caution" sur les bons de commande (Sales Order - SO)** :
-    - Permet de suivre et de gérer les cautions associées aux commandes.
+1. **Gestion des cautions sur les bons de commande (Sales Order - SO)** :
+    - Champ "Type de caution" permettant de sélectionner le type (Espèces, Chèque, Carte Bancaire)
+    - Champ "Numéro de caution" visible uniquement lorsque le type de caution est Carte Bancaire
+    - Permet de suivre et de gérer les cautions associées aux commandes
 
 2. **Ajout de champs sur le modèle `product.template`** :
     - **Valeur en cas de vol** : Permet de définir une valeur spécifique pour un produit en cas de vol.
@@ -17,6 +19,7 @@ Le module `multibikes_base` est un module Odoo personnalisé qui ajoute des fonc
 
 4. **Ajout des champs associés dans les vues** :
     - Les champs ajoutés sont intégrés dans les vues correspondantes pour une gestion simplifiée et intuitive.
+    - Affichage conditionnel pour faciliter la saisie des informations pertinentes.
 
 ## Installation
 1. Copier le module dans le répertoire `custom-addons` de votre déploiement Odoo.
@@ -24,7 +27,8 @@ Le module `multibikes_base` est un module Odoo personnalisé qui ajoute des fonc
 3. Installer le module `multibikes_base` via l'interface d'administration.
 
 ## Utilisation
-- Lors de la création ou de la modification d'un bon de commande, vous pourrez renseigner le numéro de caution.
+- Lors de la création ou de la modification d'un bon de commande, vous pourrez sélectionner le type de caution.
+- Si le type "Carte Bancaire" est sélectionné, le champ pour le numéro de caution sera affiché pour saisie.
 - Les champs "Valeur en cas de vol" et "Caution" sont disponibles dans la fiche produit.
 - Les champs "Nationalité" et "Numéro de carte d'identité" sont accessibles dans la fiche partenaire.
 

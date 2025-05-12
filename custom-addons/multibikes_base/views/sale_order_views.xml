@@ -9,7 +9,8 @@
             <!-- Ajout du champ de numéro de caution dans la section des détails du partenaire -->
             <!-- Ce champ permet de faire le lien avec l'empreinte de carte' -->
             <xpath expr="//group[@name='partner_details']" position="inside">
-                <field name="mb_numero_de_caution"/>
+                <field name="mb_type_de_caution"/>
+                <field name="mb_numero_de_caution" invisible="mb_type_de_caution != 'carte_bancaire'"/>
             </xpath>
         </field>
     </record>

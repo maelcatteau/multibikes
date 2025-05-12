@@ -11,9 +11,9 @@ Ce projet contient les fichiers de configuration nécessaires pour déployer Odo
 ├── .gitignore                  # Fichiers ignorés par Git
 └── custom-addons/              # Modules personnalisés
     ├── multibikes_base/        # Module de base MultiBikes
-    ├── multibikes_prolongation/# Module de prolongation de location
+    ├── multibikes_prolongation/    # Module de prolongation de location
     ├── multibikes_website_visibility/     # Module de visibilité sur le site web
-    └── multibikes_website_minimal_duration/# Module de durée minimale sur le site web
+    └── multibikes_website_minimal_duration/    # Module de durée minimale sur le site web
 ```
 
 ## Structure d'un module
