@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record model="ir.ui.view" id="product_template_size_caution_form_view">
+        <field name="name">product.template.form.inherit.size.caution</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="website_sale.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <!-- On place les nouveaux champs après le groupe extra_info -->
+            <group name="extra_info" position="after">
+                <group name="bike_size_info" string="Informations de taille" invisible="not rent_ok">
+                    <field name="mb_size_min"/>
+                    <field name="mb_size_max"/>
+                </group>
+                <group name="caution_info" string="Caution" invisible="not rent_ok">
+                    <field name="mb_caution" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                </group>
+            </group>
+        </field>
+    </record>
+</odoo>

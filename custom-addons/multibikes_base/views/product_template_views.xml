@@ -12,6 +12,8 @@
                 <field name="mb_caution" widget="monetary" invisible="not rent_ok"/>
                 <field name="mb_value_in_case_of_theft" widget="monetary" invisible="not rent_ok"/>
                 <field name="mb_currency_id" invisible="1"/>
+                <field name="mb_size_min" invisible="not rent_ok"/>
+                <field name="mb_size_max" invisible="not rent_ok"/>
             </xpath>
         </field>
     </record>

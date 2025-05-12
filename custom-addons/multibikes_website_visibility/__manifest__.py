@@ -15,5 +15,7 @@
     'license': 'LGPL-3',
     'data': [
     'views/product_pricing_views.xml',
+    'views/product_template_views.xml',
+    'views/product_template_template.xml'
     ],
 }
