@@ -33,3 +33,14 @@ class ProductTemplate(models.Model):
         default=lambda self: self.env.company.currency_id,
         help="Devise utilisée pour les montants de caution et de valeur en cas de vol."
     )
+
+    # Champs pour la taille
+    mb_size_min = fields.Float(
+        string='Taille minimale',
+        help="Taille minimale du cycliste en centimètres."
+    )
+
+    mb_size_max = fields.Float(
+        string='Taille maximale',
+        help="Taille maximale du cycliste en centimètres."
+    )
