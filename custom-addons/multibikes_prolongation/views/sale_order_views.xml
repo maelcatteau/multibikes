@@ -125,4 +125,64 @@
             </xpath>
         </field>
     </record>
+
+
+    <record id="rental_extension_kanban_view" model="ir.ui.view">
+        <field name="name">rental.extension.kanban</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_renting.rental_order_view_kanban"/>
+        <field name="arch" type="xml">
+            <!-- 1. Ajouter les champs nécessaires pour les badges de prolongation -->
+            <field name="has_rented_products" position="after">
+                <field name="mb_is_rental_extension"/>
+                <field name="mb_extension_count"/>
+            </field>
+
+            <!-- 2. Masquer le champ state original qui est modifié par la vue parente.
+                Nous allons le réafficher dans notre bloc personnalisé à droite. -->
+            <xpath expr="//footer/field[@name='state']" position="attributes">
+                <attribute name="invisible">1</attribute>
+                <!-- On le rend invisible car on va le replacer nous-même -->
+            </xpath>
+
+            <!-- 3. Remplacer le champ rental_status ajouté par la vue parente.
+                Ce champ est ajouté avec `ms-auto` (poussé à droite).
+                Nous le remplaçons par un conteneur qui inclura les badges ET les statuts (state et rental_status),
+                tout en conservant l'alignement à droite (`ms-auto`). -->
+            <xpath expr="//footer/field[@name='rental_status']" position="replace">
+                <!-- Conteneur pour tous les éléments de droite (badges + statuts) -->
+                <div class="d-flex flex-column align-items-end ms-auto">
+
+                    <!-- Badge "Prolongation" -->
+                    <span t-if="record.mb_is_rental_extension.raw_value"
+                        class="badge rounded-pill text-bg-info mb-1">
+                        <i class="fa fa-refresh"/> Prolongation
+                    </span>
+
+                    <!-- Badge "Prolongé" -->
+                    <span t-if="record.mb_extension_count.raw_value > 0 and !record.mb_is_rental_extension.raw_value"
+                        class="badge rounded-pill text-bg-success mb-1">
+                        <i class="fa fa-clock-o"/> Prolongé (<t t-esc="record.mb_extension_count.value"/>)
+                    </span>
+
+                    <!-- Réafficher le champ 'state' ici, en reprenant la logique d'invisibilité de la vue parente -->
+                    <field name="state" widget="label_selection"
+                        invisible="state == 'sale' and rental_status"
+                        options="{'classes': {'draft': 'default', 'sent': 'primary', 'sale': 'success', 'done': 'warning', 'cancel': 'danger'}}"
+                        class="mt-1"/> <!-- Optionnel: Ajouter une petite marge au dessus si nécessaire -->
+
+                    <!-- Réafficher le champ 'rental_status' ici (celui qu'on remplace),
+                        en reprenant sa logique d'invisibilité et ses options -->
+                    <field name="rental_status" widget="label_selection"
+                        invisible="state != 'sale' or not rental_status or not has_rented_products"
+                        options="{'classes': {'pickup': 'success', 'return': 'warning', 'returned': 'default'}}"/>
+                </div>
+            </xpath>
+
+            <!-- Note: Le bloc //footer/div contenant le nom et la date reste inchangé par rapport à la vue parente,
+                car nous n'y touchons pas ici. Seuls les éléments qui venaient *après* ce bloc sont modifiés. -->
+
+        </field>
+    </record>
+
 </odoo> 
