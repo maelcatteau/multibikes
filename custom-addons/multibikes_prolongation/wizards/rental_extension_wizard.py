@@ -11,6 +11,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from datetime import datetime, timedelta
 import logging
+import pytz
 
 _logger = logging.getLogger(__name__)
 
@@ -114,19 +115,7 @@ class RentalExtensionWizard(models.TransientModel):
         }
     
     def _prepare_extension_line_values(self, extension_order, wizard_line):
-        """
-        Prépare les valeurs pour les lignes de la commande de prolongation
-        ----------------------------------------------------------------
-        Définit les informations de produit, quantité, prix, etc. pour chaque
-        ligne de la commande de prolongation.
-        
-        Args:
-            extension_order: La commande de prolongation (peut être vide lors de la préparation)
-            wizard_line: La ligne du wizard contenant les informations de l'article à prolonger
-            
-        Returns:
-            dict: Valeurs pour la création de la ligne de commande
-        """
+
         original_line = wizard_line.mb_order_line_id
         product = original_line.product_id
         
@@ -141,14 +130,22 @@ class RentalExtensionWizard(models.TransientModel):
         # Calcul du prix selon la catégorie de produit
         price_unit = self._calculate_extension_price(product, original_line, duration_days)
         
+        # Conversion des dates pour l'affichage dans le fuseau horaire de l'utilisateur
+        user_tz = self.env.user.tz or 'UTC'
+        local_tz = pytz.timezone(user_tz)
+        
+        # Convertir les dates UTC en dates locales pour l'affichage
+        start_date_local = pytz.utc.localize(start_date).astimezone(local_tz)
+        end_date_local = pytz.utc.localize(end_date).astimezone(local_tz)
+        
         _logger.info(
             "Préparation ligne de prolongation: produit=%s, quantité=%s, prix unitaire=%s, "
             "début=%s, fin=%s",
             product.name, wizard_line.mb_quantity, price_unit, 
-            start_date.strftime('%d/%m/%Y %H:%M'), end_date.strftime('%d/%m/%Y %H:%M')
+            start_date_local.strftime('%d/%m/%Y %H:%M'), end_date_local.strftime('%d/%m/%Y %H:%M')
         )
         
-        # Créer les valeurs de ligne sans inclure order_id si extension_order n'est pas encore créé
+        # Utiliser les dates locales pour le nom/description
         line_vals = {
             'product_id': product.id,
             'product_uom_qty': wizard_line.mb_quantity,
@@ -157,11 +154,11 @@ class RentalExtensionWizard(models.TransientModel):
             'discount': 0,
             'name': _("%s - Prolongation du %s au %s") % (
                 product.name,
-                start_date.strftime('%d/%m/%Y %H:%M'),
-                end_date.strftime('%d/%m/%Y %H:%M')
+                start_date_local.strftime('%d/%m/%Y %H:%M'),
+                end_date_local.strftime('%d/%m/%Y %H:%M')
             ),
-            'scheduled_date': start_date,
-            'return_date': end_date,
+            'scheduled_date': start_date,  # Garder la date UTC pour le stockage
+            'return_date': end_date,       # Garder la date UTC pour le stockage
             'is_rental': True,
         }
         
@@ -170,6 +167,7 @@ class RentalExtensionWizard(models.TransientModel):
             line_vals['order_id'] = extension_order.id
             
         return line_vals
+
     
     def _calculate_extension_price(self, product, original_line, duration_days):
         """
