@@ -9,7 +9,7 @@
     """,
     'version': '1.0',
     'category': 'Sales/Rental',
-    'depends': ['sale_renting', 'stock'],
+    'depends': ['sale_renting', 'stock', 'sale_stock'],
     'installable': True,
     'application': False,
     'auto_install': False,

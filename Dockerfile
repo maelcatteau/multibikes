@@ -41,6 +41,11 @@ RUN chown -R odoo:odoo /var/lib/odoo /var/log/odoo /mnt/extra-addons
 # S'assurer que le dossier de configuration est accessible
 RUN mkdir -p /etc/odoo && chown -R odoo:odoo /etc/odoo && chmod 775 /etc/odoo
 
+RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update \
+    && apt-get install -y postgresql-client-15
+
 # Copier le script d'entrée
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
