@@ -355,18 +355,16 @@ class RentalExtensionWizard(models.TransientModel):
         # Créer la nouvelle commande de prolongation
         _logger.info("Création de la commande de prolongation")
         with self.env.cr.savepoint():
-            extension_order = self.env['sale.order'].create(extension_order_vals)
-            # Modifier le nom pour éviter les sauts dans la séquence 
-            # (ne fonctionnera que si le format est bien SOxxxxx)
-            if extension_order.name and extension_order.mb_original_rental_id:
-                # Essayer de mettre le nom sous forme [Original]-P[Numéro d'extension]
-                try:
-                    # Utiliser le même préfixe que la commande originale et y ajouter un suffixe d'extension
-                    extension_order.name = f"{original_order.name}-P{extension_number}"
-                    _logger.info(f"Nom de la commande de prolongation modifié: {extension_order.name}")
-                except Exception as e:
-                    _logger.warning(f"Impossible de modifier le nom de la commande de prolongation: {e}")
-                    # Si ça échoue, on garde le comportement standard
+            # Utilisez la méthode suivante pour éviter les sauts dans la séquence
+            extension_order = self.env['sale.order'].with_context(ignore_sequence=True).create(extension_order_vals)
+
+            # Ensuite, définissez le nom manuellement
+            original_order = self.mb_order_id
+            extension_number = self.env['sale.order'].search_count([
+                ('mb_original_rental_id', '=', original_order.id),
+                ('id', '!=', original_order.id),  # Ne pas compter le SO original
+            ])
+            extension_order.name = f"{original_order.name}-P{extension_number}"
         
         _logger.info("Commande de prolongation créée: %s", extension_order.name)
 

@@ -238,5 +238,19 @@ class SaleOrder(models.Model):
             'domain': [('mb_original_rental_id', '=', self.id)],
             'context': {'create': False}
         }
-
-
+    
+    @api.model
+    def create(self, vals):
+        """Surcharge pour gérer correctement les noms des prolongations"""
+        if self._context.get('ignore_sequence') and not vals.get('name'):
+            # Si nous ignorons la séquence pour une prolongation,
+            # utiliser un nom temporaire qui sera modifié après
+            vals['name'] = 'TEMP'
+        else:
+            # Comportement normal d'Odoo pour générer le numéro de séquence
+            if not vals.get('name') and vals.get('company_id'):
+                vals['name'] = self.env['ir.sequence'].with_context(force_company=vals['company_id']).next_by_code('sale.order') or _('New')
+            if not vals.get('name'):
+                vals['name'] = self.env['ir.sequence'].next_by_code('sale.order') or _('New')
+        
+        return super(SaleOrder, self).create(vals)
