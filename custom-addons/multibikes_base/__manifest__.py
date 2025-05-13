@@ -13,7 +13,7 @@
     'author': 'Maël CATTEAU',
     
     # Dépendances du module
-    'depends': ['base', 'sale', 'sale_renting', 'website_sale_renting'],
+    'depends': ['base', 'sale', 'sale_renting'],
     
     # Fichiers de données (vues, menus, actions, etc.)
     'data': [
