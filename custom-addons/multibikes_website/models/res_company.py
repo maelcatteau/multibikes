@@ -42,31 +42,49 @@ class ResCompany(models.Model):
         if not reference_date:
             reference_date = fields.Date.today()
             
-        _logger.info("Vérification de la durée minimale pour la date: %s", reference_date)
+        _logger.info("Vérification de la durée minimale pour la date: %s (type: %s)", reference_date, type(reference_date))
 
         # Vérifier la période 1 si les dates sont définies
-        if (self.mb_renting_period1_start_date and self.mb_renting_period1_end_date and 
-            self.mb_renting_period1_start_date <= reference_date <= self.mb_renting_period1_end_date):
-            _logger.info("Période 1 applicable: %s jours en %s", 
-                        self.mb_renting_period1_minimal_time_duration, 
-                        self.mb_renting_period1_minimal_time_unit)
-            return (self.mb_renting_period1_minimal_time_duration, self.mb_renting_period1_minimal_time_unit)
-            
+        if (self.mb_renting_period1_start_date and self.mb_renting_period1_end_date):
+            _logger.info("Période 1 - Début: %s (type: %s), Fin: %s (type: %s)", 
+                        self.mb_renting_period1_start_date, type(self.mb_renting_period1_start_date),
+                        self.mb_renting_period1_end_date, type(self.mb_renting_period1_end_date))
+            try:
+                if self.mb_renting_period1_start_date <= reference_date <= self.mb_renting_period1_end_date:
+                    _logger.info("Période 1 applicable: %s jours en %s", 
+                                self.mb_renting_period1_minimal_time_duration, 
+                                self.mb_renting_period1_minimal_time_unit)
+                    return (self.mb_renting_period1_minimal_time_duration, self.mb_renting_period1_minimal_time_unit)
+            except TypeError as e:
+                _logger.error("Erreur de comparaison période 1: %s", str(e))
+                
         # Vérifier la période 2 si les dates sont définies
-        if (self.mb_renting_period2_start_date and self.mb_renting_period2_end_date and 
-            self.mb_renting_period2_start_date <= reference_date <= self.mb_renting_period2_end_date):
-            _logger.info("Période 2 applicable: %s jours en %s", 
-                        self.mb_renting_period2_minimal_time_duration, 
-                        self.mb_renting_period2_minimal_time_unit)
-            return (self.mb_renting_period2_minimal_time_duration, self.mb_renting_period2_minimal_time_unit)
-            
+        if (self.mb_renting_period2_start_date and self.mb_renting_period2_end_date):
+            _logger.info("Période 2 - Début: %s (type: %s), Fin: %s (type: %s)", 
+                        self.mb_renting_period2_start_date, type(self.mb_renting_period2_start_date),
+                        self.mb_renting_period2_end_date, type(self.mb_renting_period2_end_date))
+            try:
+                if self.mb_renting_period2_start_date <= reference_date <= self.mb_renting_period2_end_date:
+                    _logger.info("Période 2 applicable: %s jours en %s", 
+                                self.mb_renting_period2_minimal_time_duration, 
+                                self.mb_renting_period2_minimal_time_unit)
+                    return (self.mb_renting_period2_minimal_time_duration, self.mb_renting_period2_minimal_time_unit)
+            except TypeError as e:
+                _logger.error("Erreur de comparaison période 2: %s", str(e))
+                
         # Vérifier la période 3 si les dates sont définies
-        if (self.mb_renting_period3_start_date and self.mb_renting_period3_end_date and 
-            self.mb_renting_period3_start_date <= reference_date <= self.mb_renting_period3_end_date):
-            _logger.info("Période 3 applicable: %s jours en %s", 
-                        self.mb_renting_period3_minimal_time_duration, 
-                        self.mb_renting_period3_minimal_time_unit)
-            return (self.mb_renting_period3_minimal_time_duration, self.mb_renting_period3_minimal_time_unit)
+        if (self.mb_renting_period3_start_date and self.mb_renting_period3_end_date):
+            _logger.info("Période 3 - Début: %s (type: %s), Fin: %s (type: %s)", 
+                        self.mb_renting_period3_start_date, type(self.mb_renting_period3_start_date),
+                        self.mb_renting_period3_end_date, type(self.mb_renting_period3_end_date))
+            try:
+                if self.mb_renting_period3_start_date <= reference_date <= self.mb_renting_period3_end_date:
+                    _logger.info("Période 3 applicable: %s jours en %s", 
+                                self.mb_renting_period3_minimal_time_duration, 
+                                self.mb_renting_period3_minimal_time_unit)
+                    return (self.mb_renting_period3_minimal_time_duration, self.mb_renting_period3_minimal_time_unit)
+            except TypeError as e:
+                _logger.error("Erreur de comparaison période 3: %s", str(e))
         
         # Si aucune période ne correspond, retourner la valeur par défaut
         _logger.info("Aucune période spéciale applicable, utilisation de la durée par défaut: %s %s", 

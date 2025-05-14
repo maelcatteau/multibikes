@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Template pour afficher les tailles et caution sur la page produit -->
+    <template id="product_size_caution_info" inherit_id="website_sale.product_price" name="Product Size and Caution Info">
+        <!-- Position juste avant le prix -->
+        <xpath expr="//div[@itemprop='offers']" position="before">
+            <div t-if="product.rent_ok and (product.mb_size_min or product.mb_size_max or product.mb_caution)" class="mt-4 mb-4">
+                <!-- Séparateur pour ajouter de l'espace avec la description -->
+                <hr class="mt-3 mb-3"/>
+                
+                <div class="d-flex flex-row justify-content-between">
+                    <!-- Informations de taille -->
+                    <div t-if="product.mb_size_min or product.mb_size_max" class="variant_attribute me-5">
+                        <strong class="attribute_name pe-0" style="border-right: none !important;">TAILLE REQUISE :</strong>
+                        <div class="mt-1">
+                            <span t-if="product.mb_size_min">
+                                Min: <t t-esc="int(product.mb_size_min // 100)"/> m <t t-esc="int(product.mb_size_min % 100)"/>
+                            </span>
+                            <span t-if="product.mb_size_min and product.mb_size_max"> - </span>
+                            <span t-if="product.mb_size_max">
+                                Max: <t t-esc="int(product.mb_size_max // 100)"/> m <t t-esc="int(product.mb_size_max % 100)"/>
+                            </span>
+                        </div>
+                    </div>
+                    <!-- Information de caution -->
+                    <div t-if="product.mb_caution and product.mb_caution > 0" class="variant_attribute">
+                        <strong class="attribute_name pe-0" style="border-right: none !important;">CAUTION :</strong>
+                        <div class="mt-1">
+                            <span t-field="product.mb_caution" t-options='{"widget": "monetary", "display_currency": website.currency_id}'/>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Séparateur pour ajouter de l'espace avec le prix -->
+                <hr class="mt-3"/>
+            </div>
+        </xpath>
+    </template>
+</odoo>

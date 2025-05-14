@@ -28,7 +28,7 @@
     ],
     'assets': {
         'web.assets_frontend': [
-            'multibikes_website/static/src/js/rental_contraints.js',
+            'multibikes_website/static/src/js/rental_constraints.js',
         ],
     },
     'author': 'MultiBikes',

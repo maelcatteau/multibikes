@@ -3,8 +3,8 @@
 from odoo import http
 from odoo.http import request
 from odoo.addons.website_sale_renting.controllers.main import WebsiteSaleRenting
-from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
 from datetime import datetime
+import logging
 
 class WebsiteSaleRentingCustom(WebsiteSaleRenting):
     @http.route('/rental/product/constraints', type='json', auth="public", methods=['POST'], website=True)
@@ -14,36 +14,34 @@ class WebsiteSaleRentingCustom(WebsiteSaleRenting):
         Si aucune date n'est fournie dans la requête, utilise la date actuelle.
         """
         from odoo import fields
-        import logging
         _logger = logging.getLogger(__name__)
         
         # Log de débogage pour voir ce qui est reçu
         _logger.info("Requête de contraintes de location reçue avec données: %s", post)
         
         reference_date_str = post.get('start_date')
-        reference_date = fields.Date.today()  # Valeur par défaut
+        reference_date = fields.Date.today()  # Valeur par défaut (date actuelle)
         
         if reference_date_str:
             _logger.info("Date de référence reçue: %s", reference_date_str)
-            try:
-                # Essai avec le format standard
-                reference_date = datetime.strptime(reference_date_str, DEFAULT_SERVER_DATE_FORMAT).date()
-            except ValueError:
-                # Si échec, essayons d'autres formats courants
-                formats_to_try = [
-                    '%Y-%m-%dT%H:%M:%S',  # Format ISO avec T
-                    '%Y-%m-%d %H:%M:%S',  # Format avec espace
-                    '%Y-%m-%d',           # Date simple
-                ]
-                
-                for date_format in formats_to_try:
-                    try:
-                        _logger.info("Essai de conversion avec format: %s", date_format)
-                        reference_date = datetime.strptime(reference_date_str, date_format).date()
-                        _logger.info("Format reconnu: %s", date_format)
-                        break
-                    except ValueError:
-                        continue
+            # Liste des formats à essayer, incluant le format standard d'Odoo après serializeDateTime
+            formats_to_try = [
+                '%Y-%m-%d %H:%M:%S',  # Format standard Odoo (après serializeDateTime)
+                '%Y-%m-%dT%H:%M:%S',  # Format ISO avec T
+                '%Y-%m-%dT%H:%M:%S.%fZ',  # Format ISO complet avec millisecondes et Z
+                '%Y-%m-%d',  # Date simple
+            ]
+            
+            for date_format in formats_to_try:
+                try:
+                    _logger.info("Essai de conversion avec format: %s", date_format)
+                    reference_date = datetime.strptime(reference_date_str, date_format).date()
+                    _logger.info("Format reconnu: %s, Date convertie: %s", date_format, reference_date)
+                    break
+                except ValueError:
+                    continue
+            else:
+                _logger.warning("Aucun format ne correspond à la date reçue: %s, utilisation de la date par défaut: %s", reference_date_str, reference_date)
         
         _logger.info("Date de référence utilisée pour le calcul: %s", reference_date)
         

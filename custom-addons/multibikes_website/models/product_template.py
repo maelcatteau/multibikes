@@ -15,7 +15,6 @@ class ProductTemplate(models.Model):
         """
         Surcharge de la méthode pour :
         1. Filtrer les tarifs affichés dans la pricing_table en fonction de mb_website_published
-        2. Ajouter la durée minimale dynamique basée sur la date
         """
         res = super()._get_additionnal_combination_info(product_or_template, quantity, date, website)
 
@@ -27,34 +26,17 @@ class ProductTemplate(models.Model):
         pricelist = website.pricelist_id
         ProductPricing = self.env['product.pricing']
 
-        # Récupérer les dates du contexte ou de la commande
-        order = website.sale_get_order() if website and request else self.env['sale.order']
-        start_date_str = self.env.context.get('start_date')
-        start_date = start_date_str or order.rental_start_date
-
-        _logger.info("Calcul de la durée minimale pour date: %s", start_date)
-
-        # Calcul de la durée minimale dynamique
-        if start_date:
-            try:
-                if isinstance(start_date, str):
-                    from datetime import datetime
-                    start_date = datetime.strptime(start_date.split(" ")[0], "%Y-%m-%d").date()
-                minimal_duration, minimal_unit = self.env.company.get_dynamic_renting_minimal_duration(start_date)
-                _logger.info("Durée minimale calculée: %s %s", minimal_duration, minimal_unit)
-                res['renting_minimal_duration'] = minimal_duration
-                res['renting_minimal_unit'] = minimal_unit
-            except Exception as e:
-                _logger.error("Erreur lors du calcul de la durée minimale: %s", e)
-
         # Obtenir le tarif par défaut
         pricing = ProductPricing._get_first_suitable_pricing(product_or_template, pricelist)
         if not pricing:
             return res
 
-        # Détermination des dates et de la durée de location
+        # Récupérer les dates du contexte ou de la commande
+        order = website.sale_get_order() if website and request else self.env['sale.order']
         start_date = self.env.context.get('start_date') or order.rental_start_date
         end_date = self.env.context.get('end_date') or order.rental_return_date
+
+        # Détermination des dates et de la durée de location
         if start_date and end_date:
             current_pricing = product_or_template._get_best_pricing_rule(
                 start_date=start_date,
