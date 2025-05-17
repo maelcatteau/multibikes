@@ -13,6 +13,8 @@
     'version': '1.0',
     'category': 'Sales/Rental',
     'depends': [
+        'web',
+        'website_sale',
         'website_sale_renting',
         'multibikes_base'
     ],
@@ -29,8 +31,8 @@
     'assets': {
         'web.assets_frontend': [
             'multibikes_website/static/src/js/multibikes_website_rental_constraints.js',
-            'multibikes_website/static/src/js/multibikes_website_renting_mixin_constraints.js',
             'multibikes_website/static/src/js/multibikes_website_daterangepicker.js',
+            'multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js',
         ],
     },
     'author': 'MultiBikes',
