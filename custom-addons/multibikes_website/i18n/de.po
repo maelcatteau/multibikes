@@ -18,42 +18,42 @@ msgstr ""
 
 #. module: multibikes_website
 #: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-#, javascript-format
+#. odoo-javascript
 msgid "You cannot pick up your rental on that day of the week."
 msgstr "Sie können Ihre Anmietung an diesem Wochentag nicht abholen."
 
 #. module: multibikes_website
 #: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-#, javascript-format
+#. odoo-javascript
 msgid "You cannot return your rental on that day of the week."
 msgstr "Sie können Ihre Anmietung an diesem Wochentag nicht zurückgeben."
 
 #. module: multibikes_website
 #: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-#, javascript-format
+#. odoo-javascript
 msgid "The return date should be after the pickup date."
 msgstr "Das Rückgabedatum muss nach dem Abholdatum liegen."
 
 #. module: multibikes_website
 #: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-#, javascript-format
+#. odoo-javascript
 msgid "The pickup date cannot be in the past."
 msgstr "Das Abholdatum darf nicht in der Vergangenheit liegen."
 
 #. module: multibikes_website
 #: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-#, javascript-format
-msgid "The rental duration is too short. The minimum rental period is %s between %s and %s."
-msgstr "Die Mietdauer ist zu kurz. Die Mindestmietdauer beträgt %s zwischen %s und %s."
+#. odoo-javascript
+msgid "The rental duration is too short. The minimum rental period is %(duration)s between %(start)s and %(end)s."
+msgstr "Die Mietdauer ist zu kurz. Die Mindestmietdauer beträgt %(duration)s zwischen %(start)s und %(end)s."
 
 #. module: multibikes_website
 #: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-#, javascript-format
-msgid "The rental duration is too short. The minimum rental period is %s."
-msgstr "Die Mietdauer ist zu kurz. Die Mindestmietdauer beträgt %s."
+#. odoo-javascript
+msgid "The rental duration is too short. The minimum rental period is %(duration)s."
+msgstr "Die Mietdauer ist zu kurz. Die Mindestmietdauer beträgt %(duration)s."
 
 #. module: multibikes_website
 #: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-#, javascript-format
+#. odoo-javascript
 msgid "Please select a rental period."
 msgstr "Bitte wählen Sie eine Mietdauer aus."
