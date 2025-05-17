@@ -8,26 +8,26 @@ class ResCompany(models.Model):
     mb_renting_period1_end_date = fields.Date(string="Date fin période 1", default=lambda self: fields.Date.today().replace(month=4, day=30))
     mb_renting_period1_minimal_time_duration = fields.Integer(string="Durée minimale période 1", default=1)
     mb_renting_period1_minimal_time_unit = fields.Selection([
-        ('hour', 'Heures'),
-        ('day', 'Jours'),
-        ('week', 'Semaine')], string="Unité de durée période 1", default='day')
+        ('hour', 'Hour'),
+        ('day', 'Day'),
+        ('week', 'Week')], string="Unité de durée période 1", default='day')
     
     # Ajoutez les périodes 2 et 3 comme dans votre code
     mb_renting_period2_start_date = fields.Date(string="Date début période 2", default=lambda self: fields.Date.today().replace(month=5, day=1))
     mb_renting_period2_end_date = fields.Date(string="Date fin période 2", default=lambda self: fields.Date.today().replace(month=8, day=31))
     mb_renting_period2_minimal_time_duration = fields.Integer(string="Durée minimale période 2", default=1)
     mb_renting_period2_minimal_time_unit = fields.Selection([
-        ('hour', 'Heures'),
-        ('day', 'Jours'),
-        ('week', 'Semaine')], string="Unité de durée période 2", default='day')
+        ('hour', 'Hour'),
+        ('day', 'Day'),
+        ('week', 'Week')], string="Unité de durée période 2", default='day')
     
     mb_renting_period3_start_date = fields.Date(string="Date début période 3", default=lambda self: fields.Date.today().replace(month=9, day=1))
     mb_renting_period3_end_date = fields.Date(string="Date fin période 3", default=lambda self: fields.Date.today().replace(month=12, day=31))
     mb_renting_period3_minimal_time_duration = fields.Integer(string="Durée minimale période 3", default=1)
     mb_renting_period3_minimal_time_unit = fields.Selection([
-        ('hour', 'Heures'),
-        ('day', 'Jours'),
-        ('week', 'Semaine')], string="Unité de durée période 3", default='day')
+        ('hour', 'Hour'),
+        ('day', 'Day'),
+        ('week', 'Week')], string="Unité de durée période 3", default='day')
 
     def get_dynamic_renting_minimal_duration(self, reference_date=None):
         """

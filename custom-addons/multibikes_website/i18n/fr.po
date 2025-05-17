@@ -4,63 +4,262 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0\n"
+"Project-Id-Version: Odoo Server 18.0+e-20250505\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-17 00:00+0000\n"
-"PO-Revision-Date: 2025-05-17 00:00+0000\n"
+"POT-Creation-Date: 2025-05-17 13:32+0000\n"
+"PO-Revision-Date: 2025-05-17 13:32+0000\n"
 "Last-Translator: \n"
-"Language-Team: French\n"
-"Language: fr\n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
 
 #. module: multibikes_website
-#. odoo-javascript
-#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-msgid "You cannot pick up your rental on that day of the week."
+#: model_terms:ir.ui.view,arch_db:multibikes_website.res_config_settings_view_form_rental_periods
+msgid "<span class=\"o_form_label\">Période 1 (Avant saison)</span>"
 msgstr ""
-"Vous ne pouvez pas récupérer votre location ce jour de la semaine."
 
 #. module: multibikes_website
-#. odoo-javascript
-#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-msgid "You cannot return your rental on that day of the week."
+#: model_terms:ir.ui.view,arch_db:multibikes_website.res_config_settings_view_form_rental_periods
+msgid "<span class=\"o_form_label\">Période 2 (Saison)</span>"
 msgstr ""
-"Vous ne pouvez pas retourner votre location ce jour de la semaine."
 
 #. module: multibikes_website
-#. odoo-javascript
-#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-msgid "The return date should be after the pickup date."
+#: model_terms:ir.ui.view,arch_db:multibikes_website.res_config_settings_view_form_rental_periods
+msgid "<span class=\"o_form_label\">Période 3 (Après saison)</span>"
 msgstr ""
-"La date de retour doit être postérieure à la date de récupération."
 
 #. module: multibikes_website
-#. odoo-javascript
-#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-msgid "The pickup date cannot be in the past."
-msgstr ""
-"La date de récupération ne peut pas être dans le passé."
+#: model_terms:ir.ui.view,arch_db:multibikes_website.product_size_caution_info
+msgid ""
+"<strong class=\"attribute_name pe-0\" style=\"border-right: none "
+"!important;\">DEPOSIT :</strong>"
+msgstr "CAUTION :"
 
 #. module: multibikes_website
-#. odoo-javascript
-#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-msgid "The rental duration is too short. The minimum rental period is %(duration)s between %(start)s and %(end)s."
-msgstr ""
-"La durée de la location est trop courte. La période minimale de location est de %(duration)s entre %(start)s et %(end)s."
+#: model_terms:ir.ui.view,arch_db:multibikes_website.product_size_caution_info
+msgid ""
+"<strong class=\"attribute_name pe-0\" style=\"border-right: none "
+"!important;\">REQUIRED SIZE :</strong>"
+msgstr "TAILLE REQUISE :"
 
 #. module: multibikes_website
-#. odoo-javascript
-#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
-msgid "The rental duration is too short. The minimum rental period is %(duration)s."
+#: model_terms:ir.ui.view,arch_db:multibikes_website.product_template_size_caution_form_view
+msgid "Caution"
 msgstr ""
-"La durée de la location est trop courte. La période minimale de location est de %(duration)s."
+
+#. module: multibikes_website
+#: model:ir.model,name:multibikes_website.model_res_company
+msgid "Companies"
+msgstr "Sociétés"
+
+#. module: multibikes_website
+#: model:ir.model,name:multibikes_website.model_res_config_settings
+msgid "Config Settings"
+msgstr "Paramètres de configuration"
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period1_start_date
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period1_start_date
+msgid "Date début période 1"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period2_start_date
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period2_start_date
+msgid "Date début période 2"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period3_start_date
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period3_start_date
+msgid "Date début période 3"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period1_end_date
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period1_end_date
+msgid "Date fin période 1"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period2_end_date
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period2_end_date
+msgid "Date fin période 2"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period3_end_date
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period3_end_date
+msgid "Date fin période 3"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields.selection,name:multibikes_website.selection__res_company__mb_renting_period1_minimal_time_unit__day
+#: model:ir.model.fields.selection,name:multibikes_website.selection__res_company__mb_renting_period2_minimal_time_unit__day
+#: model:ir.model.fields.selection,name:multibikes_website.selection__res_company__mb_renting_period3_minimal_time_unit__day
+msgid "Day"
+msgstr "Jour"
+
+#. module: multibikes_website
+#: model_terms:ir.ui.view,arch_db:multibikes_website.res_config_settings_view_form_rental_periods
+msgid "Du"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period1_minimal_time_duration
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period1_minimal_time_duration
+msgid "Durée minimale période 1"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period2_minimal_time_duration
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period2_minimal_time_duration
+msgid "Durée minimale période 2"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period3_minimal_time_duration
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period3_minimal_time_duration
+msgid "Durée minimale période 3"
+msgstr ""
+
+#. module: multibikes_website
+#: model_terms:ir.ui.view,arch_db:multibikes_website.res_config_settings_view_form_rental_periods
+msgid "Durée minimum"
+msgstr ""
+
+#. module: multibikes_website
+#: model_terms:ir.ui.view,arch_db:multibikes_website.res_config_settings_view_form_rental_periods
+msgid "Durées minimales par période"
+msgstr ""
+
+#. module: multibikes_website
+#: model_terms:ir.ui.view,arch_db:multibikes_website.res_config_settings_view_form_rental_periods
+msgid "Définir la deuxième période et la durée minimale associée"
+msgstr ""
+
+#. module: multibikes_website
+#: model_terms:ir.ui.view,arch_db:multibikes_website.res_config_settings_view_form_rental_periods
+msgid "Définir la première période et la durée minimale associée"
+msgstr ""
+
+#. module: multibikes_website
+#: model_terms:ir.ui.view,arch_db:multibikes_website.res_config_settings_view_form_rental_periods
+msgid "Définir la troisième période et la durée minimale associée"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields.selection,name:multibikes_website.selection__res_company__mb_renting_period1_minimal_time_unit__hour
+#: model:ir.model.fields.selection,name:multibikes_website.selection__res_company__mb_renting_period2_minimal_time_unit__hour
+#: model:ir.model.fields.selection,name:multibikes_website.selection__res_company__mb_renting_period3_minimal_time_unit__hour
+msgid "Hour"
+msgstr "Heure"
+
+#. module: multibikes_website
+#: model_terms:ir.ui.view,arch_db:multibikes_website.product_template_size_caution_form_view
+msgid "Informations de taille"
+msgstr ""
+
+#. module: multibikes_website
+#: model_terms:ir.ui.view,arch_db:multibikes_website.product_size_caution_info
+msgid "Max:"
+msgstr ""
+
+#. module: multibikes_website
+#: model_terms:ir.ui.view,arch_db:multibikes_website.product_size_caution_info
+msgid "Min:"
+msgstr ""
 
 #. module: multibikes_website
 #. odoo-javascript
 #: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
 msgid "Please select a rental period."
+msgstr "Merci de sélectionner une période de location"
+
+#. module: multibikes_website
+#: model:ir.model,name:multibikes_website.model_product_pricing
+msgid "Pricing rule of rental products"
+msgstr "Règle de tarification des produits de location"
+
+#. module: multibikes_website
+#: model:ir.model,name:multibikes_website.model_product_template
+msgid "Product"
+msgstr "Produit"
+
+#. module: multibikes_website
+#. odoo-javascript
+#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
+msgid "The pickup date cannot be in the past."
+msgstr "La date de départ ne peut pas être dans le passé"
+
+#. module: multibikes_website
+#. odoo-javascript
+#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
+msgid "The rental duration is too short. The minimum rental period is %s between %s and %s."
+msgstr "La durée de la location est trop courte. La durée miminum de location est %s entre le %s and %s."
+
+#. module: multibikes_website
+#. odoo-javascript
+#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
+msgid "The rental duration is too short. The minimum rental period is %s."
+msgstr "La durée de la location est trop courte. La durée miminum de location est %s "
+
+#. module: multibikes_website
+#. odoo-javascript
+#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
+msgid "The return date should be after the pickup date."
+msgstr "La date de retour doit être après la date de départ"
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period1_minimal_time_unit
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period1_minimal_time_unit
+msgid "Unité de durée période 1"
 msgstr ""
-"Veuillez sélectionner une période de location."
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period2_minimal_time_unit
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period2_minimal_time_unit
+msgid "Unité de durée période 2"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_res_company__mb_renting_period3_minimal_time_unit
+#: model:ir.model.fields,field_description:multibikes_website.field_res_config_settings__mb_renting_period3_minimal_time_unit
+msgid "Unité de durée période 3"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields,field_description:multibikes_website.field_product_pricing__mb_website_published
+msgid "Visible sur le site web"
+msgstr ""
+
+#. module: multibikes_website
+#: model:ir.model.fields.selection,name:multibikes_website.selection__res_company__mb_renting_period1_minimal_time_unit__week
+#: model:ir.model.fields.selection,name:multibikes_website.selection__res_company__mb_renting_period2_minimal_time_unit__week
+#: model:ir.model.fields.selection,name:multibikes_website.selection__res_company__mb_renting_period3_minimal_time_unit__week
+msgid "Week"
+msgstr "Semaine"
+
+#. module: multibikes_website
+#: model:ir.model.fields,help:multibikes_website.field_product_pricing__mb_website_published
+msgid "When checked, this pricing will be visible on the website."
+msgstr "Quand coché, le prix sera visible sur le site web"
+
+#. module: multibikes_website
+#. odoo-javascript
+#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
+msgid "You cannot pick up your rental on that day of the week."
+msgstr "Vous ne pouvez pas faire un départ en location ce jour de la semaine"
+
+#. module: multibikes_website
+#. odoo-javascript
+#: code:addons/multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js:0
+msgid "You cannot return your rental on that day of the week."
+msgstr "Vous ne vous pas faire de retour ce jour de la semaine"
+
+#. module: multibikes_website
+#: model_terms:ir.ui.view,arch_db:multibikes_website.res_config_settings_view_form_rental_periods
+msgid "au"
+msgstr ""

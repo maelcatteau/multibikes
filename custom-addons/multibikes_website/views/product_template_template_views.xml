@@ -11,7 +11,7 @@
                 <div class="d-flex flex-row justify-content-between">
                     <!-- Informations de taille -->
                     <div t-if="product.mb_size_min or product.mb_size_max" class="variant_attribute me-5">
-                        <strong class="attribute_name pe-0" style="border-right: none !important;">TAILLE REQUISE :</strong>
+                        <strong class="attribute_name pe-0" style="border-right: none !important;">REQUIRED SIZE :</strong>
                         <div class="mt-1">
                             <span t-if="product.mb_size_min">
                                 Min: <t t-esc="int(product.mb_size_min // 100)"/> m <t t-esc="int(product.mb_size_min % 100)"/>
@@ -24,7 +24,7 @@
                     </div>
                     <!-- Information de caution -->
                     <div t-if="product.mb_caution and product.mb_caution > 0" class="variant_attribute">
-                        <strong class="attribute_name pe-0" style="border-right: none !important;">CAUTION :</strong>
+                        <strong class="attribute_name pe-0" style="border-right: none !important;">DEPOSIT :</strong>
                         <div class="mt-1">
                             <span t-field="product.mb_caution" t-options='{"widget": "monetary", "display_currency": website.currency_id}'/>
                         </div>

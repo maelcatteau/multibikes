@@ -8,10 +8,6 @@ import { msecPerUnit, unitMessages } from '@website_sale_renting/js/renting_mixi
 
 const { DateTime } = luxon;
 
-console.log('[multibikes_website] Script loaded');
-console.log('[multibikes_website] WebsiteSale available:', !!publicWidget.registry.WebsiteSale);
-console.log('[multibikes_website] WebsiteSaleDaterangePicker available:', !!publicWidget.registry.WebsiteSaleDaterangePicker);
-
 // Patcher le prototype de WebsiteSale pour affecter toutes les instances
 patch(publicWidget.registry.WebsiteSale.prototype, {
     _getInvalidMessage(startDate, endDate, productId = false) {
@@ -39,13 +35,13 @@ patch(publicWidget.registry.WebsiteSale.prototype, {
                             const formatted = sprintf(unitMessages[unit], minimalDuration);
                             if (minStart && minEnd) {
                                 message = _t(
-                                    "The rental duration is too short. The minimum rental period is %(duration)s between %(start)s and %(end)s.",
-                                    { duration: formatted, start: minStart, end: minEnd }
+                                    "The rental duration is too short. The minimum rental period is %s between %s and %s.",
+                                    sprintf(formatted, minStart, minEnd)
                                 );
                             } else {
                                 message = _t(
-                                    "The rental duration is too short. The minimum rental period is %(duration)s.",
-                                    { duration: formatted }
+                                    "The rental duration is too short. The minimum rental period is %s.",
+                                    sprintf(formatted)
                                 );
                             }
                         }
@@ -88,13 +84,13 @@ if (publicWidget.registry.WebsiteSaleDaterangePicker) {
                                 const formatted = sprintf(unitMessages[unit], minimalDuration);
                                 if (minStart && minEnd) {
                                     message = _t(
-                                        "The rental duration is too short. The minimum rental period is %(duration)s between %(start)s and %(end)s.",
-                                        { duration: formatted, start: minStart, end: minEnd }
+                                        "The rental duration is too short. The minimum rental period is %s between %s and %s.",
+                                        sprintf(formatted, minStart, minEnd)
                                     );
                                 } else {
                                     message = _t(
-                                        "The rental duration is too short. The minimum rental period is %(duration)s.",
-                                        { duration: formatted }
+                                        "The rental duration is too short. The minimum rental period is %s.",
+                                        sprintf(formatted)
                                     );
                                 }
                             }
