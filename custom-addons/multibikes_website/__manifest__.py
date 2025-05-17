@@ -23,6 +23,7 @@
     'auto_install': False,
     'license': 'LGPL-3',
     'data': [
+        'security/ir.model.access.csv',
         'views/res_config_settings_views.xml',
         'views/product_pricing_views.xml',
         'views/product_template_views.xml',

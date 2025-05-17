@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_rental_extension_wizard_user,rental.extension.wizard.user,model_mb_renting_day_config,sales_team.group_sale_salesman,1,1,1,1
+access_rental_extension_wizard_line_user,rental.extension.wizard.line.user,model_mb_renting_period,sales_team.group_sale_salesman,1,1,1,1
