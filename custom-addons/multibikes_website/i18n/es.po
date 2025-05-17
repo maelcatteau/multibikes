@@ -1,0 +1,59 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* multibikes_website
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-05-17 00:00+0000\n"
+"PO-Revision-Date: 2025-05-17 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: multibikes_website
+#: code:addons/multibikes_website/static/src/js/website_sale.js:0
+#, javascript-format
+msgid "You cannot pick up your rental on that day of the week."
+msgstr "No puede recoger su alquiler en ese día de la semana."
+
+#. module: multibikes_website
+#: code:addons/multibikes_website/static/src/js/website_sale.js:0
+#, javascript-format
+msgid "You cannot return your rental on that day of the week."
+msgstr "No puede devolver su alquiler en ese día de la semana."
+
+#. module: multibikes_website
+#: code:addons/multibikes_website/static/src/js/website_sale.js:0
+#, javascript-format
+msgid "The return date should be after the pickup date."
+msgstr "La fecha de devolución debe ser posterior a la fecha de recogida."
+
+#. module: multibikes_website
+#: code:addons/multibikes_website/static/src/js/website_sale.js:0
+#, javascript-format
+msgid "The pickup date cannot be in the past."
+msgstr "La fecha de recogida no puede estar en el pasado."
+
+#. module: multibikes_website
+#: code:addons/multibikes_website/static/src/js/website_sale.js:0
+#, javascript-format
+msgid "The rental duration is too short. The minimum rental period is %s between %s and %s."
+msgstr "La duración del alquiler es demasiado corta. El período mínimo de alquiler es de %s entre %s y %s."
+
+#. module: multibikes_website
+#: code:addons/multibikes_website/static/src/js/website_sale.js:0
+#, javascript-format
+msgid "The rental duration is too short. The minimum rental period is %s."
+msgstr "La duración del alquiler es demasiado corta. El período mínimo de alquiler es de %s."
+
+#. module: multibikes_website
+#: code:addons/multibikes_website/static/src/js/website_sale.js:0
+#, javascript-format
+msgid "Please select a rental period."
+msgstr "Por favor, seleccione un período de alquiler."
