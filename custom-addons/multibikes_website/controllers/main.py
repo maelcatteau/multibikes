@@ -44,7 +44,7 @@ class WebsiteSaleRentingCustom(WebsiteSaleRenting):
         
         weekdays = request.env.company._get_renting_forbidden_days()
         response = {
-            'renting_unavailability_days': {day: day in weekdays for day in range(1, 8)},  # Corrigé 'renting_unavailabity_days' en 'renting_unavailability_days'
+            'renting_unavailabity_days': {day: day in weekdays for day in range(1, 8)},
             'renting_minimal_time': {
                 'duration': minimal_duration,
                 'unit': minimal_unit,
