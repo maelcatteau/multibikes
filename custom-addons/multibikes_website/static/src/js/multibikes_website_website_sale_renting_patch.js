@@ -11,7 +11,6 @@ const { DateTime } = luxon;
 // Patcher le prototype de WebsiteSale pour affecter toutes les instances
 patch(publicWidget.registry.WebsiteSale.prototype, {
     _getInvalidMessage(startDate, endDate, productId = false) {
-        console.log('[multibikes_website] override _getInvalidMessage in WebsiteSale');
         let message;
         if (!this.rentingUnavailabilityDays || !this.rentingMinimalTime) {
             return;
@@ -65,7 +64,6 @@ patch(publicWidget.registry.WebsiteSale.prototype, {
 if (publicWidget.registry.WebsiteSaleDaterangePicker) {
     patch(publicWidget.registry.WebsiteSaleDaterangePicker.prototype, {
         _getInvalidMessage(startDate, endDate, productId = false) {
-            console.log('[multibikes_website] override _getInvalidMessage in WebsiteSaleDaterangePicker');
             let message;
             if (!this.rentingUnavailabilityDays || !this.rentingMinimalTime) {
                 return;
@@ -114,5 +112,4 @@ if (publicWidget.registry.WebsiteSaleDaterangePicker) {
             return message;
         },
     });
-    console.log('[multibikes_website] Patch applied to WebsiteSaleDaterangePicker prototype');
 }

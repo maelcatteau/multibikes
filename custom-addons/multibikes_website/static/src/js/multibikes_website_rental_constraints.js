@@ -31,16 +31,11 @@ WebsiteSale.include({
      * @private
      */
     _updateRentalConstraints: async function ($parent) {
-        console.log('[WebsiteSale] _updateRentalConstraints appelé');
         
         const rentingDates = this._getRentingDates();
         const startDate = rentingDates.start_date;
         const productId = this._getProductId($parent.closest('form'));
         
-        console.log('[WebsiteSale] Données initiales:', { 
-            startDate: startDate || 'non défini',
-            productId: productId || 'non défini'
-        });
 
         if (!startDate || !productId) {
             console.warn("[WebsiteSale] Cannot update rental constraints: missing start date or product ID");
@@ -50,18 +45,19 @@ WebsiteSale.include({
         // Formater la date pour le backend
         let formattedStartDate;
         try {
-            if (typeof startDate === 'string') {
-                formattedStartDate = startDate;
-            } else if (startDate instanceof Date) {
-                formattedStartDate = startDate.toISOString();
+            if (startDate && startDate.isLuxonDateTime) {
+                // Utiliser l'API Luxon pour obtenir une chaîne ISO
+                console.log('[WebsiteSale] Start date is of type luxon datetime:', startDate);
+                formattedStartDate = startDate.toISO();
+                console.log('[WebsiteSale] Formatted start date:', formattedStartDate);
             } else {
+                console.log('[WebsiteSale] Start date is of unknown type:', startDate);
                 formattedStartDate = new Date(startDate).toISOString();
+                
             }
-            console.log('[WebsiteSale] Date formatée:', formattedStartDate);
         } catch (e) {
             console.error("[WebsiteSale] Error formatting start date:", e);
             formattedStartDate = startDate.toString();
-            console.log('[WebsiteSale] Date formatée (fallback):', formattedStartDate);
         }
 
         try {
@@ -84,12 +80,9 @@ WebsiteSale.include({
                     websiteTz: constraints.website_tz || 'UTC'
                 };
                 
-                console.log('[WebsiteSale] Déclenchement événement renting_constraints_changed avec:', eventData);
-                
                 // Déclencher l'événement DOM avec la structure exacte du code original
                 $('.oe_website_sale').trigger('renting_constraints_changed', eventData);
-                
-                console.log('[WebsiteSale] Événement déclenché');
+                console.log('[WebsiteSale] Événement déclenché avec succès, avec les données:', eventData);
             } else {
                 console.warn('[WebsiteSale] Aucune contrainte reçue du serveur');
             }

@@ -11,11 +11,9 @@ publicWidget.registry.WebsiteSaleDaterangePicker = WebsiteSaleDaterangePicker.ex
      * @override
      */
     start: async function () {
-        console.log('[DaterangePicker] Initialisation du widget');
         await this._super.apply(this, arguments);
         // Attacher un écouteur pour les mises à jour des contraintes
         $('.oe_website_sale').on('renting_constraints_changed', this._onRentingConstraintsChanged.bind(this));
-        console.log('[DaterangePicker] Écouteur pour renting_constraints_changed attaché');
     },
 
     /**
@@ -24,7 +22,6 @@ publicWidget.registry.WebsiteSaleDaterangePicker = WebsiteSaleDaterangePicker.ex
      * @override
      */
     destroy: function () {
-        console.log('[DaterangePicker] Destruction du widget');
         $('.oe_website_sale').off('renting_constraints_changed', this._onRentingConstraintsChanged.bind(this));
         this._super.apply(this, arguments);
     },
@@ -38,7 +35,6 @@ publicWidget.registry.WebsiteSaleDaterangePicker = WebsiteSaleDaterangePicker.ex
      * @private
      */
     _onRentingConstraintsChanged: function (ev, constraints) {
-        console.log('[DaterangePicker] Événement renting_constraints_changed reçu', constraints);
         
         const oldUnavailabilityDays = JSON.stringify(this.rentingUnavailabilityDays || []);
         const oldMinimalTime = JSON.stringify(this.rentingMinimalTime || { duration: 0, unit: 'day', start_date: null, end_date: null });
@@ -54,7 +50,6 @@ publicWidget.registry.WebsiteSaleDaterangePicker = WebsiteSaleDaterangePicker.ex
         
         // Vérifier la validité des dates après la mise à jour des contraintes
         this._verifyValidPeriod();
-        console.log('[DaterangePicker] Vérification de la période terminée');
     }    
 });
 
