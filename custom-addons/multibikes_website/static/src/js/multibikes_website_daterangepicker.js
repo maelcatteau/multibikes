@@ -18,11 +18,11 @@ publicWidget.registry.WebsiteSaleDaterangePicker = WebsiteSaleDaterangePicker.ex
         // Attacher un écouteur pour les mises à jour des contraintes
         $('.oe_website_sale').on('renting_constraints_changed', this._onRentingConstraintsChanged.bind(this));
         
+        // Ajouter la légende après l'initialisation
+        this._addLegend();
+        
         // Ajouter les styles nécessaires
         this._addLegendStyles();
-        
-        // Ajouter la légende
-        this._addLegend();
     },
 
     /**
@@ -92,22 +92,18 @@ publicWidget.registry.WebsiteSaleDaterangePicker = WebsiteSaleDaterangePicker.ex
     },
 
     /**
-     * Ajoute une légende pour expliquer les couleurs dans le conteneur dédié.
+     * Ajoute une légende pour expliquer les couleurs
      * @private
      */
     _addLegend: function () {
-        const legendContainer = document.getElementById('rental_legend_container');
-        
-        if (!legendContainer) {
-            console.warn("[DaterangePicker] Conteneur de légende 'rental_legend_container' non trouvé.");
-            return;
+        // Supprimer la légende existante si elle existe
+        const existingLegend = this.el.parentElement.querySelector('.o_daterangepicker_legend');
+        if (existingLegend) {
+            existingLegend.remove();
         }
         
-        // Vider le conteneur au cas où (si la méthode est appelée plusieurs fois)
-        legendContainer.innerHTML = ''; 
-        
         const legendHtml = `
-            <div class="o_daterangepicker_legend">
+            <div class="o_daterangepicker_legend mt-3">
                 <div class="row">
                     <div class="col-6">
                         <div class="mt-1"><span class="o_legend_color o_daterangepicker_both me-2"></span> Départ et Retour possibles</div>
@@ -116,14 +112,15 @@ publicWidget.registry.WebsiteSaleDaterangePicker = WebsiteSaleDaterangePicker.ex
                     </div>
                     <div class="col-6">
                         <div class="mt-1"><span class="o_legend_color o_daterangepicker_closed me-2"></span> Fermé</div>
-                        <div class="mt-1"><span class="o_legend_color o_daterangepicker_unavailable me-2"></span> Produit indisponible</div>
+                        <div class="mt-1"><span class="o_legend_color o_daterangepicker_danger me-2"></span> Produit indisponible</div>
                     </div>
                 </div>
             </div>
         `;
-        
+
+        const legendContainer = document.createElement('div');
         legendContainer.innerHTML = legendHtml;
-        console.log('[DaterangePicker] Légende ajoutée dans #rental_legend_container.');
+        this.el.parentElement.appendChild(legendContainer);
     },
     
     /**
@@ -162,8 +159,7 @@ publicWidget.registry.WebsiteSaleDaterangePicker = WebsiteSaleDaterangePicker.ex
             }
             .daterangepicker td.disabled, 
             .daterangepicker td.o_daterangepicker_danger {
-                background-color: #ff6b6b !important;
-                color: white !important;
+                background-color: #f2dede !important;
             }
             
             /* Styles pour les légendes */
@@ -179,8 +175,8 @@ publicWidget.registry.WebsiteSaleDaterangePicker = WebsiteSaleDaterangePicker.ex
             .o_daterangepicker_legend .o_daterangepicker_closed {
                 background-color: #f2dede;
             }
-            .o_daterangepicker_legend .o_daterangepicker_unavailable {
-                background-color: #ff6b6b;
+            .o_daterangepicker_legend .o_daterangepicker_danger {
+                background-color: #f2dede;
             }
         `;
         
