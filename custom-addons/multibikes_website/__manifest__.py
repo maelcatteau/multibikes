@@ -34,6 +34,7 @@
             'multibikes_website/static/src/js/multibikes_website_rental_constraints.js',
             'multibikes_website/static/src/js/multibikes_website_daterangepicker.js',
             'multibikes_website/static/src/js/multibikes_website_website_sale_renting_patch.js',
+            'multibikes_website/static/src/scss/dateRangePicker.scss',
         ],
     },
     'author': 'MultiBikes',

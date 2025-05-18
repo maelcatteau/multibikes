@@ -19,13 +19,13 @@ class MBRentingDayConfig(models.Model):
     
     is_open = fields.Boolean('Day Open', default=True)
     
-    allow_pickup = fields.Boolean('Pickup Allowed', default=True, readonly=True, states={'is_open': [('readonly', False)]})
-    pickup_hour_from = fields.Float('Pickup From', default=9.45, readonly=True, states={'is_open': [('readonly', False)]})
-    pickup_hour_to = fields.Float('Pickup To', default=14.15, readonly=True, states={'is_open': [('readonly', False)]})
+    allow_pickup = fields.Boolean('Pickup Allowed', default=True)
+    pickup_hour_from = fields.Float('Pickup From', default=9.45)
+    pickup_hour_to = fields.Float('Pickup To', default=14.15)
     
-    allow_return = fields.Boolean('Return Allowed', default=True, readonly=True, states={'is_open': [('readonly', False)]})
-    return_hour_from = fields.Float('Return From', default=17.30, readonly=True, states={'is_open': [('readonly', False)]})
-    return_hour_to = fields.Float('Return To', default=18.30, readonly=True, states={'is_open': [('readonly', False)]})
+    allow_return = fields.Boolean('Return Allowed', default=True)
+    return_hour_from = fields.Float('Return From', default=17.30)
+    return_hour_to = fields.Float('Return To', default=18.30)
     
     
     @api.onchange('is_open')
