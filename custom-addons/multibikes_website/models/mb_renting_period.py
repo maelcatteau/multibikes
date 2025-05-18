@@ -10,6 +10,8 @@ class MBRentingPeriod(models.Model):
     
     start_date = fields.Date('Start Date', required=True)
     end_date = fields.Date('End Date', required=True)
+
+    is_closed = fields.Boolean('Closed', default=False)
     
     minimal_time_duration = fields.Integer('Minimum Duration', default=1)
     minimal_time_unit = fields.Selection([
