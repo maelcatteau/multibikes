@@ -34,9 +34,14 @@ patch(publicWidget.registry.WebsiteSale.prototype, {
                         if (durationInUnits < minimalDuration) {
                             const formatted = sprintf(unitMessages[unit], minimalDuration);
                             if (minStart && minEnd) {
+                                const formattedStartDate = DateTime.fromISO(minStart).toLocaleString(DateTime.DATE_SHORT);
+                                const formattedEndDate = DateTime.fromISO(minEnd).toLocaleString(DateTime.DATE_SHORT);
+                                
                                 message = _t(
                                     "The rental duration is too short. The minimum rental period is %s between %s and %s.",
-                                    sprintf(formatted, minStart, minEnd)
+                                    sprintf(formatted),
+                                    formattedStartDate,
+                                    formattedEndDate
                                 );
                             } else {
                                 message = _t(
@@ -83,9 +88,14 @@ if (publicWidget.registry.WebsiteSaleDaterangePicker) {
                             if (durationInUnits < minimalDuration) {
                                 const formatted = sprintf(unitMessages[unit], minimalDuration);
                                 if (minStart && minEnd) {
+                                    const formattedStartDate = DateTime.fromISO(minStart).toLocaleString(DateTime.DATE_SHORT);
+                                    const formattedEndDate = DateTime.fromISO(minEnd).toLocaleString(DateTime.DATE_SHORT);
+                                    
                                     message = _t(
                                         "The rental duration is too short. The minimum rental period is %s between %s and %s.",
-                                        sprintf(formatted, minStart, minEnd)
+                                        sprintf(formatted),
+                                        formattedStartDate,
+                                        formattedEndDate
                                     );
                                 } else {
                                     message = _t(
