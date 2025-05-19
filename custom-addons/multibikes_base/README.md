@@ -15,7 +15,6 @@ Le module `multibikes_base` est un module Odoo personnalisé qui ajoute des fonc
 
 3. **Ajout de champs sur le modèle `res.partner`** :
     - **Nationalité** : Permet de renseigner la nationalité d'un partenaire.
-    - **Numéro de carte d'identité** : Permet de stocker le numéro de carte d'identité d'un partenaire.
 
 4. **Ajout des champs associés dans les vues** :
     - Les champs ajoutés sont intégrés dans les vues correspondantes pour une gestion simplifiée et intuitive.

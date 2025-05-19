@@ -13,8 +13,3 @@ class ResPartner(models.Model):
         string='Nationalité du client',
         help="Permet de renseigner la nationalité du client pour les contrats de location"
     )
-
-    mb_n_id = fields.Char(
-        string='Numéro de la carte d\'identité',
-        help="Permet de renseigner le numéro de la carte d'identité du client pour la vérification d'identité lors de la location"
-    )

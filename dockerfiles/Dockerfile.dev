@@ -49,6 +49,8 @@ RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
 # Copier le script d'entrée
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+COPY run_tests.sh /run_tests.sh
+RUN chmod +x /run_tests.sh
 
 VOLUME ["/var/lib/odoo", "/mnt/extra-addons"]
 

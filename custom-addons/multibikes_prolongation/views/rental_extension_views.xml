@@ -19,7 +19,7 @@
                     </group>
                     <div class="alert alert-info" role="alert">
                         <p>
-                            <i class="fa fa-info-circle"></i>
+                            <i class="fa fa-info-circle" title="Information"></i>
                             <strong>Information</strong>: Cette action va créer une nouvelle commande de location pour prolonger la période des articles sélectionnés.
                         </p>
                         <p>Les bons de livraison seront automatiquement ajustés :</p>

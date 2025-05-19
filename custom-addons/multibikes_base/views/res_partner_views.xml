@@ -8,7 +8,6 @@
         <field name="arch" type="xml">
             <!-- Ajouter les champs d'identification dans le groupe contenant email/téléphone -->
             <xpath expr="//field[@name='email']/../.." position="inside">
-                <field name="mb_n_id" placeholder="Numéro de pièce d'identité"/>
                 <field name="mb_nationalite" placeholder="Nationalité"/>
             </xpath>
             

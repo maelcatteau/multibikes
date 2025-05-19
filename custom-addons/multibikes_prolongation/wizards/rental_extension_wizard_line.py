@@ -27,10 +27,10 @@ class RentalExtensionWizardLine(models.TransientModel):
     
     mb_wizard_id = fields.Many2one('rental.extension.wizard', string="Assistant", required=True, ondelete='cascade')
     mb_order_line_id = fields.Many2one('sale.order.line', string="Ligne de commande originale", required=True)
-    mb_product_id = fields.Many2one('product.product', string="Produit", required=True)
+    mb_product_id = fields.Many2one('product.product', string="Produit à prolonger", required=True)
     mb_product_name = fields.Char(string="Description", required=True)
-    mb_quantity = fields.Float(string="Quantité", required=True, default=1.0)
-    mb_uom_id = fields.Many2one('uom.uom', string="Unité de mesure", required=True)
+    mb_quantity = fields.Float(string="Quantité en prolongation", required=True, default=1.0)
+    mb_uom_id = fields.Many2one('uom.uom', string="Unité de mesure de prolongation", required=True)
     mb_selected = fields.Boolean(string="Sélectionné", default=True, 
                               help="Cochez cette case pour inclure ce produit dans la prolongation")
     mb_available_qty = fields.Float(string="Quantité disponible", compute='_compute_available_qty', 
@@ -47,9 +47,9 @@ class RentalExtensionWizardLine(models.TransientModel):
     qty_to_deliver = fields.Float(string="Quantité à livrer", compute='_compute_qty_at_date')
     is_mto = fields.Boolean(string="Produit à la commande", compute='_compute_qty_at_date')
     display_qty_widget = fields.Boolean(string="Afficher le widget de quantité", default=True)
-    product_id = fields.Many2one('product.product', string="Produit", compute='_compute_product_data')
-    product_uom = fields.Many2one('uom.uom', string="Unité de mesure", compute='_compute_product_data')
-    product_uom_qty = fields.Float(string="Quantité", compute='_compute_product_data')
+    product_id = fields.Many2one('product.product', string="Produit original", compute='_compute_product_data')
+    product_uom = fields.Many2one('uom.uom', string="Unité de mesure originale", compute='_compute_product_data')
+    product_uom_qty = fields.Float(string="Quantité originale", compute='_compute_product_data')
     
     @api.depends('mb_order_line_id')
     def _compute_available_qty(self):
