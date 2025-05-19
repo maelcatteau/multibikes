@@ -25,10 +25,10 @@ class MultibikesBaseTestCommon(TransactionCase):
         # Création d'un produit (vélo) de test
         cls.product = cls.env['product.template'].create({
             'name': 'Vélo de Test',
-            'type': 'product',
+            'type': 'consu',
             'categ_id': cls.product_category.id,
             'list_price': 50.0,
-            'rental': True,
+            'rent_ok': True,
             'mb_caution': 200.0,
             'mb_value_in_case_of_theft': 500.0,
             'mb_size_min': 160.0,

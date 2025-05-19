@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo.tests import tagged
 from .common import MultibikesWebsiteTestCommon as MultibikesWebsiteConfigTestCommon
-from datetime import datetime
+from datetime import datetime, timedelta
 
 @tagged('post_install', '-at_install')
 class TestStockWarehouse(MultibikesWebsiteConfigTestCommon):
