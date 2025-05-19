@@ -9,6 +9,7 @@ odoo --version
 DB_NAME=${TEST_DB_NAME:-test_multibikes_ci}
 MODULES_TO_TEST=${TEST_MODULES:-multibikes_base,multibikes_website}
 REPORTS_DIR=/test-reports
+USE_TEST_TAGS=${USE_TEST_TAGS:-false}
 
 # Chemin des add-ons valide
 VALID_ADDONS_PATH="/mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons"
@@ -18,6 +19,7 @@ echo "Base de données de test: ${DB_NAME}"
 echo "Modules à tester: ${MODULES_TO_TEST}"
 echo "Chemin des addons: ${VALID_ADDONS_PATH}"
 echo "Répertoire des rapports: ${REPORTS_DIR}"
+echo "Utilisation des tags de test: ${USE_TEST_TAGS}"
 echo "------------------------------------"
 
 # Créer un répertoire temporaire pour les logs
@@ -37,18 +39,26 @@ if [ "$DB_EXISTS" = "1" ]; then
     PGDATABASE=test_postgres dropdb -h ${PGHOST:-db-test} -p ${PGPORT:-5432} -U ${PGUSER:-odoo} ${DB_NAME} || echo "Échec de la suppression de la base de données, on continue..."
 fi
 
-
 # Exécution des tests Odoo uniquement pour les modules MultiBikes
 echo "Lancement des tests Odoo..."
-/usr/bin/odoo \
+
+# Préparation de la commande de base
+BASE_CMD="/usr/bin/odoo \
     --no-http \
-    --log-level=test \
+    --log-level=${LOG_LEVEL} \
     -d ${DB_NAME} \
     --addons-path=${VALID_ADDONS_PATH} \
     -i ${MODULES_TO_TEST} \
-    --test-enable \
-    --test-tags '/multibikes_base,multibikes_website' \
-    --stop-after-init 2>&1 | tee ${TEMP_LOG}
+    --test-enable"
+
+# Ajouter l'option --test-tags uniquement si USE_TEST_TAGS est true
+if [ "${USE_TEST_TAGS}" = "true" ]; then
+    echo "Filtrage des tests avec les tags: ${TEST_MODULES:-multibikes_base,multibikes_website}"
+    ${BASE_CMD} --test-tags=${TEST_MODULES:-multibikes_base,multibikes_website} --stop-after-init 2>&1 | tee ${TEMP_LOG}
+else
+    echo "Exécution de tous les tests sans filtrage par tags"
+    ${BASE_CMD} --stop-after-init 2>&1 | tee ${TEMP_LOG}
+fi
 
 # Essayer de copier le log dans le répertoire de rapports
 cp ${TEMP_LOG} "${REPORTS_DIR}/test_results.log" 2>/dev/null || echo "Avertissement: Impossible de copier le log dans ${REPORTS_DIR}"
