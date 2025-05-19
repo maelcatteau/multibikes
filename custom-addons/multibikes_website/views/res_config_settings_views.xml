@@ -43,6 +43,16 @@
                     <page string="Configuration des jours">
                         <field name="day_configs" context="{'default_company_id': company_id, 'default_period_id': id}"/>
                     </page>
+                    <page string="Configuration des stocks">
+                        <field name="stock_period_config_ids" context="{'default_period_id': id}">
+                            <form>
+                                <group>
+                                    <field name="period_id" invisible="1"/>
+                                    <field name="storable_product_ids" widget="many2many_tags"/>
+                                </group>
+                            </form>
+                        </field>
+                    </page>
                 </notebook>
             </form>
         </field>

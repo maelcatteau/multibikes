@@ -23,6 +23,13 @@ class MBRentingPeriod(models.Model):
     day_configs = fields.One2many('mb.renting.day.config', 'period_id', string='Day Configurations',
                                   domain="[('company_id', '=', company_id)]")
     
+    # Relation inverse vers les configurations de stock
+    stock_period_config_ids = fields.One2many(
+        'mb.renting.stock.period.config',
+        'period_id',
+        string='Configurations de stock'
+    )
+    
     _sql_constraints = [
         ('date_check', 'CHECK(start_date <= end_date)', 'The start date must be before the end date.'),
         ('company_dates_unique', 'UNIQUE(company_id, start_date, end_date)', 'A period with these dates already exists.')
