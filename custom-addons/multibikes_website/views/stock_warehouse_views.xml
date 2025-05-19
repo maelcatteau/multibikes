@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Extension de la vue formulaire de stock.warehouse -->
+        <record id="view_warehouse_form_inherit_exclude_availability" model="ir.ui.view">
+            <field name="name">stock.warehouse.form.inherit.exclude.availability</field>
+            <field name="model">stock.warehouse</field>
+            <field name="inherit_id" ref="stock.view_warehouse"/>
+            <field name="arch" type="xml">
+                <!-- Ciblage de la page "Warehouse Configuration" après le groupe spécifié -->
+                <xpath expr="//page[@name='warehouse_config']/group/group[@name='group_resupply']" position="after">
+                    <group string="E-commerce Settings">
+                        <field name="is_excluded_from_availability"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

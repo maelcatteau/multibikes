@@ -16,7 +16,11 @@
         'web',
         'website_sale',
         'website_sale_renting',
-        'multibikes_base'
+        'stock',
+        'product',
+        'multibikes_base',
+        'website_sale_stock',
+        'website_sale_stock_renting'
     ],
     'installable': True,
     'application': False,
@@ -27,7 +31,8 @@
         'views/res_config_settings_views.xml',
         'views/product_pricing_views.xml',
         'views/product_template_views.xml',
-        'views/product_template_template_views.xml'
+        'views/product_template_template_views.xml',
+        'views/stock_warehouse_views.xml',
     ],
     'assets': {
         'web.assets_frontend': [
