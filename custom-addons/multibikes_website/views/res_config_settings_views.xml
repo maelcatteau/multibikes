@@ -1,26 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vue tree pour mb.renting.day.config -->
-    <record id="view_mb_renting_day_config_tree" model="ir.ui.view">
-        <field name="name">mb.renting.day.config.tree</field>
-        <field name="model">mb.renting.day.config</field>
+    <!-- Vue list pour mb.renting.stock.period.config -->
+    <record id="view_mb_renting_stock_period_config_list" model="ir.ui.view">
+        <field name="name">mb.renting.stock.period.config.list</field>
+        <field name="model">mb.renting.stock.period.config</field>
         <field name="arch" type="xml">
             <list editable="bottom">
-                <field name="company_id" invisible="1"/>
+                <!-- Le champ period_id est invisible mais toujours présent pour le filtrage -->
                 <field name="period_id" invisible="1"/>
-                <field name="day_of_week"/>
-                <field name="is_open"/>
-                <field name="allow_pickup"/>
-                <field name="pickup_hour_from" widget="float_time"/>
-                <field name="pickup_hour_to" widget="float_time"/>
-                <field name="allow_return"/>
-                <field name="return_hour_from" widget="float_time"/>
-                <field name="return_hour_to" widget="float_time"/>
+                <field name="storable_product_ids" widget="many2many_tags" options="{'no_create': True}" string="Produits stockables"/>
+                <field name="total_stock_by_product" string="Détail du stock par produit"/>
+                <!-- Élargit la colonne en définissant une largeur spécifique -->
+                <field name="stock_available_for_period" string="Stock disponible pour la période" width="200"/>
+                <!-- Ajout du compteur de produits stockables -->
+                <field name="storable_product_count" string="Nb produits configurés"/>
             </list>
         </field>
     </record>
-
-    <!-- Vue form pour mb.renting.period -->
+    
     <record id="view_mb_renting_period_form" model="ir.ui.view">
         <field name="name">mb.renting.period.form</field>
         <field name="model">mb.renting.period</field>
@@ -37,6 +34,8 @@
                     <group>
                         <field name="minimal_time_duration"/>
                         <field name="minimal_time_unit"/>
+                        <field name="total_storable_products" string="Total produits stockables" readonly="1"/>
+                        <field name="remaining_products_to_configure" string="Produits restants à configurer" readonly="1"/>
                     </group>
                 </group>
                 <notebook>
@@ -44,17 +43,36 @@
                         <field name="day_configs" context="{'default_company_id': company_id, 'default_period_id': id}"/>
                     </page>
                     <page string="Configuration des stocks">
-                        <field name="stock_period_config_ids" context="{'default_period_id': id}">
-                            <form>
-                                <group>
-                                    <field name="period_id" invisible="1"/>
-                                    <field name="storable_product_ids" widget="many2many_tags"/>
-                                </group>
-                            </form>
+                        <field name="stock_period_config_ids" context="{'default_period_id': id}" domain="[('period_id', '=', id)]">
+                            <list editable="bottom">
+                                <field name="storable_product_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                                <field name="total_stock_by_product" readonly="1"/>
+                                <field name="stock_available_for_period" width="250"/>
+                            </list>
                         </field>
                     </page>
                 </notebook>
             </form>
+        </field>
+    </record>
+    
+    <!-- Vue list pour mb.renting.day.config (déjà en list, gardée pour référence) -->
+    <record id="view_mb_renting_day_config_list" model="ir.ui.view">
+        <field name="name">mb.renting.day.config.list</field>
+        <field name="model">mb.renting.day.config</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="company_id" invisible="1"/>
+                <field name="period_id" invisible="1"/>
+                <field name="day_of_week"/>
+                <field name="is_open"/>
+                <field name="allow_pickup"/>
+                <field name="pickup_hour_from" widget="float_time"/>
+                <field name="pickup_hour_to" widget="float_time"/>
+                <field name="allow_return"/>
+                <field name="return_hour_from" widget="float_time"/>
+                <field name="return_hour_to" widget="float_time"/>
+            </list>
         </field>
     </record>
 
