@@ -46,6 +46,8 @@ publicWidget.registry.WebsiteSaleDaterangePicker = WebsiteSaleDaterangePicker.ex
         
         // Correction: utiliser dailyConfigs, qui est le nom utilisé dans les données reçues
         this.dailyConfigs = constraints.dailyConfigs || {};
+
+        this._verifyValidPeriod(); 
         
         console.log('[DaterangePicker] Configurations journalières stockées:', this.dailyConfigs);
     },
