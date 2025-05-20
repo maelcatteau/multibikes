@@ -210,6 +210,7 @@ class MultibikesWebsiteTestCommon(TransactionCase):
             'type': 'consu',
             'rent_ok': True,
             'tracking': 'none',
+            'is_storable': True,
             'uom_id': cls.env.ref('uom.product_uom_unit').id,
             'uom_po_id': cls.env.ref('uom.product_uom_unit').id,
             'default_code': 'VLT001',
@@ -225,6 +226,7 @@ class MultibikesWebsiteTestCommon(TransactionCase):
             'type': 'consu',
             'rent_ok': False,
             'tracking': 'none',
+            'is_storable': True,
             'uom_id': cls.env.ref('uom.product_uom_unit').id,
             'uom_po_id': cls.env.ref('uom.product_uom_unit').id,
             'default_code': 'AVT001',
@@ -274,19 +276,32 @@ class MultibikesWebsiteTestCommon(TransactionCase):
             'stock_available_for_period': 10,
         })
         
-        # Créer un mouvement de stock pour ajouter du stock
-        move = cls.env['stock.move'].create({
-            'name': 'Test Move In',
+        # Ajout de stock pour les produits
+        # Stock pour le produit principal de location dans tous les entrepôts
+        cls.env['stock.quant'].create({
             'product_id': cls.rental_product.id,
-            'product_uom': cls.env.ref('uom.product_uom_unit').id,
-            'product_uom_qty': 5.0,
-            'location_id': cls.env.ref('stock.stock_location_suppliers').id,
-            'location_dest_id': cls.main_warehouse.lot_stock_id.id,
+            'location_id': cls.main_warehouse.lot_stock_id.id,
+            'quantity': 5.0,
         })
-        move._action_confirm()
-        move._action_assign()
-        move.move_line_ids.write({'quantity': 5.0})
-        move._action_done()
+        
+        cls.env['stock.quant'].create({
+            'product_id': cls.rental_product.id,
+            'location_id': cls.secondary_warehouse.lot_stock_id.id,
+            'quantity': 3.0,
+        })
+        
+        cls.env['stock.quant'].create({
+            'product_id': cls.rental_product.id,
+            'location_id': cls.excluded_warehouse.lot_stock_id.id,
+            'quantity': 3.0,
+        })
+        
+        # Stock pour le produit stockable (non de location)
+        cls.env['stock.quant'].create({
+            'product_id': cls.storable_product.id,
+            'location_id': cls.main_warehouse.lot_stock_id.id,
+            'quantity': 5.0,
+        })
         
         # ----- MOUVEMENTS DE STOCK -----
         

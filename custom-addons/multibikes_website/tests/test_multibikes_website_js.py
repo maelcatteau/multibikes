@@ -1,13 +1,50 @@
 # -*- coding: utf-8 -*-
 from odoo.tests import tagged
 from odoo.tests.common import HttpCase
-from odoo.addons.website.tools import MockRequest
+from unittest import mock
 from datetime import date, timedelta, datetime
 import json
 import logging
+import contextlib
+from odoo.http import request
 from .common import MultibikesWebsiteTestCommon
+from odoo import fields
 
 _logger = logging.getLogger(__name__)
+
+# Définition de la classe MockRequest pour simuler des requêtes HTTP
+class MockRequest(contextlib.ContextManager):
+    def __init__(self, env, website=None, website_routing=False):
+        self.env = env
+        self.website = website
+        self.website_routing = website_routing
+        self.original_request = request
+        self.original_context = None
+        self.original_env = None
+        self.original_website = None
+        self.original_website_routing = None
+    
+    def __enter__(self):
+        # Sauvegarde de l'état original
+        self.original_context = getattr(request, 'context', {}).copy() if hasattr(request, 'context') else {}
+        self.original_env = getattr(request, 'env', None)
+        self.original_website = getattr(request, 'website', None)
+        self.original_website_routing = getattr(request, 'website_routing', None)
+        
+        # Configuration de la requête simulée
+        request.context = self.env.context.copy()
+        request.env = self.env
+        request.website = self.website
+        request.website_routing = self.website_routing
+        
+        return request
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Restauration de l'état original
+        request.context = self.original_context
+        request.env = self.original_env
+        request.website = self.original_website
+        request.website_routing = self.original_website_routing
 
 
 @tagged('post_install', '-at_install', 'multibikes_js')
@@ -421,7 +458,7 @@ class TestMultibikesWebsiteJS(HttpCase, MultibikesWebsiteTestCommon):
         # Configurer une requête simulée
         product = self.js_test_product
         
-        # Simuler une requête au controller avec une période invalide
+        # Utilisation de la classe MockRequest corrigée
         with MockRequest(self.env, website=self.website, website_routing=True):
             # Simuler une requête AJAX
             today = fields.Date.today()

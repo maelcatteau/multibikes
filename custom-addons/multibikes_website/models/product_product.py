@@ -11,10 +11,18 @@ class ProductProduct(models.Model):
         """ Surcharge pour exclure les quantités des entrepôts marqués comme exclus, en tenant compte des transferts internes dans les deux sens et en ajustant les périodes. """
         self.ensure_one()
 
-        # Log du début de la méthode
         _logger.info("Calcul des disponibilités pour le produit %s (ID: %s) de %s à %s", 
                      self.name, self.id, from_date, to_date)
         _logger.info("Entrepôt initial passé : %s", warehouse_id)
+
+        # Si un entrepôt spécifique est demandé, ne pas exclure cet entrepôt même s'il est marqué comme exclu
+        if warehouse_id:
+            return super(ProductProduct, self)._get_availabilities(
+                from_date, to_date, warehouse_id=warehouse_id, with_cart=with_cart
+            )
+
+        # Ici, warehouse_id est False : on veut la dispo globale, mais en excluant les entrepôts marqués comme exclus
+        # (reste de la logique d'exclusion inchangée)
 
         # Appel de la méthode d'origine avec tous les entrepôts
         original_availabilities = super(ProductProduct, self)._get_availabilities(

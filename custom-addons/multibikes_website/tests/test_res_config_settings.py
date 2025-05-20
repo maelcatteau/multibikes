@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo.tests import tagged
 from .common import MultibikesWebsiteTestCommon as MultibikesWebsiteConfigTestCommon
+from datetime import timedelta
 
 @tagged('post_install', '-at_install')
 class TestResConfigSettings(MultibikesWebsiteConfigTestCommon):

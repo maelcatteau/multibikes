@@ -36,87 +36,85 @@ class TestProductTemplate(MultibikesWebsiteProductTestCommon):
         # Vérifier que la clé is_rental n'est pas présente ou est False
         self.assertNotIn('is_rental', result)
     
-    @mock.patch('odoo.http.request')
-    def test_get_additionnal_combination_info_rental_no_dates(self, mock_request):
+    def test_get_additionnal_combination_info_rental_no_dates(self):
         """Test de _get_additionnal_combination_info pour un produit louable sans dates spécifiées"""
         # Simuler l'environnement HTTP
-        mock_request.website = self.website
-        
-        # Créer un order vide
-        order = self.env['sale.order'].create({
-            'partner_id': self.env.ref('base.partner_admin').id,
-            'company_id': self.test_company.id,
-        })
-        mock_request.website.sale_get_order.return_value = order
-        
-        # Appeler la méthode
-        quantity = 1
-        date = datetime.today()
-        
-        result = self.rental_product_template._get_additionnal_combination_info(
-            self.rental_product, quantity, date, self.website
-        )
-        
-        # Vérifier les résultats
-        self.assertTrue(result.get('is_rental'), "Le produit devrait être marqué comme louable")
-        
-        # Vérifier que la pricing_table ne contient que les tarifs publiés
-        pricing_table = result.get('pricing_table', [])
-        pricing_names = [p[0] for p in pricing_table]
-        
-        # Doit inclure les tarifs publiés
-        self.assertIn(self.pricing_hour.name, pricing_names, "Le tarif horaire (publié) devrait être inclus")
-        self.assertIn(self.pricing_day.name, pricing_names, "Le tarif journalier (publié) devrait être inclus")
-        
-        # Ne doit pas inclure les tarifs non publiés
-        self.assertNotIn(self.pricing_week.name, pricing_names, "Le tarif hebdomadaire (non publié) ne devrait pas être inclus")
+        with mock.patch('odoo.http.request') as mock_request:
+            mock_request.website = self.website
+            # Créer un order vide
+            order = self.env['sale.order'].create({
+                'partner_id': self.env.ref('base.partner_admin').id,
+                'company_id': self.test_company.id,
+            })
+            mock_request.website.sale_get_order.return_value = order
+
+            # Appeler la méthode
+            quantity = 1
+            date = datetime.today()
+
+            result = self.rental_product_template._get_additionnal_combination_info(
+                self.rental_product, quantity, date, self.website
+            )
+
+            # Vérifier les résultats
+            self.assertTrue(result.get('is_rental'), "Le produit devrait être marqué comme louable")
+
+            # Vérifier que la pricing_table ne contient que les tarifs publiés
+            pricing_table = result.get('pricing_table', [])
+            pricing_names = [p[0] for p in pricing_table]
+
+            # Doit inclure les tarifs publiés
+            self.assertIn(self.pricing_hour.name, pricing_names, "Le tarif horaire (publié) devrait être inclus")
+            self.assertIn(self.pricing_day.name, pricing_names, "Le tarif journalier (publié) devrait être inclus")
+
+            # Ne doit pas inclure les tarifs non publiés
+            self.assertNotIn(self.pricing_week.name, pricing_names, "Le tarif hebdomadaire (non publié) ne devrait pas être inclus")
     
-    @mock.patch('odoo.http.request')
-    def test_get_additionnal_combination_info_rental_with_dates(self, mock_request):
+    def test_get_additionnal_combination_info_rental_with_dates(self):
         """Test de _get_additionnal_combination_info pour un produit louable avec dates spécifiées"""
         # Simuler l'environnement HTTP
-        mock_request.website = self.website
-        
-        # Créer un order avec des dates de location
-        start_date = datetime.now()
-        end_date = start_date + timedelta(days=2)
-        
-        order = self.env['sale.order'].create({
-            'partner_id': self.env.ref('base.partner_admin').id,
-            'company_id': self.test_company.id,
-            'rental_start_date': start_date,
-            'rental_return_date': end_date,
-        })
-        mock_request.website.sale_get_order.return_value = order
-        
-        # Appeler la méthode
-        quantity = 1
-        date = datetime.today()
-        
-        result = self.rental_product_template._get_additionnal_combination_info(
-            self.rental_product, quantity, date, self.website
-        )
-        
-        # Vérifier les résultats
-        self.assertTrue(result.get('is_rental'), "Le produit devrait être marqué comme louable")
-        
-        # Vérifier les dates par défaut
-        self.assertTrue('default_start_date' in result, "Les dates par défaut devraient être définies")
-        self.assertTrue('default_end_date' in result, "Les dates par défaut devraient être définies")
-        
-        # Vérifier que la durée actuelle est correcte (2 jours)
-        self.assertEqual(result.get('current_rental_duration'), 2, "La durée de location devrait être de 2 jours")
-        
-        # Vérifier que la pricing_table ne contient que les tarifs publiés
-        pricing_table = result.get('pricing_table', [])
-        pricing_names = [p[0] for p in pricing_table]
-        
-        # Doit inclure les tarifs publiés
-        self.assertIn(self.pricing_hour.name, pricing_names, "Le tarif horaire (publié) devrait être inclus")
-        self.assertIn(self.pricing_day.name, pricing_names, "Le tarif journalier (publié) devrait être inclus")
-        
-        # Ne doit pas inclure les tarifs non publiés
-        self.assertNotIn(self.pricing_week.name, pricing_names, "Le tarif hebdomadaire (non publié) ne devrait pas être inclus")
+        with mock.patch('odoo.http.request') as mock_request:
+            mock_request.website = self.website
+            # Créer un order avec des dates de location
+            start_date = datetime.now()
+            end_date = start_date + timedelta(days=2)
+
+            order = self.env['sale.order'].create({
+                'partner_id': self.env.ref('base.partner_admin').id,
+                'company_id': self.test_company.id,
+                'rental_start_date': start_date,
+                'rental_return_date': end_date,
+            })
+            mock_request.website.sale_get_order.return_value = order
+
+            # Appeler la méthode
+            quantity = 1
+            date = datetime.today()
+
+            result = self.rental_product_template._get_additionnal_combination_info(
+                self.rental_product, quantity, date, self.website
+            )
+
+            # Vérifier les résultats
+            self.assertTrue(result.get('is_rental'), "Le produit devrait être marqué comme louable")
+
+            # Vérifier les dates par défaut
+            self.assertTrue('default_start_date' in result, "Les dates par défaut devraient être définies")
+            self.assertTrue('default_end_date' in result, "Les dates par défaut devraient être définies")
+
+            # Vérifier que la durée actuelle est correcte (2 jours)
+            self.assertEqual(result.get('current_rental_duration'), 2, "La durée de location devrait être de 2 jours")
+
+            # Vérifier que la pricing_table ne contient que les tarifs publiés
+            pricing_table = result.get('pricing_table', [])
+            pricing_names = [p[0] for p in pricing_table]
+
+            # Doit inclure les tarifs publiés
+            self.assertIn(self.pricing_hour.name, pricing_names, "Le tarif horaire (publié) devrait être inclus")
+            self.assertIn(self.pricing_day.name, pricing_names, "Le tarif journalier (publié) devrait être inclus")
+
+            # Ne doit pas inclure les tarifs non publiés
+            self.assertNotIn(self.pricing_week.name, pricing_names, "Le tarif hebdomadaire (non publié) ne devrait pas être inclus")
     
     def test_get_additionnal_combination_info_with_all_pricing_published(self):
         """Test avec tous les tarifs publiés"""
@@ -127,12 +125,13 @@ class TestProductTemplate(MultibikesWebsiteProductTestCommon):
         quantity = 1
         date = datetime.today()
         
-        # Mock le request pour éviter les erreurs
-        with mock.patch('odoo.http.request') as mock_request:
+        # Patch du proxy request via odoo.http
+        from odoo import http
+        with mock.patch.object(http, 'request', create=True) as mock_request:
             mock_request.website = self.website
             order = self.env['sale.order'].create({
                 'partner_id': self.env.ref('base.partner_admin').id,
-                'company_id': self.test_company.id,
+                'company_id': self.main_company.id,
             })
             mock_request.website.sale_get_order.return_value = order
             

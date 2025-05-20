@@ -7,6 +7,12 @@ from datetime import datetime, timedelta
 class TestStockWarehouse(MultibikesWebsiteConfigTestCommon):
     """Tests pour le modèle stock.warehouse avec les extensions multibikes_website"""
     
+    def setUp(self):
+        super(TestStockWarehouse, self).setUp()
+        # Définir self.product comme référence à un produit existant
+        self.product = self.rental_product
+    
+    
     def test_is_excluded_from_availability_field(self):
         """Test du champ is_excluded_from_availability"""
         # Vérifier les valeurs initiales

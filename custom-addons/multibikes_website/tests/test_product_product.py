@@ -7,6 +7,11 @@ from datetime import datetime, timedelta
 class TestProductProduct(MultibikesWebsiteProductTestCommon):
     """Tests pour le modèle product.product avec les extensions multibikes_website"""
     
+    def setUp(self):
+        super().setUp()
+        self.start_date = self.start_date_dt
+    
+    
     def test_get_availabilities(self):
         """Test de la méthode _get_availabilities avec exclusion d'entrepôts"""
         # Convertir les dates en datetime si ce sont des strings

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
+from datetime import datetime, timedelta
 from odoo.tests import tagged
 from .common import MultibikesWebsiteTestCommon
 import logging
@@ -44,7 +44,7 @@ class TestMBRentingDayConfig(MultibikesWebsiteTestCommon):
             test_date += timedelta(days=1)
         
         # Obtenir la config pour ce lundi
-        config = self.env['mb.renting.day.config'].get_config_for_date(test_date, self.test_company.id)
+        config = self.env['mb.renting.day.config'].get_config_for_date(test_date, self.main_company.id)
         
         # Vérifier que c'est bien la config du lundi
         self.assertEqual(config.id, self.monday_config.id)
@@ -55,14 +55,14 @@ class TestMBRentingDayConfig(MultibikesWebsiteTestCommon):
             test_date += timedelta(days=1)
         
         # Obtenir la config pour ce dimanche
-        config = self.env['mb.renting.day.config'].get_config_for_date(test_date, self.test_company.id)
+        config = self.env['mb.renting.day.config'].get_config_for_date(test_date, self.main_company.id)
         
         # Vérifier que c'est bien la config du dimanche
         self.assertEqual(config.id, self.sunday_config.id)
         
         # Test avec une date hors période
         out_of_period_date = self.next_month + timedelta(days=10)
-        config = self.env['mb.renting.day.config'].get_config_for_date(out_of_period_date, self.test_company.id)
+        config = self.env['mb.renting.day.config'].get_config_for_date(out_of_period_date, self.main_company.id)
         
         # Aucune config ne devrait être trouvée
         self.assertFalse(config)
