@@ -13,12 +13,16 @@ class MBRentingPeriod(models.Model):
 
     is_closed = fields.Boolean('Closed', default=False)
     
-    minimal_time_duration = fields.Integer('Minimum Duration', default=1)
-    minimal_time_unit = fields.Selection([
-        ('hour', 'Hour'), 
-        ('day', 'Day'), 
-        ('week', 'Week')
-    ], string="Minimum Duration Unit", default='day', required=True)
+    # On remplace la gestion de la durée minimale par une référence à sale.temporal.recurrence
+    recurrence_id = fields.Many2one(
+        'sale.temporal.recurrence',
+        string='Récurrence de location',
+        required=True,
+        help="Règle de récurrence utilisée pour définir la durée minimale de location."
+    )
+    recurrence_name = fields.Char(related='recurrence_id.name', string="Nom de la récurrence", store=False, readonly=True)
+    recurrence_duration = fields.Integer(related='recurrence_id.duration', string="Durée minimale", store=False, readonly=True)
+    recurrence_unit = fields.Selection(related='recurrence_id.unit', string="Unité de durée", store=False, readonly=True)
     
     day_configs = fields.One2many('mb.renting.day.config', 'period_id', string='Day Configurations',
                                   domain="[('company_id', '=', company_id)]")

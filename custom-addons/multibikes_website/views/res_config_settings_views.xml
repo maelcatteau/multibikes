@@ -32,8 +32,10 @@
                         <field name="is_closed"/>
                     </group>
                     <group>
-                        <field name="minimal_time_duration"/>
-                        <field name="minimal_time_unit"/>
+                        <field name="recurrence_id"/>
+                        <field name="recurrence_name" readonly="1"/>
+                        <field name="recurrence_duration" readonly="1"/>
+                        <field name="recurrence_unit" readonly="1"/>
                         <field name="total_storable_products" string="Total produits stockables" readonly="1"/>
                         <field name="remaining_products_to_configure" string="Produits restants à configurer" readonly="1"/>
                     </group>
