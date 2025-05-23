@@ -1,64 +1,28 @@
-FROM ubuntu:22.04
+# ./dockerfiles/Dockerfile.app
+FROM ghcr.io/maelcatteau/odoo-ee-base:18.0
 
-# Éviter les interactions avec les paquets
-ENV DEBIAN_FRONTEND=noninteractive
+# Temporairement root pour copier les scripts et changer les permissions
+USER root 
 
-# Installation des dépendances
-RUN apt-get update && apt-get install -y \
-    postgresql-client \
-    python3 \
-    python3-pip \
-    libpq-dev \
-    wget \
-    gnupg \
-    lsb-release \
-    wkhtmltopdf \
-    ca-certificates \
-    curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Configurer le répertoire de travail
-WORKDIR /opt/odoo
-
-# Copier l'archive .deb
-COPY ./odoo_18.0+e.latest_all.deb /tmp/
-
-# Installer les dépendances Python supplémentaires
-RUN pip3 install --no-cache-dir phonenumbers pycountry python-stdnum requests pyOpenSSL cryptography
-
-# Installer le package Odoo Enterprise
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends /tmp/odoo_18.0+e.latest_all.deb && \
-    apt-get -f install -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/odoo_18.0+e.latest_all.deb
-
-# Créer les répertoires nécessaires
-RUN mkdir -p /var/lib/odoo /var/log/odoo /mnt/extra-addons
-RUN chown -R odoo:odoo /var/lib/odoo /var/log/odoo /mnt/extra-addons
-
-# S'assurer que le dossier de configuration est accessible
-RUN mkdir -p /etc/odoo && chown -R odoo:odoo /etc/odoo && chmod 775 /etc/odoo
-
-RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
-    && apt-get update \
-    && apt-get install -y postgresql-client-15
-
-# Copier le script d'entrée
-COPY entrypoint.sh /entrypoint.sh
+# Copier les scripts nécessaires
+COPY ./scripts/entrypoint_dev.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-COPY run_tests.sh /run_tests.sh
-RUN chmod +x /run_tests.sh
 
-VOLUME ["/var/lib/odoo", "/mnt/extra-addons"]
+# Créer et configurer le répertoire pour les rapports de test
+RUN mkdir -p /test-reports && \
+    chmod 777 /test-reports
 
-# Exposer les ports Odoo
+# S'assurer que les répertoires pour les volumes existent et ont les bonnes permissions
+RUN mkdir -p /mnt/extra-addons /etc/odoo /var/lib/odoo /var/log/odoo && \
+    chown -R odoo:odoo /mnt/extra-addons /etc/odoo /var/lib/odoo /var/log/odoo
+
+# Les volumes seront gérés par docker-compose
+VOLUME ["/var/lib/odoo", "/mnt/extra-addons", "/etc/odoo", "/test-reports"]
+
 EXPOSE 8069 8072
 
-# Passer à l'utilisateur odoo pour exécuter Odoo
 USER odoo
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["odoo", "-c", "/etc/odoo/odoo.conf"]
+# Important: nous spécifions simplement "odoo" comme commande de démarrage
+CMD ["odoo"]

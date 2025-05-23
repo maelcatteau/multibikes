@@ -6,14 +6,22 @@ Ce projet contient les fichiers de configuration nécessaires pour déployer Odo
 
 ```
 .
-├── Dockerfile                # Image Docker personnalisée pour Odoo
-├── entrypoint.sh             # Script d'entrée du conteneur
-├── .gitignore                # Fichiers ignorés par Git
-├── Documentation             # Documentation utilisée pour la mise en place du projet
-└── custom-addons/            # Modules personnalisés
-    ├── multibikes_base/      # Module de base MultiBikes
+├── dockerfiles/             # Fichiers Docker pour différents environnements
+│   ├── Dockerfile.app      # Configuration Docker pour production
+│   ├── Dockerfile.dev      # Configuration Docker pour développement
+│   ├── Dockerfile.odooEEbase # Image de base Odoo Enterprise
+│   └── Dockerfile.staging  # Configuration Docker pour pré-production
+├── scripts/                # Scripts de déploiement et utilitaires
+│   ├── entrypoint_dev.sh   # Script d'entrée pour développement
+│   ├── entrypoint_prod.sh  # Script d'entrée pour production
+│   ├── entrypoint_staging.sh # Script d'entrée pour pré-production
+│   └── run_tests.sh        # Script d'exécution des tests
+├── .gitignore             # Fichiers ignorés par Git
+├── Documentation          # Documentation utilisée pour la mise en place du projet
+└── custom-addons/        # Modules personnalisés
+    ├── multibikes_base/  # Module de base MultiBikes
     ├── multibikes_prolongation/ # Module de prolongation de location
-    └── multibikes_website/   # Module de fonctionnalités pour le site web
+    └── multibikes_website/ # Module de fonctionnalités pour le site web
 ```
 
 ## Structure d'un module
