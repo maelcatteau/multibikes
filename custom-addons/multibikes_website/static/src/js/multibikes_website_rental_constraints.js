@@ -124,6 +124,7 @@ WebsiteSale.include({
             rentingMinimalTime: {
                 duration: matchingPeriod.minimal_time_duration,
                 unit: matchingPeriod.minimal_time_unit,
+                name: matchingPeriod.minimal_time_name,
                 start_date: matchingPeriod.start_date,
                 end_date: matchingPeriod.end_date
             },

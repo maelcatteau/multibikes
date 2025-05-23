@@ -50,8 +50,9 @@ class WebsiteSaleRentingCustom(WebsiteSaleRenting):
                 'start_date': fields.Date.to_string(period.start_date),
                 'end_date': fields.Date.to_string(period.end_date),
                 'is_closed': period.is_closed,
-                'minimal_time_duration': period.minimal_time_duration,
-                'minimal_time_unit': period.minimal_time_unit,
+                'minimal_time_duration': period.recurrence_duration,
+                'minimal_time_unit': period.recurrence_unit,
+                'minimal_time_name': period.recurrence_name,
                 'day_configs': day_configs
             })
         
