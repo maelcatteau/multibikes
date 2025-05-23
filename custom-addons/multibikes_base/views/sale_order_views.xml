@@ -12,6 +12,24 @@
                 <field name="mb_type_de_caution"/>
                 <field name="mb_numero_de_caution" invisible="mb_type_de_caution != 'carte_bancaire'"/>
             </xpath>
+            
+            <!-- Ajout des champs dans les lignes de commande - vue liste -->
+            <xpath expr="//notebook/page[@name='order_lines']/field/list/field[@name='price_unit']" position="after">
+                <field name="mb_caution_unit"/>
+                <field name="mb_value_in_case_of_theft"/>
+            </xpath>
+            <xpath expr="//notebook/page[@name='order_lines']/field/list/field[@name='price_subtotal']" position="after">
+                <field name="mb_caution_subtotal"/>
+            </xpath>
+
+            <!-- Ajout des champs dans les lignes de commande - vue formulaire (popup) -->
+            <xpath expr="//field[@name='order_line']//form//field[@name='price_unit']" position="after">
+                <field name="mb_caution_unit"/>
+                <field name="mb_value_in_case_of_theft"/>
+            </xpath>
+            <xpath expr="//field[@name='order_line']//form//field[@name='price_subtotal']" position="after">
+                <field name="mb_caution_subtotal"/>
+            </xpath>
         </field>
     </record>
 </odoo>
