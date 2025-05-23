@@ -20,12 +20,12 @@ class MBRentingDayConfig(models.Model):
     is_open = fields.Boolean('Day Open', default=True)
     
     allow_pickup = fields.Boolean('Pickup Allowed', default=True)
-    pickup_hour_from = fields.Float('Pickup From', default=9.45)
-    pickup_hour_to = fields.Float('Pickup To', default=14.15)
+    pickup_hour_from = fields.Float('Pickup From', default=9.75)
+    pickup_hour_to = fields.Float('Pickup To', default=14.25)
     
     allow_return = fields.Boolean('Return Allowed', default=True)
-    return_hour_from = fields.Float('Return From', default=17.30)
-    return_hour_to = fields.Float('Return To', default=18.30)
+    return_hour_from = fields.Float('Return From', default=17.50)
+    return_hour_to = fields.Float('Return To', default=18.50)
     
     
     @api.onchange('is_open')
@@ -36,6 +36,20 @@ class MBRentingDayConfig(models.Model):
             self.allow_return = False
             self.pickup_hour_from = False
             self.pickup_hour_to = False
+            self.return_hour_from = False
+            self.return_hour_to = False
+
+    @api.onchange('allow_pickup')
+    def _onchange_allow_pickup(self):
+        """Quand is_open passe à False, désactive les options de pickup et return et réinitialise les horaires"""
+        if not self.allow_pickup:
+            self.pickup_hour_from = False
+            self.pickup_hour_to = False
+    
+    @api.onchange('allow_return')
+    def _onchange_allow_return(self):
+        """Quand is_open passe à False, désactive les options de pickup et return et réinitialise les horaires"""
+        if not self.allow_return:
             self.return_hour_from = False
             self.return_hour_to = False
     
