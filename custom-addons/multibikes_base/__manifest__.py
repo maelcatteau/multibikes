@@ -19,7 +19,6 @@
     # Fichiers de données (vues, menus, actions, etc.)
     'data': [
         'views/product_template_views.xml',
-        'views/res_partner_views.xml',
         'views/sale_order_views.xml',
         'report/sale_report_caution.xml'
     ],

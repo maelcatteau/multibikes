@@ -14,7 +14,6 @@ class MultibikesBaseTestCommon(TransactionCase):
         cls.partner = cls.env['res.partner'].create({
             'name': 'Client Test',
             'email': 'client.test@example.com',
-            'mb_nationalite': 'Française',
         })
         
         # Création d'une catégorie de produit

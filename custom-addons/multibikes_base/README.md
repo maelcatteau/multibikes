@@ -1,36 +1,51 @@
-# multibikes_base
+# Module Multibikes Base
 
-## Description
-Le module `multibikes_base` est un module Odoo personnalisé qui ajoute des fonctionnalités spécifiques pour la gestion des informations liées aux produits, aux partenaires et aux ventes. Il est conçu pour répondre aux besoins spécifiques de gestion des cautions et des informations d'identité.
+Module de base pour la gestion des locations de vélos dans Odoo.
 
 ## Fonctionnalités
-1. **Gestion des cautions sur les bons de commande (Sales Order - SO)** :
-    - Champ "Type de caution" permettant de sélectionner le type (Espèces, Chèque, Carte Bancaire)
-    - Champ "Numéro de caution" visible uniquement lorsque le type de caution est Carte Bancaire
-    - Permet de suivre et de gérer les cautions associées aux commandes
 
-2. **Ajout de champs sur le modèle `product.template`** :
-    - **Valeur en cas de vol** : Permet de définir une valeur spécifique pour un produit en cas de vol.
-    - **Caution** : Permet de spécifier une caution associée à un produit.
+### Gestion des Produits (Vélos)
+- **Cautions** : Possibilité de définir un montant de caution pour chaque vélo
+- **Valeur en cas de vol** : Montant facturé en cas de vol ou perte totale
+- **Tailles** : Définition des tailles minimales et maximales recommandées
 
-3. **Ajout de champs sur le modèle `res.partner`** :
-    - **Nationalité** : Permet de renseigner la nationalité d'un partenaire.
+### Gestion des Commandes
+- **Type de caution** : Choix entre carte bancaire, espèces ou chèque
+- **Numéro de caution** : Référence de la caution (ex: 4 derniers chiffres CB)
 
-4. **Ajout des champs associés dans les vues** :
-    - Les champs ajoutés sont intégrés dans les vues correspondantes pour une gestion simplifiée et intuitive.
-    - Affichage conditionnel pour faciliter la saisie des informations pertinentes.
+### Rapports
+- **Rapport de devis/commande avec cautions** : Affichage des cautions dans les devis standards
+- **Rapport de caution uniquement** : Facture spécifique pour les cautions
+- **Support multilingue** : Français, anglais et allemand
+
+## Structure du Module
+
+```
+multibikes_base/
+├── models/
+│   ├── product_template.py    # Extension des produits pour les cautions
+│   ├── sale_order.py         # Extension des commandes
+│   └── sale_order_line.py    # Logique des lignes de commande
+├── views/
+│   ├── product_template_views.xml  # Vues des produits
+│   └── sale_order_views.xml       # Vues des commandes
+├── report/
+│   └── sale_report_caution.xml    # Templates des rapports
+├── tests/
+│   ├── test_product_template.py   # Tests des produits
+│   └── test_sale_order.py        # Tests des commandes
+└── i18n/                          # Fichiers de traduction
+```
 
 ## Installation
-1. Copier le module dans le répertoire `custom-addons` de votre déploiement Odoo.
-2. Mettre à jour la liste des modules dans Odoo.
-3. Installer le module `multibikes_base` via l'interface d'administration.
 
-## Utilisation
-- Lors de la création ou de la modification d'un bon de commande, vous pourrez sélectionner le type de caution.
-- Si le type "Carte Bancaire" est sélectionné, le champ pour le numéro de caution sera affiché pour saisie.
-- Les champs "Valeur en cas de vol" et "Caution" sont disponibles dans la fiche produit.
-- Les champs "Nationalité" et "Numéro de carte d'identité" sont accessibles dans la fiche partenaire.
+1. Placer le module dans le dossier `custom-addons`
+2. Redémarrer Odoo
+3. Aller dans **Applications**
+4. Rechercher "Multibikes base"
+5. Cliquer sur **Installer**
 
-## Auteurs
-Ce module a été développé pour répondre aux besoins spécifiques de gestion des cautions et des informations d'identité dans le cadre de la gestion des produits et des partenaires.
+## Configuration
+
+Aucune configuration particulière n'est requise. Le module étend automatiquement les vues existantes.
 
