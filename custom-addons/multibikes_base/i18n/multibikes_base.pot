@@ -1,0 +1,86 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#   * multibikes_base
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-12-19 10:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: multibikes_base
+#: model:ir.actions.report,name:multibikes_base.action_report_saleorder_with_caution
+msgid "Devis / Commande avec Cautions"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.actions.report,name:multibikes_base.action_report_caution_only
+msgid "Facture de Caution Uniquement"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
+msgid "Caution Unitaire"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
+msgid "Total Caution"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "Total Cautions :"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "Facture de Caution n° "
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "Référence Commande :"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "Date :"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "Commercial :"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "Description"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "Quantité"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "Valeur en cas de Vol"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "Informations sur les Cautions :"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "Cette facture couvre les cautions de sécurité pour les articles loués. Les cautions seront remboursées lors du retour des articles en bon état. En cas de vol ou de perte totale, les montants listés dans la colonne \"Valeur en cas de Vol\" seront facturés."
+msgstr "" 

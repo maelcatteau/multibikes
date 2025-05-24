@@ -1,13 +1,22 @@
 #!/bin/bash
 set -e
 
-# Chemin du fichier de configuration Odoo
-ODOO_CONF=${ODOO_RC:-/etc/odoo/odoo.conf}
-ODOO_CONF_DIR=$(dirname "$ODOO_CONF")
-TMP_CONF="/tmp/odoo_temp.conf"
+# Vérifier et corriger les permissions si nécessaire
+if [ ! -w "/var/lib/odoo" ]; then
+    echo "Correction des permissions pour /var/lib/odoo"
+    sudo chown -R odoo:odoo /var/lib/odoo
+    sudo chmod -R 755 /var/lib/odoo
+fi
+
+# Créer les répertoires nécessaires
+mkdir -p /var/lib/odoo/sessions /var/lib/odoo/filestore
+
+# Configuration par défaut
+TMP_CONF=${TMP_CONF:-/tmp/odoo_dev.conf}
+ODOO_CONF=${ODOO_CONF:-/etc/odoo/odoo.conf}
 
 # Variables de base de données
-DB_HOST=${PGHOST:-db}
+DB_HOST=${PGHOST:-db-dev}
 DB_PORT=${PGPORT:-5432}
 DB_USER=${PGUSER:-odoo}
 DB_PASSWORD=${PGPASSWORD:-odoo}
@@ -20,21 +29,28 @@ PROXY_MODE=${PROXY_MODE:-false}
 WEBSITE_SERVER_URL=${WEBSITE_SERVER_URL:-""}
 ODOO_WORKERS=${ODOO_WORKERS:-0}
 
-# Variables de développement et débogage
-DEV_MODE=${DEV_MODE:-false}
-DEBUG_MODE=${DEBUG_MODE:-false}
-TEST_ENABLE=${TEST_ENABLE:-false}
-LOG_LEVEL=${LOG_LEVEL:-info}
-LOG_HANDLER=${LOG_HANDLER:-":INFO"}
+# Variables de développement et débogage (valeurs par défaut pour dev)
+DEV_MODE=${DEV_MODE:-true}
+DEBUG_MODE=${DEBUG_MODE:-true}
+TEST_ENABLE=${TEST_ENABLE:-true}
+LOG_LEVEL=${LOG_LEVEL:-debug}
+LOG_HANDLER=${LOG_HANDLER:-":DEBUG"}
 
-# Variables de performances
-LIMIT_MEMORY_HARD=${LIMIT_MEMORY_HARD:-2684354560}
-LIMIT_MEMORY_SOFT=${LIMIT_MEMORY_SOFT:-2147483648}
+# Variables de performances (réduites pour le dev)
+LIMIT_MEMORY_HARD=${LIMIT_MEMORY_HARD:-1073741824}  # 1GB pour dev
+LIMIT_MEMORY_SOFT=${LIMIT_MEMORY_SOFT:-805306368}   # 768MB pour dev
 
-# Variables de sécurité
+# Variables de sécurité (plus permissives pour le dev)
 DISABLE_DATABASE_MANAGER=${DISABLE_DATABASE_MANAGER:-false}
 
-# Créer le fichier de configuration Odoo
+# Variables WebSockets (ajout pour cohérence)
+GEVENT_PORT=${GEVENT_PORT:-8072}
+WEBSOCKET_RATE_LIMIT_BURST=${WEBSOCKET_RATE_LIMIT_BURST:-10}
+WEBSOCKET_RATE_LIMIT_DELAY=${WEBSOCKET_RATE_LIMIT_DELAY:-0.2}
+
+# Variables de cron pour dev
+MAX_CRON_THREADS=${MAX_CRON_THREADS:-1}
+
 # Créer le fichier de configuration temporaire
 echo "Création du fichier de configuration temporaire: $TMP_CONF"
 cat > "$TMP_CONF" << EOF
@@ -55,6 +71,12 @@ workers = $ODOO_WORKERS
 ; Performances
 limit_memory_hard = $LIMIT_MEMORY_HARD
 limit_memory_soft = $LIMIT_MEMORY_SOFT
+max_cron_threads = $MAX_CRON_THREADS
+
+; WebSockets pour les rapports PDF et dev
+gevent_port = $GEVENT_PORT
+websocket_rate_limit_burst = $WEBSOCKET_RATE_LIMIT_BURST
+websocket_rate_limit_delay = $WEBSOCKET_RATE_LIMIT_DELAY
 
 ; Logging
 EOF
@@ -94,32 +116,17 @@ if [ -n "$WEBSITE_SERVER_URL" ]; then
     echo "proxy_prefetch = True" >> "$TMP_CONF"
 fi
 
-# Déplacer le fichier temporaire vers l'emplacement final
+# Configuration spécifique au développement
+echo "auto_reload = True" >> "$TMP_CONF"
+echo "without_demo = False" >> "$TMP_CONF"
+
+# Déplacer le fichier de configuration vers /etc/odoo
 echo "Déplacement du fichier de configuration vers: $ODOO_CONF"
-# Si nous sommes root, nous pouvons directement copier
-if [ "$(id -u)" = "0" ]; then
-    mkdir -p "$ODOO_CONF_DIR" || true
-    cp "$TMP_CONF" "$ODOO_CONF"
-    chown odoo:odoo "$ODOO_CONF" || true
-    chmod 644 "$ODOO_CONF" || true
-else
-    # Si nous ne sommes pas root, utilisons sudo si disponible
-    if command -v sudo > /dev/null; then
-        sudo mkdir -p "$ODOO_CONF_DIR" || true
-        sudo cp "$TMP_CONF" "$ODOO_CONF"
-        sudo chown odoo:odoo "$ODOO_CONF" || true
-        sudo chmod 644 "$ODOO_CONF" || true
-    else
-        # Si sudo n'est pas disponible, utilisons un emplacement alternatif où nous avons les permissions
-        ODOO_CONF="/var/lib/odoo/odoo.conf"
-        mkdir -p "$(dirname "$ODOO_CONF")" || true
-        cp "$TMP_CONF" "$ODOO_CONF"
-        echo "Attention: Impossible d'écrire dans $ODOO_RC, utilisation de $ODOO_CONF à la place"
-    fi
-fi
+cp "$TMP_CONF" "$ODOO_CONF"
+chmod 644 "$ODOO_CONF"
 
 # Afficher la configuration
-echo "======== Configuration Odoo ========"
+echo "======== Configuration Odoo Dev ========"
 echo "Fichier de configuration: $ODOO_CONF"
 echo ""
 echo "Base de données:"
@@ -141,9 +148,15 @@ echo "- Debug mode: $DEBUG_MODE"
 echo "- Test enable: $TEST_ENABLE"
 echo "- Log level: $LOG_LEVEL"
 echo ""
+echo "WebSockets:"
+echo "- Gevent port: $GEVENT_PORT"
+echo "- Rate limit burst: $WEBSOCKET_RATE_LIMIT_BURST"
+echo "- Rate limit delay: $WEBSOCKET_RATE_LIMIT_DELAY"
+echo ""
 echo "Performance:"
 echo "- Memory limit (hard): $LIMIT_MEMORY_HARD"
 echo "- Memory limit (soft): $LIMIT_MEMORY_SOFT"
+echo "- Max cron threads: $MAX_CRON_THREADS"
 echo ""
 echo "Sécurité:"
 echo "- Database manager disabled: $DISABLE_DATABASE_MANAGER"
@@ -154,5 +167,19 @@ cat "$ODOO_CONF"
 echo "=================================="
 
 # Exécuter Odoo avec le fichier de configuration
-echo "Démarrage d'Odoo avec le fichier de configuration $ODOO_CONF"
-exec odoo -c "$ODOO_CONF" "$@"
+echo "Démarrage d'Odoo Dev avec le fichier de configuration $ODOO_CONF"
+
+# Filtrer les arguments pour éviter la duplication
+args=()
+for arg in "$@"; do
+    if [ "$arg" != "odoo" ] && [ "$arg" != "--config=/etc/odoo/odoo.conf" ]; then
+        args+=("$arg")
+    fi
+done
+
+# Si aucun argument spécifique n'est fourni, utiliser la configuration par défaut
+if [ ${#args[@]} -eq 0 ]; then
+    exec odoo -c "$ODOO_CONF"
+else
+    exec odoo -c "$ODOO_CONF" "${args[@]}"
+fi

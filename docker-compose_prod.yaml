@@ -1,0 +1,56 @@
+services:
+  odoo-prod:
+    build:
+      context: .
+      dockerfile: ./dockerfiles/Dockerfile.prod
+    image: odoo_multibikes_prod:local
+    container_name: odoo-prod
+    depends_on:
+      db-prod:
+        condition: service_healthy
+    expose:
+      - "8069"
+      - "8072"  # Port WebSocket
+    networks:
+      - odoo-network
+      - npm-odoo
+      - default
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    volumes:
+      - ./custom-addons:/mnt/extra-addons:delegated
+      - odoo-data-prod:/var/lib/odoo
+    env_file:
+      - ./env/Database_prod.env  # Pour que les variables DB soient disponibles
+      - ./env/Prod.env
+    restart: unless-stopped
+
+  # Base de données principale pour production
+  db-prod:
+    image: postgres:15
+    env_file:
+      - ./env/Database_prod.env
+    networks:
+      - odoo-network
+    volumes:
+      - postgres-data-prod:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-odoo} -d ${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  default:
+  odoo-network:
+    driver: bridge
+  npm-odoo:
+    external: true
+
+volumes:
+  postgres-data-prod:
+  odoo-data-prod:

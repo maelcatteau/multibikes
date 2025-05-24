@@ -1,0 +1,29 @@
+FROM ghcr.io/maelcatteau/odoo-ee-base_2:18.0
+
+# Variables d'environnement pour la production
+ENV DEV_MODE=false \
+    DEBUG_MODE=false \
+    TEST_ENABLE=false \
+    LOG_LEVEL=warn \
+    ODOO_WORKERS=4 \
+    LIMIT_MEMORY_HARD=2684354560 \
+    LIMIT_MEMORY_SOFT=2147483648 \
+    MAX_CRON_THREADS=2 \
+    DISABLE_DATABASE_MANAGER=true \
+    PROXY_MODE=true \
+    WEBSOCKET_RATE_LIMIT_BURST=5 \
+    WEBSOCKET_RATE_LIMIT_DELAY=0.5
+
+# Copier le script en tant que root (avant USER odoo)
+USER root
+COPY scripts/entrypoint_prod.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && chown odoo:odoo /entrypoint.sh
+
+# Exposition des ports
+EXPOSE 8069 8072
+
+# Revenir à l'utilisateur odoo
+USER odoo
+
+# Point d'entrée
+ENTRYPOINT ["/entrypoint.sh"]

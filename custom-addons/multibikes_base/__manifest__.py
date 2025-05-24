@@ -9,6 +9,7 @@
         - Gestion des cautions pour les locations
         - Personnalisation des fiches produits
         - Personnalisation des commandes
+        - Support multilingue (français, anglais, allemand)
     """,
     'author': 'Maël CATTEAU',
     
@@ -19,7 +20,8 @@
     'data': [
         'views/product_template_views.xml',
         'views/res_partner_views.xml',
-        'views/sale_order_views.xml'
+        'views/sale_order_views.xml',
+        'report/sale_report_caution.xml'
     ],
     
     # Configuration d'installation

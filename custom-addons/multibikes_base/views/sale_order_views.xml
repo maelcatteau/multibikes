@@ -30,6 +30,14 @@
             <xpath expr="//field[@name='order_line']//form//field[@name='price_subtotal']" position="after">
                 <field name="mb_caution_subtotal"/>
             </xpath>
+
+            <!-- Ajout du champ de caution totale -->
+            <xpath expr="//group[@name='sale_total']" position="inside">
+                <field name="mb_caution_total" 
+                    class="oe_subtotal_footer_separator" 
+                    widget="monetary" 
+                    string="Caution Totale"/>
+            </xpath>
         </field>
     </record>
 </odoo>

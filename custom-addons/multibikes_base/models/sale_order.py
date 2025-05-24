@@ -1,4 +1,4 @@
-from odoo import models, fields
+from odoo import models, fields, api
 
 class SaleOrder(models.Model):
     """
@@ -24,3 +24,18 @@ class SaleOrder(models.Model):
         string="Numéro du dossier de caution",
         help="Numéro du dossier de caution pour la location. Ce numéro est utilisé pour faire le lien aavec l'empreinte de carte"
     )
+
+    mb_caution_total = fields.Monetary(
+        string="Caution totale",
+        compute='_compute_mb_caution_total',
+        store=True,
+        help="Montant total de la caution pour la location"
+    )
+
+    @api.depends('order_line.mb_caution_subtotal')
+    def _compute_mb_caution_total(self):
+        for order in self:
+            total = 0.0
+            for line in order.order_line:
+                total += line.mb_caution_subtotal or 0.0
+            order.mb_caution_total = total
