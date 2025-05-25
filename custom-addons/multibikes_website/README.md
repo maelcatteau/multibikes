@@ -93,3 +93,23 @@ Pour toute question ou problème concernant ce module, veuillez contacter l'équ
 ## Licence
 
 Ce module est distribué sous licence LGPL-3.
+
+## Gestion du Stock par Période
+
+Ce module permet de configurer et de visualiser le stock disponible pour chaque période de location directement sur le site web. Les configurations de stock sont définies pour chaque période et permettent de gérer efficacement la disponibilité des produits.
+
+### Configuration du Stock
+- **Produits stockables** : Associez des produits stockables à chaque période de location.
+- **Stock disponible** : Définissez le stock disponible pour chaque période afin de contrôler la disponibilité des produits sur le site.
+- **Détail du stock** : Visualisez le détail du stock par produit pour chaque période.
+
+## Configuration des Horaires Journalières
+
+Le module permet de configurer les horaires d'ouverture et de fermeture pour chaque jour de la semaine, ce qui est essentiel pour la gestion des locations.
+
+### Configuration des Horaires
+- **Jours d'ouverture** : Définissez quels jours de la semaine sont ouverts pour les locations.
+- **Heures de pickup et de retour** : Configurez les heures spécifiques pour le pickup et le retour des produits.
+- **Fermeture** : Indiquez les jours où les locations ne sont pas possibles.
+
+Ces configurations permettent d'assurer une gestion précise et flexible des périodes de location et des disponibilités sur le site web.
