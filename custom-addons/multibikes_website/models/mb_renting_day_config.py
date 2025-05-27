@@ -108,7 +108,7 @@ class MBRentingDayConfig(models.Model):
         weekday = str(date.weekday() + 1)  # Lundi=1, ..., Dimanche=7
         
         return self.search([
-            ('company_id', '=', period.company_id),
+            ('company_id', '=', self.env.company.id),
             ('period_id', '=', period.id),
             ('day_of_week', '=', weekday)
         ], limit=1)
