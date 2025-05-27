@@ -23,6 +23,10 @@ class WebsiteSaleRentingCustom(WebsiteSaleRenting):
         return {
             'renting_periods': periods_data,
             'website_tz': request.website.tz,
+            'renting_minimal_time': {
+                'duration': '1',
+                'unit': 'hour'
+            },
         }
     
     def _get_rental_periods(self):

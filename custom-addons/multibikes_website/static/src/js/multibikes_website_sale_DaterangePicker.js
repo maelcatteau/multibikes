@@ -23,16 +23,21 @@ patch(publicWidget.registry.WebsiteSaleDaterangePicker.prototype, {
         return rpc("/rental/product/constraints").then((constraints) => {
             this.rentingPeriods = constraints.renting_periods;
             this.websiteTz = constraints.website_tz;
+            this.rentingMinimalTime = constraints.renting_minimal_time
 
             console.log('[WebsiteSaleDaterangePicker] Événement renting_constraints_loaded déclenché avec:', {
                 rentingPeriods: this.rentingPeriods,
-                websiteTz: this.websiteTz
+                websiteTz: this.websiteTz,
+                rentingMinimalTime: this.rentingMinimalTime
             });
 
-            $('.oe_website_sale').trigger('renting_constraints_loaded', {
-                rentingPeriods: this.rentingPeriods,
+            $('.oe_website_sale').trigger('renting_constraints_changed', {
+                rentingMinimalTime: this.rentingMinimalTime,
                 websiteTz: this.websiteTz,
             });
+            $('.oe_website_sale').trigger('renting_constraints_loaded', {
+                rentingPeriods: this.rentingPeriods,
+            })
         });
     },
     /**
