@@ -96,13 +96,11 @@ class MBRentingDayConfig(models.Model):
     
     # === MÉTHODES MÉTIER ===
     @api.model
-    def get_config_for_date(self, date, company_id=None):
+    def get_config_for_date(self, date):
         """Récupère la configuration pour une date donnée"""
-        if not company_id:
-            company_id = self.env.company.id
             
         # Trouve la période correspondant à la date
-        period = self.env['mb.renting.period'].find_period_for_date(date, company_id)
+        period = self.env['mb.renting.period'].find_period_for_date(date)
         if not period:
             return None
             
@@ -110,7 +108,7 @@ class MBRentingDayConfig(models.Model):
         weekday = str(date.weekday() + 1)  # Lundi=1, ..., Dimanche=7
         
         return self.search([
-            ('company_id', '=', company_id),
+            ('company_id', '=', period.company_id),
             ('period_id', '=', period.id),
             ('day_of_week', '=', weekday)
         ], limit=1)

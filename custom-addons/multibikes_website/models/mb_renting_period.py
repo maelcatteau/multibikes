@@ -181,10 +181,8 @@ class MBRentingPeriod(models.Model):
         }
 
     @api.model
-    def find_period_for_date(self, target_date, company_id=None):
+    def find_period_for_date(self, target_date):
         """Trouve la période active pour une date donnée"""
-        if not company_id:
-            company_id = self.env.company.id
         
         # Conversion en datetime si nécessaire
         if hasattr(target_date, 'date'):
@@ -194,7 +192,7 @@ class MBRentingPeriod(models.Model):
             target_datetime = fields.Datetime.to_datetime(target_date)
         
         return self.search([
-            ('company_id', '=', company_id),
+            ('company_id', '=', self.env.company.id),
             ('start_date', '<=', target_datetime),
             ('end_date', '>=', target_datetime),
             ('is_closed', '=', False)
