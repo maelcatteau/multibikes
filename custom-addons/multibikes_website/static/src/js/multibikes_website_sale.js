@@ -39,12 +39,6 @@ WebsiteSale.include({
      */
     _onRentingPeriodsLoaded(_event, info) {
         this.rentingPeriods = info.rentingPeriods;
-        this.websiteTz = info.websiteTz || 'UTC';
-        // console.log("[WebsiteSale] Renting periods loaded:", this.rentingPeriods, "TZ:", this.websiteTz);
-
-        // Si des dates sont déjà sélectionnées ou une variante est là, mettre à jour les contraintes
-        const $parent = this.$el.closest('.oe_website_sale').find('#product_details');
-        this._updateRentalConstraints($parent);
     },
 
     /**
@@ -125,11 +119,6 @@ WebsiteSale.include({
             startDate: startDate || 'non défini',
             productId: productId || 'non défini'
         });
-
-        // Si nous n'avons pas encore chargé les contraintes, le faire maintenant
-        if (!this.rentingPeriods) {
-            await this._loadRentingConstraints();
-        }
         
         if (!this.rentingPeriods) {
             console.warn("[WebsiteSale] Impossible de mettre à jour les contraintes : données non chargées");
