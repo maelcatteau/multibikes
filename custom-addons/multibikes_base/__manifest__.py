@@ -1,7 +1,7 @@
 {
     # Informations générales sur le module
     'name': 'Multibikes base',
-    'version': '1.0',
+    'version': '18.0.1.0.0', 
     'category': 'Sales/Rental',
     'summary': 'Module de base pour la gestion des locations de vélos',
     'description': """

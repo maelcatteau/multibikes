@@ -10,7 +10,7 @@
         4. Filtrage intelligent des tarifs affichés dans la table de prix
         5. Amélioration de l'expérience utilisateur pour la location de vélos
     """,
-    'version': '1.0',
+    'version': '18.0.1.0.0',
     'category': 'Sales/Rental',
     'depends': [
         'web',

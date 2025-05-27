@@ -23,7 +23,7 @@ DB_PASSWORD=${PGPASSWORD:-odoo}
 
 # Variables de configuration Odoo
 ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
-ADDONS_PATH=${ADDONS_PATH:-/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons}
+ADDONS_PATH=${ADDONS_PATH:-/mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons}
 DATA_DIR=${DATA_DIR:-/var/lib/odoo}
 PROXY_MODE=${PROXY_MODE:-False}
 WEBSITE_SERVER_URL=${WEBSITE_SERVER_URL:-""}
@@ -72,7 +72,7 @@ db_password = odoo
 admin_passwd = odoo-multibikes-dev
 
 ; Configuration de base
-addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
+addons_path = /mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons
 data_dir = /var/lib/odoo
 proxy_mode = True
 workers = 0
