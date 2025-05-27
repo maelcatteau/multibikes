@@ -77,7 +77,7 @@ class MBRentingPeriod(models.Model):
         ('company_dates_unique', 'UNIQUE(company_id, start_date, end_date)', 'A period with these dates already exists.')
     ]
 
-    @api.depends()
+    @api.depends('company_id')
     def _compute_total_storable_products(self):
         """Calcule le nombre total de produits stockables dans le système."""
         for period in self:
@@ -214,8 +214,10 @@ class MBRentingPeriod(models.Model):
                 vals['start_date'] = last_period.end_date
                 
             # Auto-suggestion du nom si pas fourni
-            if not vals.get('name') and last_period:
-                vals['name'] = f"Période {len(self.search([('company_id', '=', company_id)])) + 1}"
+            if not vals.get('name'):
+                # Plus robuste pour les créations multiples
+                count = self.search_count([('company_id', '=', company_id)])
+                vals['name'] = f"Période {count + 1}"
         
         return super().create(vals)
 
@@ -258,8 +260,10 @@ class MBRentingPeriod(models.Model):
         # Récupérer tous les produits stockables
         all_storable_products = self.env['product.product'].search([
             ('is_storable', '=', True),
-            ('active', '=', True)
+            ('active', '=', True),
+            '|', ('company_id', '=', self.company_id.id), ('company_id', '=', False)
         ])
+
         
         # Récupérer les produits déjà configurés
         already_configured = self.stock_period_config_ids.mapped('storable_product_ids')
@@ -292,6 +296,6 @@ class MBRentingPeriod(models.Model):
             'view_mode': 'form',
             'target': 'new',
             'context': {
-                'default_notification': f'✅ {len(products_to_configure)} produit(s) ajouté(s) à configurer'
+                'default_notification': f'✅ {message}'
             },
         }
