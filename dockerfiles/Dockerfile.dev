@@ -9,8 +9,18 @@ ENV DEV_MODE=true \
     LIMIT_MEMORY_HARD=1073741824 \
     LIMIT_MEMORY_SOFT=805306368
 
-# Copier le script en tant que root (avant USER odoo)
+# Copier le script et installer les dépendances de développement en tant que root
 USER root
+
+# Installer les dépendances de développement
+RUN pip3 install --no-cache-dir \
+    pyinotify \
+    watchdog \
+    debugpy \
+    ipython \
+    pytest-odoo
+
+# Copier le script d'entrée
 COPY scripts/entrypoint_dev.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && chown odoo:odoo /entrypoint.sh
 
@@ -22,4 +32,3 @@ USER odoo
 
 # Point d'entrée
 ENTRYPOINT ["/entrypoint.sh"]
-

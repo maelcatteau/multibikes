@@ -25,7 +25,7 @@ DB_PASSWORD=${PGPASSWORD:-odoo}
 ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
 ADDONS_PATH=${ADDONS_PATH:-/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons}
 DATA_DIR=${DATA_DIR:-/var/lib/odoo}
-PROXY_MODE=${PROXY_MODE:-false}
+PROXY_MODE=${PROXY_MODE:-False}
 WEBSITE_SERVER_URL=${WEBSITE_SERVER_URL:-""}
 ODOO_WORKERS=${ODOO_WORKERS:-0}
 
@@ -34,7 +34,6 @@ DEV_MODE=${DEV_MODE:-true}
 DEBUG_MODE=${DEBUG_MODE:-true}
 TEST_ENABLE=${TEST_ENABLE:-true}
 LOG_LEVEL=${LOG_LEVEL:-debug}
-LOG_HANDLER=${LOG_HANDLER:-":DEBUG"}
 
 # Variables de performances (réduites pour le dev)
 LIMIT_MEMORY_HARD=${LIMIT_MEMORY_HARD:-1073741824}  # 1GB pour dev
@@ -43,7 +42,7 @@ LIMIT_MEMORY_SOFT=${LIMIT_MEMORY_SOFT:-805306368}   # 768MB pour dev
 # Variables de sécurité (plus permissives pour le dev)
 DISABLE_DATABASE_MANAGER=${DISABLE_DATABASE_MANAGER:-false}
 
-# Variables WebSockets (ajout pour cohérence)
+# Variables WebSockets
 GEVENT_PORT=${GEVENT_PORT:-8072}
 WEBSOCKET_RATE_LIMIT_BURST=${WEBSOCKET_RATE_LIMIT_BURST:-10}
 WEBSOCKET_RATE_LIMIT_DELAY=${WEBSOCKET_RATE_LIMIT_DELAY:-0.2}
@@ -51,74 +50,70 @@ WEBSOCKET_RATE_LIMIT_DELAY=${WEBSOCKET_RATE_LIMIT_DELAY:-0.2}
 # Variables de cron pour dev
 MAX_CRON_THREADS=${MAX_CRON_THREADS:-1}
 
+# Fonction pour convertir les valeurs booléennes
+convert_bool() {
+    local value="$1"
+    if [ "$value" = "true" ] || [ "$value" = "True" ] || [ "$value" = "1" ]; then
+        echo "True"
+    else
+        echo "False"
+    fi
+}
+
 # Créer le fichier de configuration temporaire
 echo "Création du fichier de configuration temporaire: $TMP_CONF"
 cat > "$TMP_CONF" << EOF
 [options]
 ; Base de données
-db_host = $DB_HOST
-db_port = $DB_PORT
-db_user = $DB_USER
-db_password = $DB_PASSWORD
-admin_passwd = $ADMIN_PASSWORD
+db_host = db-dev
+db_port = 5432
+db_user = odoo
+db_password = odoo
+admin_passwd = odoo-multibikes-dev
 
 ; Configuration de base
-addons_path = $ADDONS_PATH
-data_dir = $DATA_DIR
-proxy_mode = $PROXY_MODE
-workers = $ODOO_WORKERS
+addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
+data_dir = /var/lib/odoo
+proxy_mode = True
+workers = 0
+
+; Mode développement Odoo 18
+dev_mode = reload,qweb,werkzeug,xml
+without_demo = False
+test_enable = False
 
 ; Performances
-limit_memory_hard = $LIMIT_MEMORY_HARD
-limit_memory_soft = $LIMIT_MEMORY_SOFT
-max_cron_threads = $MAX_CRON_THREADS
+limit_memory_hard = 2684354560
+limit_memory_soft = 2147483648
+max_cron_threads = 1
 
-; WebSockets pour les rapports PDF et dev
-gevent_port = $GEVENT_PORT
-websocket_rate_limit_burst = $WEBSOCKET_RATE_LIMIT_BURST
-websocket_rate_limit_delay = $WEBSOCKET_RATE_LIMIT_DELAY
+; WebSockets
+gevent_port = 8072
 
 ; Logging
-EOF
-
-# Configuration des logs
-if [ "$DEBUG_MODE" = true ] || [ "$DEBUG_MODE" = "True" ]; then
-    cat >> "$TMP_CONF" << EOF
 log_level = debug
-log_handler = [':DEBUG']
+log_handler = :DEBUG
+
+; Sécurité
+list_db = True
 EOF
-else
-    cat >> "$TMP_CONF" << EOF
-log_level = $LOG_LEVEL
-log_handler = ['$LOG_HANDLER']
-EOF
-fi
-
-# Mode développement
-if [ "$DEV_MODE" = true ] || [ "$DEV_MODE" = "True" ]; then
-    echo "dev_mode = all" >> "$TMP_CONF"
-fi
-
-# Tests
-if [ "$TEST_ENABLE" = true ] || [ "$TEST_ENABLE" = "True" ]; then
-    echo "test_enable = True" >> "$TMP_CONF"
-fi
-
-# Sécurité
-if [ "$DISABLE_DATABASE_MANAGER" = true ] || [ "$DISABLE_DATABASE_MANAGER" = "True" ]; then
-    echo "list_db = False" >> "$TMP_CONF"
-else
-    echo "list_db = True" >> "$TMP_CONF"
-fi
 
 # Website server URL si défini
 if [ -n "$WEBSITE_SERVER_URL" ]; then
     echo "proxy_prefetch = True" >> "$TMP_CONF"
 fi
 
-# Configuration spécifique au développement
-echo "auto_reload = True" >> "$TMP_CONF"
-echo "without_demo = False" >> "$TMP_CONF"
+# Configuration spécifique pour forcer le mode développement
+if [ "$DEV_MODE" = "true" ] || [ "$DEV_MODE" = "True" ]; then
+    cat >> "$TMP_CONF" << EOF
+
+; Configuration supplémentaire pour le mode développement
+server_wide_modules = base,web
+EOF
+fi
+
+# Assurer que le répertoire de destination existe
+mkdir -p "$(dirname "$ODOO_CONF")"
 
 # Déplacer le fichier de configuration vers /etc/odoo
 echo "Déplacement du fichier de configuration vers: $ODOO_CONF"
@@ -141,30 +136,14 @@ echo "- Proxy mode: $PROXY_MODE"
 if [ -n "$WEBSITE_SERVER_URL" ]; then
     echo "- Website URL: $WEBSITE_SERVER_URL"
 fi
-echo ""
-echo "Développement:"
-echo "- Dev mode: $DEV_MODE"
-echo "- Debug mode: $DEBUG_MODE"
-echo "- Test enable: $TEST_ENABLE"
-echo "- Log level: $LOG_LEVEL"
-echo ""
-echo "WebSockets:"
-echo "- Gevent port: $GEVENT_PORT"
-echo "- Rate limit burst: $WEBSOCKET_RATE_LIMIT_BURST"
-echo "- Rate limit delay: $WEBSOCKET_RATE_LIMIT_DELAY"
-echo ""
-echo "Performance:"
-echo "- Memory limit (hard): $LIMIT_MEMORY_HARD"
-echo "- Memory limit (soft): $LIMIT_MEMORY_SOFT"
-echo "- Max cron threads: $MAX_CRON_THREADS"
-echo ""
-echo "Sécurité:"
-echo "- Database manager disabled: $DISABLE_DATABASE_MANAGER"
-echo "=================================="
-echo "Contenu du fichier de configuration:"
-echo "=================================="
-cat "$ODOO_CONF"
-echo "=================================="
+
+# Attendre que la base de données soit prête
+echo "Vérification de la disponibilité de la base de données..."
+until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" 2>/dev/null; do
+    echo "En attente de la base de données..."
+    sleep 2
+done
+echo "Base de données disponible!"
 
 # Exécuter Odoo avec le fichier de configuration
 echo "Démarrage d'Odoo Dev avec le fichier de configuration $ODOO_CONF"
@@ -172,14 +151,31 @@ echo "Démarrage d'Odoo Dev avec le fichier de configuration $ODOO_CONF"
 # Filtrer les arguments pour éviter la duplication
 args=()
 for arg in "$@"; do
-    if [ "$arg" != "odoo" ] && [ "$arg" != "--config=/etc/odoo/odoo.conf" ]; then
-        args+=("$arg")
-    fi
+    case "$arg" in
+        "odoo"|"--config="*|"-c="*)
+            # Ignorer ces arguments pour éviter les doublons
+            ;;
+        *)
+            args+=("$arg")
+            ;;
+    esac
 done
 
-# Si aucun argument spécifique n'est fourni, utiliser la configuration par défaut
+echo "🚀 Démarrage Odoo 18 en mode développement complet..."
+
+# Nettoyer le cache au démarrage
+rm -rf /var/lib/odoo/sessions/* 2>/dev/null || true
+
 if [ ${#args[@]} -eq 0 ]; then
-    exec odoo -c "$ODOO_CONF"
+    # CONFIGURATION CORRECTE pour Odoo 18
+    exec odoo -c "$ODOO_CONF" \
+        --dev=reload,qweb,werkzeug,xml \
+        --log-level=debug \
+        --limit-time-cpu=3600 \
+        --limit-time-real=7200 \
+        --load=base,web
 else
-    exec odoo -c "$ODOO_CONF" "${args[@]}"
+    exec odoo -c "$ODOO_CONF" \
+        --dev=reload,qweb,werkzeug,xml \
+        "${args[@]}"
 fi
