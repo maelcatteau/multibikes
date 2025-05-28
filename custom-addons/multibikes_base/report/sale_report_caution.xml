@@ -12,7 +12,7 @@
         <!-- Ajout des cellules caution dans le corps du tableau -->
         <xpath expr="//td[@name='td_subtotal']" position="before">
             <td name="td_caution_unit" class="text-end">
-                <span t-if="line.mb_caution > 0" t-field="line.mb_caution" 
+                <span t-if="line.mb_caution_unit > 0" t-field="line.mb_caution_unit" 
                     t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
             </td>
             <td name="td_caution_subtotal" class="text-end">
@@ -90,7 +90,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <t t-foreach="doc.order_line.filtered(lambda l: l.mb_caution > 0)" t-as="line">
+                        <t t-foreach="doc.order_line.filtered(lambda l: l.mb_caution_unit > 0)" t-as="line">
                             <tr>
                                 <td><span t-field="line.name"/></td>
                                 <td class="text-end">
@@ -98,7 +98,7 @@
                                     <span t-field="line.product_uom" groups="uom.group_uom"/>
                                 </td>
                                 <td class="text-end">
-                                    <span t-field="line.mb_caution" 
+                                    <span t-field="line.mb_caution_unit" 
                                         t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
                                 </td>
                                 <td class="text-end">
