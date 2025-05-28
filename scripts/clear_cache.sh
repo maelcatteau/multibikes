@@ -2,7 +2,7 @@
 echo "🧹 Nettoyage cache assets Odoo 18..."
 
 # Clear via shell Odoo 18
-docker-compose exec odoo-dev python3 /usr/bin/odoo shell -d test <<EOF
+docker compose exec odoo-dev python3 /usr/bin/odoo shell -d test <<EOF
 # Odoo 18 : Clear des assets et bundles
 env['ir.attachment'].search([
     ('name', 'ilike', 'web.assets_%')
@@ -30,6 +30,6 @@ exit()
 EOF
 
 echo "🔄 Redémarrage conteneur..."
-docker-compose restart odoo-dev
+docker compose restart odoo-dev
 
 echo "✅ Terminé ! Accédez avec ?debug=1"
