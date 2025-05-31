@@ -6,8 +6,8 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <!-- Ajout du champ de numéro de caution dans la section des détails du partenaire -->
-            <!-- Ce champ permet de faire le lien avec l'empreinte de carte' -->
+            
+            <!-- Ajout du champ de caution dans la section des détails du partenaire -->
             <xpath expr="//group[@name='partner_details']" position="inside">
                 <field name="mb_type_de_caution"/>
                 <field name="mb_numero_de_caution" invisible="mb_type_de_caution != 'carte_bancaire'"/>
@@ -15,29 +15,33 @@
             
             <!-- Ajout des champs dans les lignes de commande - vue liste -->
             <xpath expr="//notebook/page[@name='order_lines']/field/list/field[@name='price_unit']" position="after">
-                <field name="mb_caution_unit"/>
-                <field name="mb_value_in_case_of_theft"/>
+                <field name="mb_caution_unit" string="Caution unit." optional="show" widget="monetary"/>
+                <field name="mb_value_in_case_of_theft" string="Valeur vol" optional="hide" widget="monetary"/>
             </xpath>
+            
             <xpath expr="//notebook/page[@name='order_lines']/field/list/field[@name='price_subtotal']" position="after">
-                <field name="mb_caution_subtotal"/>
+                <field name="mb_caution_subtotal" string="Caution total" optional="show" widget="monetary"/>
             </xpath>
 
             <!-- Ajout des champs dans les lignes de commande - vue formulaire (popup) -->
             <xpath expr="//field[@name='order_line']//form//field[@name='price_unit']" position="after">
-                <field name="mb_caution_unit"/>
-                <field name="mb_value_in_case_of_theft"/>
+                <field name="mb_caution_unit" readonly="1"/>
+                <field name="mb_value_in_case_of_theft" readonly="1"/>
             </xpath>
+            
             <xpath expr="//field[@name='order_line']//form//field[@name='price_subtotal']" position="after">
-                <field name="mb_caution_subtotal"/>
+                <field name="mb_caution_subtotal" readonly="1" widget="monetary"/>
             </xpath>
 
-            <!-- Ajout du champ de caution totale -->
+            <!-- Ajout du total caution dans la section des totaux -->
             <xpath expr="//group[@name='sale_total']" position="inside">
                 <field name="mb_caution_total" 
-                    class="oe_subtotal_footer_separator" 
-                    widget="monetary" 
-                    string="Caution Totale"/>
+                       string="Total Cautions" 
+                       widget="monetary" 
+                       class="oe_subtotal_footer_separator"
+                       invisible="mb_caution_total == 0"/>
             </xpath>
+
         </field>
     </record>
 </odoo>

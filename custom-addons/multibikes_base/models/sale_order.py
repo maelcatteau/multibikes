@@ -5,7 +5,7 @@ class SaleOrder(models.Model):
     """
     Extension du modèle Sale Order
     -----------------------------
-    Ajoute des champs pour gérer les cautions
+    Ajoute des champs pour gérer les cautions ET les remises globales
     associés aux commandes de location.
     """
     _inherit = 'sale.order'
@@ -20,10 +20,9 @@ class SaleOrder(models.Model):
         help="Type de caution pour la location"
     )
     
-    
     mb_numero_de_caution = fields.Integer(
         string="Numéro du dossier de caution",
-        help="Numéro du dossier de caution pour la location. Ce numéro est utilisé pour faire le lien aavec l'empreinte de carte"
+        help="Numéro du dossier de caution pour la location. Ce numéro est utilisé pour faire le lien avec l'empreinte de carte"
     )
 
     mb_caution_total = fields.Monetary(
@@ -33,10 +32,16 @@ class SaleOrder(models.Model):
         help="Montant total de la caution pour la location"
     )
 
+    mb_caution_discount_product_id = fields.Many2one(
+        'product.product',
+        string="Produit remise caution",
+        help="Produit utilisé pour les remises de caution dans le wizard"
+    )
+
     @api.depends('order_line.mb_caution_subtotal')
     def _compute_mb_caution_total(self):
         for order in self:
-            total = 0.0
-            for line in order.order_line:
-                total += line.mb_caution_subtotal or 0.0
-            order.mb_caution_total = total
+            order.mb_caution_total = sum(
+                line.mb_caution_subtotal or 0.0 
+                for line in order.order_line
+            )

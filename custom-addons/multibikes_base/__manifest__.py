@@ -14,13 +14,14 @@
     'author': 'Maël CATTEAU',
     
     # Dépendances du module
-    'depends': ['base', 'sale', 'sale_renting'],
+    'depends': ['base', 'sale', 'sale_renting', 'sale_management', 'web'],
     
     # Fichiers de données (vues, menus, actions, etc.)
     'data': [
         'views/product_template_views.xml',
         'views/sale_order_views.xml',
-        'report/sale_report_caution.xml'
+        'report/sale_report_caution.xml',
+        'wizard/sale_order_discount.xml'
     ],
     
     # Configuration d'installation

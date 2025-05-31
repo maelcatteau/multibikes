@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="sale_order_line_wizard_form_inherit" model="ir.ui.view">
+        <field name="name">sale.order.discount.inherit.form</field>
+        <field name="model">sale.order.discount</field>
+        <field name="inherit_id" ref="sale.sale_order_line_wizard_form"/>
+        <field name="arch" type="xml">
+            <sheet position="inside">
+                <separator string="Prix - Remises"/>
+            </sheet>
+            
+            <div class="row" position="after">
+                <separator string="Caution - Remises"/>
+                <div class="row">
+                    <div class="col-sm-5 col-md-4 col-lg-4 col-4">
+                        <group>
+                            <field name="apply_caution_discount"/>
+                            <label for="caution_discount_amount" string="Montant" invisible="not apply_caution_discount"/>
+                            <field name="caution_discount_amount" invisible="not apply_caution_discount" nolabel="1"/>
+                        </group>
+                    </div>
+                    <div class="col-sm-7 col-md-8 col-lg-8 col-8">
+                        <p invisible="not apply_caution_discount" class="text-muted">
+                            Remise par montant global sur la caution
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </field>
+    </record>
+
+</odoo>

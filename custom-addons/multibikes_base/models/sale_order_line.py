@@ -11,7 +11,8 @@ class SaleOrderLine(models.Model):
         currency_field='currency_id',
         readonly=True,
         store=True, 
-        help="Montant de la caution unitaire"
+        help="Montant de la caution unitaire",
+        precompute=True
     )
     
     mb_value_in_case_of_theft = fields.Monetary(
@@ -28,7 +29,8 @@ class SaleOrderLine(models.Model):
         compute='_compute_mb_subtotal',
         store=True,
         currency_field='currency_id',
-        help="Montant total de la caution (caution unitaire × quantité)"
+        help="Montant total de la caution (caution unitaire × quantité)",
+        precompute=True,
     )
     
     @api.depends('mb_caution_unit', 'product_uom_qty')
