@@ -184,7 +184,7 @@ WebsiteSale.include({
         const rentingUnavailabilityDays = this._generateUnavailabilityDays(matchingPeriod.day_configs);
 
         this.rentingUnavailabilityDays = rentingUnavailabilityDays;
-        this.rentingMinimalTime = matchingPeriod.rentingMinimalTime;
+        this.rentingMinimalTime = matchingPeriod.minimal_time;
         this.websiteTz = matchingPeriod.websiteTz;
         this.dailyConfigs = matchingPeriod.day_configs;
         
