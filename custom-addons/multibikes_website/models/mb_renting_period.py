@@ -66,6 +66,7 @@ class MBRentingPeriod(models.Model):
     )
 
     status = fields.Selection([
+        ('draft', 'Brouillon'),
         ('future', 'À venir'),
         ('active', 'Active'),
         ('past', 'Passée'),
@@ -120,6 +121,10 @@ class MBRentingPeriod(models.Model):
         for period in self:
             if period.is_closed:
                 period.status = 'closed'
+            elif not period.start_date:
+                period.status = 'draft'  # ou 'future'
+            elif not period.end_date:
+                period.status = 'future'
             elif now < period.start_date:
                 period.status = 'future'
             elif now > period.end_date:
