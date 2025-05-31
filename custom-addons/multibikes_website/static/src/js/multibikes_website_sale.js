@@ -210,33 +210,8 @@ WebsiteSale.include({
     },
 
     /**
-     * Compare la durée de location actuelle avec la durée minimale requise.
-     */
-    _compareRentalDurations(actualRental, minimalRentalRequirement) {
-        if (!actualRental || typeof actualRental.duration !== 'number' || !actualRental.unit ||
-            !minimalRentalRequirement || typeof minimalRentalRequirement.duration !== 'number' || !minimalRentalRequirement.unit) {
-            console.warn("[WebsiteSale] Comparaison de durée impossible: données invalides", actualRental, minimalRentalRequirement);
-            return true;
-        }
-
-        const unitToHours = {
-            'hour': 1, 'hours': 1,
-            'day': 24, 'days': 24,
-            'week': 24 * 7, 'weeks': 24 * 7,
-        };
-
-        const actualDurationInHours = actualRental.duration * (unitToHours[actualRental.unit.toLowerCase()] || 0);
-        const minimalDurationInHours = minimalRentalRequirement.duration * (unitToHours[minimalRentalRequirement.unit.toLowerCase()] || 0);
-
-        if (actualDurationInHours === 0 && minimalDurationInHours > 0) return false; // Si actuel est 0 et min > 0
-        if (minimalDurationInHours === 0 ) return true; // Si min est 0, toujours valide
-
-        return actualDurationInHours >= minimalDurationInHours;
-    },
-
-    /**
      * Vérifie si l'heure donnée est valide selon this.dailyConfigs.
-     * @returns {Object|null} - Objet avec les infos du créneau si valide, null si invalide v15:46
+     * @returns {Object|null} - Objet avec les infos du créneau si valide, null si invalide v16:36
      */
     _isValidTime: function (dateTimeToCheck, type = 'pickup') {
         console.log('[WebsiteSale] _isValidTime - dateTimeToCheck:', dateTimeToCheck);
@@ -360,7 +335,7 @@ WebsiteSale.include({
             } else if (this.rentingUnavailabilityDays && this.rentingUnavailabilityDays[endDate.weekday]) {
                 message = _t("You cannot return your rental on that day of the week.");
             }
-            // 2. VALIDATION HORAIRE (maintenant synchrone)
+            // 2. VALIDATION HORAIRE
             else {
                 const pickupValidation = this._isValidTime(startDate, 'pickup');
                 if (!pickupValidation.valid) {
@@ -370,87 +345,17 @@ WebsiteSale.include({
                     if (!returnValidation.valid) {
                         message = this._formatTimeValidationMessage(returnValidation, 'return');
                     }
-                    // 3. AUTRES VALIDATIONS DE DATE (seulement si les validations horaires passent)
+                    // 3. AUTRES VALIDATIONS DE DATE
                     else {
-                        const rentingDuration = endDate.diff(startDate); // Luxon Duration object
+                        const rentingDuration = endDate.diff(startDate);
                         if (rentingDuration.as('milliseconds') < 0) {
                             message = _t("The return date should be after the pickup date.");
                         } else if (startDate.startOf("day") < DateTime.now().setZone(this.websiteTz).startOf("day")) {
                             message = _t("The pickup date cannot be in the past.");
-                        } else {
-                            // 4. VALIDATION DE DURÉE (basé sur this.rentingMinimalTime mis à jour)
-                            const minimalReq = this.rentingMinimalTime; // Ex: { duration: 2, unit: 'days', name: "2 Days" }
-
-                            if (minimalReq && typeof minimalReq.duration === 'number' && minimalReq.unit) {
-                                // Convertir la durée réelle en unité comparable à minimalReq ou vice-versa
-                                // Pour simplifier, on utilise _compareRentalDurations.
-                                // On a besoin de la durée de location actuelle tirée de startDate et endDate
-                                // ou des infos de la variante de prix SI elle spécifie une durée fixe.
-
-                                // La logique originale utilisait combinationInfo.rental_duration.
-                                // Ceci est pertinent si le prix est pour une durée FIXE (Week-end, Semaine).
-                                // Si la durée est flexible (prix par jour/heure), on compare la durée sélectionnée.
-
-                                const combinationInfo = this.productPricelistItem?.combinationInfo;
-                                let actualRentalIsFixedDuration = false;
-                                let actualRentalDurationForComparison = { // Par défaut, la durée sélectionnée
-                                    duration: endDate.diff(startDate, minimalReq.unit /* ou 'hours', 'days' etc. */).as(minimalReq.unit),
-                                    unit: minimalReq.unit
-                                };
-
-                                if (combinationInfo && typeof combinationInfo.rental_duration === 'number' && combinationInfo.rental_duration_unit) {
-                                    // Le prix est pour une durée fixe, comparons cette durée.
-                                    actualRentalDurationForComparison = {
-                                        duration: combinationInfo.rental_duration,
-                                        unit: combinationInfo.rental_duration_unit,
-                                    };
-                                    actualRentalIsFixedDuration = true;
-                                    // console.log("[WebsiteSale] _getInvalidMessage: Utilisation de la durée fixe de la variante de prix pour la comparaison:", actualRentalDurationForComparison);
-                                } else {
-                                    // Convertir la durée sélectionnée (endDate - startDate) dans l'unité de minimalReq.
-                                    // Exemple : si minimalReq.unit est 'days', convertir rentingDuration en jours.
-                                    // Pour que ce soit flexible, on peut utiliser _compareRentalDurations qui convertit en heures.
-                                    const durationUnits = ['hours', 'days', 'weeks']; // Unités pour .as()
-                                    let selectedDurationValue;
-                                    let selectedUnit;
-
-                                    for (const unit of durationUnits) { // Trouver la plus grande unité où la durée est >= 1
-                                        const val = rentingDuration.as(unit);
-                                        if (val >= 1) {
-                                            selectedDurationValue = Math.floor(val); // ou garder les décimales selon la précision voulue
-                                            selectedUnit = unit;
-                                            // break; // On pourrait s'arrêter à la première unité pertinente
-                                        }
-                                    }
-                                    if (!selectedUnit && rentingDuration.as('milliseconds') > 0) { // Si durée < 1 heure mais > 0ms
-                                        selectedDurationValue = rentingDuration.as('hours');
-                                        selectedUnit = 'hours';
-                                    }
-
-                                    if (selectedDurationValue !== undefined && selectedUnit) {
-                                        actualRentalDurationForComparison = {
-                                            duration: selectedDurationValue,
-                                            unit: selectedUnit
-                                        };
-                                    } else if (rentingDuration.as('milliseconds') === 0 && minimalReq.duration > 0) {
-                                        // Si durée sélectionnée est nulle mais une durée min est exigée
-                                        actualRentalDurationForComparison = { duration: 0, unit: minimalReq.unit};
-                                    }
-                                    // console.log("[WebsiteSale] _getInvalidMessage: Utilisation de la durée sélectionnée pour la comparaison:", actualRentalDurationForComparison);
-                                }
-
-                                if (!this._compareRentalDurations(actualRentalDurationForComparison, minimalReq)) {
-                                    let formattedMinimalDuration = minimalReq.name || `${minimalReq.duration} ${minimalReq.unit}(s)`;
-                                    if (actualRentalIsFixedDuration) {
-                                        message = _t("The selected product variant has a rental duration of %s, but the period requires a minimum of %s.",
-                                            `${actualRentalDurationForComparison.duration} ${actualRentalDurationForComparison.unit}`,
-                                            formattedMinimalDuration
-                                        );
-                                    } else {
-                                        message = _t("The rental duration is too short. The minimum for this period is %s.", formattedMinimalDuration);
-                                    }
-                                }
-                            }
+                        } else if (!this._isRentalDurationValid(rentingDuration)) {
+                            const minimalReq = this.rentingMinimalTime;
+                            const formattedMinimalDuration = minimalReq.name || `${minimalReq.duration} ${minimalReq.unit}(s)`;
+                            message = _t("The rental duration is too short. The minimum for this period is %s.", formattedMinimalDuration);
                         }
                     }
                 }
@@ -459,8 +364,39 @@ WebsiteSale.include({
             message = _t("Please select a rental period.");
         }
         
-        // Retourner le message ou appeler la méthode parente si pas de message spécifique
         return message || this._super.apply(this, arguments);
+    },
+
+    /**
+     * Vérifie si la durée de location est valide selon les exigences minimales.
+     * Version simplifiée pour durées flexibles uniquement.
+     */
+    _isRentalDurationValid(selectedDuration) {
+        const minimalReq = this.rentingMinimalTime;
+        if (!minimalReq || !minimalReq.duration) return true;
+        
+        const minimalDuration = this._createDurationFromRequirement(minimalReq);
+        
+        return selectedDuration.as('milliseconds') >= minimalDuration.as('milliseconds');
+    },
+
+    /**
+     * Crée un objet Duration Luxon depuis les exigences minimales
+     */
+    _createDurationFromRequirement(minimalReq) {
+        const unitMap = {
+            'hours': 'hours',
+            'hour': 'hours', 
+            'days': 'days',
+            'day': 'days',
+            'weeks': 'weeks',
+            'week': 'weeks',
+            'months': 'months',
+            'month': 'months'
+        };
+        
+        const luxonUnit = unitMap[minimalReq.unit] || minimalReq.unit;
+        return Duration.fromObject({[luxonUnit]: minimalReq.duration});
     },
 
 
