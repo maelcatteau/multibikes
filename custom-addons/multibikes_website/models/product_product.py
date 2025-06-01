@@ -10,145 +10,202 @@ class ProductProduct(models.Model):
     _inherit = 'product.product'
 
     def _get_availabilities(self, from_date, to_date, warehouse_id, with_cart=False):
-        """ Surcharge pour exclure les quantités des entrepôts d'hivernage, en tenant compte des transferts internes dans les deux sens et en ajustant les périodes. """
+        """
+        Surcharge pour exclure les quantités des entrepôts d'hivernage, 
+        en tenant compte des transferts internes dans les deux sens et en ajustant les périodes.
+        """
         self.ensure_one()
-
+        
         _logger.info("Calcul des disponibilités pour le produit %s (ID: %s) de %s à %s", 
                      self.name, self.id, from_date, to_date)
-        _logger.info("Entrepôt initial passé : %s", warehouse_id)
-
-        # Si un entrepôt spécifique est demandé, ne pas exclure cet entrepôt même s'il est d'hivernage
+        
+        # Si un entrepôt spécifique est demandé, pas d'exclusion d'hivernage
         if warehouse_id:
             return super(ProductProduct, self)._get_availabilities(
                 from_date, to_date, warehouse_id=warehouse_id, with_cart=with_cart
             )
-
-        # Ici, warehouse_id est False : on veut la dispo globale, mais en excluant les entrepôts d'hivernage
-
-        # Appel de la méthode d'origine avec tous les entrepôts
+        
+        # Récupérer les entrepôts d'hivernage
+        winter_warehouses = self._get_winter_storage_warehouses()
+        if not winter_warehouses:
+            return super(ProductProduct, self)._get_availabilities(
+                from_date, to_date, warehouse_id=False, with_cart=with_cart
+            )
+        
+        # Calculs principaux
         original_availabilities = super(ProductProduct, self)._get_availabilities(
             from_date, to_date, warehouse_id=False, with_cart=with_cart
         )
-        _logger.info("Disponibilités initiales (super) : %s", original_availabilities)
+        
+        # Récupérer les mouvements de transfert
+        outgoing_moves, incoming_moves = self._get_winter_transfer_moves(
+            from_date, to_date, winter_warehouses
+        )
+        
+        # Créer les nouvelles périodes basées sur les dates critiques
+        new_periods = self._create_adjusted_periods(
+            from_date, to_date, original_availabilities, outgoing_moves, incoming_moves
+        )
+        
+        # Calculer les disponibilités ajustées
+        return self._calculate_adjusted_availabilities(
+            new_periods, original_availabilities, winter_warehouses,
+            outgoing_moves, incoming_moves
+        )
 
-        # Récupérer les entrepôts d'hivernage (ceux avec is_winter_storage_warehouse=True)
-        winter_storage_warehouses = self.env['stock.warehouse'].search([
+    def _get_winter_storage_warehouses(self):
+        """Récupère tous les entrepôts d'hivernage."""
+        warehouses = self.env['stock.warehouse'].search([
             ('is_winter_storage_warehouse', '=', True)
         ])
-        _logger.info("Entrepôts d'hivernage trouvés : %s", [(wh.name, wh.id) for wh in winter_storage_warehouses])
+        
+        _logger.info("Entrepôts d'hivernage trouvés : %s", 
+                     [(wh.name, wh.id) for wh in warehouses])
+        return warehouses
 
-        if not winter_storage_warehouses:
-            return original_availabilities  # Retourner les disponibilités inchangées si aucun entrepôt d'hivernage
-
-        # Récupérer les mouvements de stock sortants depuis les entrepôts d'hivernage
-        winter_warehouse_ids = winter_storage_warehouses.ids
+    def _get_winter_transfer_moves(self, from_date, to_date, winter_warehouses):
+        """
+        Récupère les mouvements de transfert depuis/vers les entrepôts d'hivernage.
+        
+        Returns:
+            tuple: (outgoing_moves, incoming_moves)
+        """
+        winter_warehouse_ids = winter_warehouses.ids
+        
+        # Mouvements sortants depuis les entrepôts d'hivernage
         outgoing_moves = self.env['stock.move'].search([
             ('product_id', '=', self.id),
-            ('state', 'not in', ['done', 'cancel']),  # Mouvements planifiés ou en cours
+            ('state', 'not in', ['done', 'cancel']),
             ('date', '>=', from_date),
             ('date', '<=', to_date),
-            ('location_id.warehouse_id', 'in', winter_warehouse_ids),  # Sortie d'un entrepôt d'hivernage
-            ('location_dest_id.warehouse_id', 'not in', winter_warehouse_ids),  # Destination hors entrepôt d'hivernage
+            ('location_id.warehouse_id', 'in', winter_warehouse_ids),
+            ('location_dest_id.warehouse_id', 'not in', winter_warehouse_ids),
         ])
-        _logger.info("Mouvements sortants depuis entrepôts d'hivernage : %s", 
-                     [(move.date, move.product_qty, move.location_id.warehouse_id.name, move.location_dest_id.warehouse_id.name) for move in outgoing_moves])
-
-        # Récupérer les mouvements de stock entrants vers les entrepôts d'hivernage
+        
+        # Mouvements entrants vers les entrepôts d'hivernage
         incoming_moves = self.env['stock.move'].search([
             ('product_id', '=', self.id),
-            ('state', 'not in', ['done', 'cancel']),  # Mouvements planifiés ou en cours
+            ('state', 'not in', ['done', 'cancel']),
             ('date', '>=', from_date),
             ('date', '<=', to_date),
-            ('location_id.warehouse_id', 'not in', winter_warehouse_ids),  # Origine hors entrepôt d'hivernage
-            ('location_dest_id.warehouse_id', 'in', winter_warehouse_ids),  # Destination dans un entrepôt d'hivernage
+            ('location_id.warehouse_id', 'not in', winter_warehouse_ids),
+            ('location_dest_id.warehouse_id', 'in', winter_warehouse_ids),
         ])
-        _logger.info("Mouvements entrants vers entrepôts d'hivernage : %s", 
-                     [(move.date, move.product_qty, move.location_id.warehouse_id.name, move.location_dest_id.warehouse_id.name) for move in incoming_moves])
+        
+        _logger.info("Mouvements sortants depuis entrepôts d'hivernage : %s", len(outgoing_moves))
+        _logger.info("Mouvements entrants vers entrepôts d'hivernage : %s", len(incoming_moves))
+        
+        return outgoing_moves, incoming_moves
 
-        # Étape 1 : Collecter toutes les dates critiques (début/fin des périodes originales + dates des transferts)
+    def _create_adjusted_periods(self, from_date, to_date, original_availabilities, 
+                               outgoing_moves, incoming_moves):
+        """
+        Crée les nouvelles périodes basées sur les dates critiques.
+        
+        Returns:
+            list: Liste des périodes avec start/end
+        """
+        # Collecter toutes les dates critiques
         critical_dates = set()
+        
+        # Ajouter les dates des périodes originales
         for availability in original_availabilities:
             critical_dates.add(availability['start'])
             critical_dates.add(availability['end'])
-
+        
+        # Ajouter les dates des transferts
         for move in outgoing_moves + incoming_moves:
-            move_date = move.date if isinstance(move.date, datetime) else datetime.strptime(move.date, '%Y-%m-%d %H:%M:%S')
+            move_date = move.date if isinstance(move.date, datetime) else \
+                       datetime.strptime(move.date, '%Y-%m-%d %H:%M:%S')
             critical_dates.add(move_date)
-
-        # Trier les dates critiques pour créer de nouvelles périodes
+        
+        # Trier et créer les nouvelles périodes
         critical_dates = sorted(list(critical_dates))
-        _logger.info("Dates critiques pour découpage des périodes : %s", critical_dates)
-
-        # Étape 2 : Créer de nouvelles périodes basées sur les dates critiques
+        _logger.info("Dates critiques : %s", len(critical_dates))
+        
         new_periods = []
         for i in range(len(critical_dates) - 1):
             start = critical_dates[i]
             end = critical_dates[i + 1]
             if start >= from_date and end <= to_date and start < end:
                 new_periods.append({'start': start, 'end': end})
-        _logger.info("Nouvelles périodes créées : %s", new_periods)
+        
+        _logger.info("Nouvelles périodes créées : %s", len(new_periods))
+        return new_periods
 
-        # Étape 3 : Calculer la quantité disponible pour chaque nouvelle période
+    def _calculate_adjusted_availabilities(self, new_periods, original_availabilities,
+                                         winter_warehouses, outgoing_moves, incoming_moves):
+        """
+        Calcule les disponibilités ajustées pour chaque periode.
+        
+        Returns:
+            list: Liste des disponibilités ajustées
+        """
         adjusted_availabilities = []
+        
         for period in new_periods:
-            period_start = period['start']
-            period_end = period['end']
-            _logger.info("Traitement de la nouvelle période %s à %s", period_start, period_end)
-
-            # Trouver la période originale qui chevauche cette nouvelle période
-            base_qty = 0
-            for orig_avail in original_availabilities:
-                if orig_avail['start'] <= period_start < orig_avail['end'] or \
-                   orig_avail['start'] < period_end <= orig_avail['end'] or \
-                   (period_start <= orig_avail['start'] and period_end >= orig_avail['end']):
-                    base_qty = orig_avail['quantity_available']
-                    break
-            _logger.info("Quantité de base pour la période (depuis original) : %s", base_qty)
-
-            # Calculer la quantité dans les entrepôts d'hivernage à l'instant T (sans période pour éviter les biais)
-            winter_qty_available = 0
-            winter_qty_in_rent = 0
-            for warehouse in winter_storage_warehouses:
-                qty_available = self.with_context(warehouse_id=warehouse.id).qty_available
-                qty_in_rent = self.with_context(warehouse_id=warehouse.id).qty_in_rent
-                winter_qty_available += qty_available
-                winter_qty_in_rent += qty_in_rent
-                _logger.info("Entrepôt d'hivernage %s (ID: %s) - qty_available: %s, qty_in_rent: %s", 
-                             warehouse.name, warehouse.id, qty_available, qty_in_rent)
-
-            # Calculer l'impact cumulatif des transferts jusqu'à la *début* de la période
-            # Cela permet de refléter l'état au début de la période
-            total_outgoing_qty = 0
-            for move in outgoing_moves:
-                move_date = move.date if isinstance(move.date, datetime) else datetime.strptime(move.date, '%Y-%m-%d %H:%M:%S')
-                if move_date <= period_start:  # Compter uniquement les mouvements avant ou au début de la période
-                    total_outgoing_qty += move.product_qty
-            _logger.info("Quantité sortante cumulative jusqu'à %s : %s", period_start, total_outgoing_qty)
-
-            total_incoming_qty = 0
-            for move in incoming_moves:
-                move_date = move.date if isinstance(move.date, datetime) else datetime.strptime(move.date, '%Y-%m-%d %H:%M:%S')
-                if move_date <= period_start:  # Compter uniquement les mouvements avant ou au début de la période
-                    total_incoming_qty += move.product_qty
-            _logger.info("Quantité entrante cumulative jusqu'à %s : %s", period_start, total_incoming_qty)
-
-            # Impact net des transferts au début de la période : on soustrait les sortants et ajoute les entrants
-            net_transfer_impact = total_incoming_qty - total_outgoing_qty
-            _logger.info("Impact net des transferts jusqu'à %s (entrants - sortants) : %s", period_start, net_transfer_impact)
-
-            # Quantité totale à exclure = (quantité disponible + en location) + impact net des transferts
-            total_winter_qty = max(0, (winter_qty_available + winter_qty_in_rent) + net_transfer_impact)
-            _logger.info("Quantité totale à exclure pour la période : %s", total_winter_qty)
-
-            # Ajuster la quantité disponible pour cette période
-            adjusted_qty = base_qty - total_winter_qty
+            # Trouver la quantité de base
+            base_qty = self._find_base_quantity(period, original_availabilities)
+            
+            # Calculer les quantités d'hivernage
+            winter_qty_total = self._calculate_winter_quantities(winter_warehouses)
+            
+            # Calculer l'impact des transferts
+            net_transfer_impact = self._calculate_transfer_impact(
+                period['start'], outgoing_moves, incoming_moves
+            )
+            
+            # Ajuster la quantité
+            total_winter_qty = max(0, winter_qty_total + net_transfer_impact)
+            adjusted_qty = max(0, base_qty - total_winter_qty)
+            
             adjusted_availabilities.append({
-                'start': period_start,
-                'end': period_end,
-                'quantity_available': max(0, adjusted_qty),  # S'assurer que la quantité ne devienne pas négative
+                'start': period['start'],
+                'end': period['end'],
+                'quantity_available': adjusted_qty,
             })
-            _logger.info("Période %s à %s - Quantité initiale: %s, Quantité ajustée: %s", 
-                         period_start, period_end, base_qty, max(0, adjusted_qty))
-
-        _logger.info("Disponibilités ajustées finales : %s", adjusted_availabilities)
+            
+            _logger.info("Période %s à %s - Base: %s, Ajustée: %s", 
+                        period['start'], period['end'], base_qty, adjusted_qty)
+        
         return adjusted_availabilities
+
+    def _find_base_quantity(self, period, original_availabilities):
+        """Trouve la quantité de base pour une période donnée."""
+        for orig_avail in original_availabilities:
+            if (orig_avail['start'] <= period['start'] < orig_avail['end'] or
+                orig_avail['start'] < period['end'] <= orig_avail['end'] or
+                (period['start'] <= orig_avail['start'] and period['end'] >= orig_avail['end'])):
+                return orig_avail['quantity_available']
+        return 0
+
+    def _calculate_winter_quantities(self, winter_warehouses):
+        """Calcule les quantités totales dans les entrepôts d'hivernage."""
+        total_qty = 0
+        for warehouse in winter_warehouses:
+            qty_available = self.with_context(warehouse_id=warehouse.id).qty_available
+            qty_in_rent = self.with_context(warehouse_id=warehouse.id).qty_in_rent
+            total_qty += qty_available + qty_in_rent
+            
+        _logger.info("Quantité totale d'hivernage : %s", total_qty)
+        return total_qty
+
+    def _calculate_transfer_impact(self, period_start, outgoing_moves, incoming_moves):
+        """Calcule l'impact net des transferts jusqu'au début de la période."""
+        total_outgoing = sum(
+            move.product_qty for move in outgoing_moves
+            if (move.date if isinstance(move.date, datetime) else
+                datetime.strptime(move.date, '%Y-%m-%d %H:%M:%S')) <= period_start
+        )
+        
+        total_incoming = sum(
+            move.product_qty for move in incoming_moves
+            if (move.date if isinstance(move.date, datetime) else
+                datetime.strptime(move.date, '%Y-%m-%d %H:%M:%S')) <= period_start
+        )
+        
+        net_impact = total_incoming - total_outgoing
+        _logger.info("Impact transferts jusqu'à %s : entrants=%s, sortants=%s, net=%s",
+                    period_start, total_incoming, total_outgoing, net_impact)
+        
+        return net_impact
