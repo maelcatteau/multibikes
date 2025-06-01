@@ -2,7 +2,7 @@
 
 import { WebsiteSale } from '@website_sale/js/website_sale';
 import { _t } from "@web/core/l10n/translation";
-const { DateTime } = luxon; // S'assurer que Luxon est disponible
+const { DateTime, Duration } = luxon; // S'assurer que Luxon est disponible
 
 WebsiteSale.include({
     events: Object.assign(WebsiteSale.prototype.events || {}, {
@@ -211,7 +211,7 @@ WebsiteSale.include({
 
     /**
      * Vérifie si l'heure donnée est valide selon this.dailyConfigs.
-     * @returns {Object|null} - Objet avec les infos du créneau si valide, null si invalide v16:36
+     * @returns {Object|null} - Objet avec les infos du créneau si valide, null si invalide v10:43
      */
     _isValidTime: function (dateTimeToCheck, type = 'pickup') {
         console.log('[WebsiteSale] _isValidTime - dateTimeToCheck:', dateTimeToCheck);
