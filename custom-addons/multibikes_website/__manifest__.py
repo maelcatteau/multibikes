@@ -32,6 +32,7 @@
         'views/product_pricing_views.xml',
         'views/product_template_template_views.xml',
         'views/stock_warehouse_views.xml',
+        'views/stock_picking_views.xml',
     ],
     'assets': {
         'web.assets_frontend': [

@@ -7,3 +7,4 @@ from . import product_pricing
 from . import product_template  
 from . import product_product
 from . import stock_warehouse
+from . import stock_picking
