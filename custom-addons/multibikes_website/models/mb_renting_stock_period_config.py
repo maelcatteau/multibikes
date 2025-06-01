@@ -107,3 +107,110 @@ class MBRentingStockPeriodConfig(models.Model):
                 res[i]['total_stock_by_product'] = record.total_stock_by_product
                 
         return res
+    
+    def _needs_transfer(self):
+        """Vérifie si ce produit nécessite un transfert à la transition de période"""
+        # Stock disponible à la date de début de cette période
+        stock_at_period_start = self._get_stock_at_date(self.period_id.start_date)
+        desired_stock = self.stock_available_for_period
+        return stock_at_period_start != desired_stock
+
+    def _get_stock_at_date(self, target_date):
+        """Calcule le stock disponible à une date donnée"""
+        if not self.storable_product_ids:
+            return 0
+        
+        # Utiliser l'API Odoo pour calculer le stock à une date donnée
+        product = self.storable_product_ids
+        stock_at_date = product.with_context(to_date=target_date).qty_available
+        return stock_at_date
+
+    def _get_transfer_direction_and_quantity(self):
+        """Calcule la direction et quantité du transfert pour la transition"""
+        stock_at_period_start = self._get_stock_at_date(self.period_id.start_date)
+        desired_stock = self.stock_available_for_period
+        difference = stock_at_period_start - desired_stock
+        
+        if difference > 0:
+            # Trop de stock prévu → vers hivernage
+            return 'to_winter', difference
+        else:
+            # Pas assez de stock prévu → depuis hivernage
+            return 'from_winter', abs(difference)
+
+    def _create_transfer(self):
+        """Crée un transfert programmé pour la date de début de période"""
+        if not self.storable_product_ids:
+            return None
+        
+        direction, quantity = self._get_transfer_direction_and_quantity()
+        
+        if quantity == 0:
+            return None
+        
+        main_warehouse = self.env['stock.warehouse'].get_main_rental_warehouse()
+        winter_warehouse = self.env['stock.warehouse'].get_winter_storage_warehouse()
+        
+        if direction == 'to_winter':
+            source_location = main_warehouse.lot_stock_id
+            dest_location = winter_warehouse.lot_stock_id
+            transfer_type = "vers hivernage"
+        else:
+            source_location = winter_warehouse.lot_stock_id
+            dest_location = main_warehouse.lot_stock_id
+            transfer_type = "depuis hivernage"
+        
+        # Créer le picking programmé pour la date de début de période
+        picking_vals = {
+            'picking_type_id': main_warehouse.int_type_id.id,
+            'location_id': source_location.id,
+            'location_dest_id': dest_location.id,
+            'scheduled_date': self.period_id.start_date,  # 🎯 DATE DE TRANSITION !
+            'origin': f"Transition auto {self.period_id.name} - {transfer_type}",
+            'move_ids': [(0, 0, {
+                'name': f"Transition {self.storable_product_ids.name}",
+                'product_id': self.storable_product_ids.id,
+                'product_uom_qty': quantity,
+                'product_uom': self.storable_product_ids.uom_id.id,
+                'location_id': source_location.id,
+                'location_dest_id': dest_location.id,
+                'date': self.period_id.start_date,  # 🎯 DATE PLANIFIÉE !
+            })]
+        }
+        
+        return self.env['stock.picking'].create(picking_vals)
+
+    @api.model
+    def execute_period_transitions(self):
+        """Méthode à appeler par un cron pour exécuter les transferts programmés"""
+        now = fields.Datetime.now()
+        today = fields.Date.today()
+        
+        _logger.info(f"Exécution des transitions de période à {now}")
+        
+        # Chercher les périodes qui commencent aujourd'hui ET qui n'ont pas encore été traitées
+        periods_starting_today = self.env['mb.renting.period'].search([
+            ('start_date', '=', today)
+        ])
+        
+        transitions_created = 0
+        
+        for period in periods_starting_today:
+            configs = self.search([('period_id', '=', period.id)])
+            
+            for config in configs:
+                if config._needs_transfer():
+                    # Vérifier si un transfert n'existe pas déjà pour cette transition
+                    existing_transfer = self.env['stock.picking'].search([
+                        ('origin', 'ilike', f'Transition auto {period.name}'),
+                        ('product_id', '=', config.storable_product_ids.id)
+                    ], limit=1)
+                    
+                    if not existing_transfer:
+                        picking = config._create_transfer()
+                        if picking:
+                            transitions_created += 1
+                            _logger.info(f"Transfert créé: {picking.name}")
+        
+        _logger.info(f"Transitions de période terminées - {transitions_created} transferts créés")
+        return transitions_created
