@@ -10,21 +10,20 @@ class ProductProduct(models.Model):
     _inherit = 'product.product'
 
     def _get_availabilities(self, from_date, to_date, warehouse_id, with_cart=False):
-        """ Surcharge pour exclure les quantités des entrepôts marqués comme exclus, en tenant compte des transferts internes dans les deux sens et en ajustant les périodes. """
+        """ Surcharge pour exclure les quantités des entrepôts d'hivernage, en tenant compte des transferts internes dans les deux sens et en ajustant les périodes. """
         self.ensure_one()
 
         _logger.info("Calcul des disponibilités pour le produit %s (ID: %s) de %s à %s", 
                      self.name, self.id, from_date, to_date)
         _logger.info("Entrepôt initial passé : %s", warehouse_id)
 
-        # Si un entrepôt spécifique est demandé, ne pas exclure cet entrepôt même s'il est marqué comme exclu
+        # Si un entrepôt spécifique est demandé, ne pas exclure cet entrepôt même s'il est d'hivernage
         if warehouse_id:
             return super(ProductProduct, self)._get_availabilities(
                 from_date, to_date, warehouse_id=warehouse_id, with_cart=with_cart
             )
 
-        # Ici, warehouse_id est False : on veut la dispo globale, mais en excluant les entrepôts marqués comme exclus
-        # (reste de la logique d'exclusion inchangée)
+        # Ici, warehouse_id est False : on veut la dispo globale, mais en excluant les entrepôts d'hivernage
 
         # Appel de la méthode d'origine avec tous les entrepôts
         original_availabilities = super(ProductProduct, self)._get_availabilities(
@@ -32,38 +31,38 @@ class ProductProduct(models.Model):
         )
         _logger.info("Disponibilités initiales (super) : %s", original_availabilities)
 
-        # Récupérer les entrepôts exclus (ceux avec is_excluded_from_availability=True)
-        excluded_warehouses = self.env['stock.warehouse'].search([
-            ('is_excluded_from_availability', '=', True)
+        # Récupérer les entrepôts d'hivernage (ceux avec is_winter_storage_warehouse=True)
+        winter_storage_warehouses = self.env['stock.warehouse'].search([
+            ('is_winter_storage_warehouse', '=', True)
         ])
-        _logger.info("Entrepôts exclus trouvés : %s", [(wh.name, wh.id) for wh in excluded_warehouses])
+        _logger.info("Entrepôts d'hivernage trouvés : %s", [(wh.name, wh.id) for wh in winter_storage_warehouses])
 
-        if not excluded_warehouses:
-            return original_availabilities  # Retourner les disponibilités inchangées si aucun entrepôt exclu
+        if not winter_storage_warehouses:
+            return original_availabilities  # Retourner les disponibilités inchangées si aucun entrepôt d'hivernage
 
-        # Récupérer les mouvements de stock sortants depuis les entrepôts exclus
-        excluded_warehouse_ids = excluded_warehouses.ids
+        # Récupérer les mouvements de stock sortants depuis les entrepôts d'hivernage
+        winter_warehouse_ids = winter_storage_warehouses.ids
         outgoing_moves = self.env['stock.move'].search([
             ('product_id', '=', self.id),
             ('state', 'not in', ['done', 'cancel']),  # Mouvements planifiés ou en cours
             ('date', '>=', from_date),
             ('date', '<=', to_date),
-            ('location_id.warehouse_id', 'in', excluded_warehouse_ids),  # Sortie d'un entrepôt exclu
-            ('location_dest_id.warehouse_id', 'not in', excluded_warehouse_ids),  # Destination hors entrepôt exclu
+            ('location_id.warehouse_id', 'in', winter_warehouse_ids),  # Sortie d'un entrepôt d'hivernage
+            ('location_dest_id.warehouse_id', 'not in', winter_warehouse_ids),  # Destination hors entrepôt d'hivernage
         ])
-        _logger.info("Mouvements sortants depuis entrepôts exclus : %s", 
+        _logger.info("Mouvements sortants depuis entrepôts d'hivernage : %s", 
                      [(move.date, move.product_qty, move.location_id.warehouse_id.name, move.location_dest_id.warehouse_id.name) for move in outgoing_moves])
 
-        # Récupérer les mouvements de stock entrants vers les entrepôts exclus
+        # Récupérer les mouvements de stock entrants vers les entrepôts d'hivernage
         incoming_moves = self.env['stock.move'].search([
             ('product_id', '=', self.id),
             ('state', 'not in', ['done', 'cancel']),  # Mouvements planifiés ou en cours
             ('date', '>=', from_date),
             ('date', '<=', to_date),
-            ('location_id.warehouse_id', 'not in', excluded_warehouse_ids),  # Origine hors entrepôt exclu
-            ('location_dest_id.warehouse_id', 'in', excluded_warehouse_ids),  # Destination dans un entrepôt exclu
+            ('location_id.warehouse_id', 'not in', winter_warehouse_ids),  # Origine hors entrepôt d'hivernage
+            ('location_dest_id.warehouse_id', 'in', winter_warehouse_ids),  # Destination dans un entrepôt d'hivernage
         ])
-        _logger.info("Mouvements entrants vers entrepôts exclus : %s", 
+        _logger.info("Mouvements entrants vers entrepôts d'hivernage : %s", 
                      [(move.date, move.product_qty, move.location_id.warehouse_id.name, move.location_dest_id.warehouse_id.name) for move in incoming_moves])
 
         # Étape 1 : Collecter toutes les dates critiques (début/fin des périodes originales + dates des transferts)
@@ -106,15 +105,15 @@ class ProductProduct(models.Model):
                     break
             _logger.info("Quantité de base pour la période (depuis original) : %s", base_qty)
 
-            # Calculer la quantité dans les entrepôts exclus à l'instant T (sans période pour éviter les biais)
-            excluded_qty_available = 0
-            excluded_qty_in_rent = 0
-            for warehouse in excluded_warehouses:
+            # Calculer la quantité dans les entrepôts d'hivernage à l'instant T (sans période pour éviter les biais)
+            winter_qty_available = 0
+            winter_qty_in_rent = 0
+            for warehouse in winter_storage_warehouses:
                 qty_available = self.with_context(warehouse_id=warehouse.id).qty_available
                 qty_in_rent = self.with_context(warehouse_id=warehouse.id).qty_in_rent
-                excluded_qty_available += qty_available
-                excluded_qty_in_rent += qty_in_rent
-                _logger.info("Entrepôt exclu %s (ID: %s) - qty_available: %s, qty_in_rent: %s", 
+                winter_qty_available += qty_available
+                winter_qty_in_rent += qty_in_rent
+                _logger.info("Entrepôt d'hivernage %s (ID: %s) - qty_available: %s, qty_in_rent: %s", 
                              warehouse.name, warehouse.id, qty_available, qty_in_rent)
 
             # Calculer l'impact cumulatif des transferts jusqu'à la *début* de la période
@@ -138,11 +137,11 @@ class ProductProduct(models.Model):
             _logger.info("Impact net des transferts jusqu'à %s (entrants - sortants) : %s", period_start, net_transfer_impact)
 
             # Quantité totale à exclure = (quantité disponible + en location) + impact net des transferts
-            total_excluded_qty = max(0, (excluded_qty_available + excluded_qty_in_rent) + net_transfer_impact)
-            _logger.info("Quantité totale à exclure pour la période : %s", total_excluded_qty)
+            total_winter_qty = max(0, (winter_qty_available + winter_qty_in_rent) + net_transfer_impact)
+            _logger.info("Quantité totale à exclure pour la période : %s", total_winter_qty)
 
             # Ajuster la quantité disponible pour cette période
-            adjusted_qty = base_qty - total_excluded_qty
+            adjusted_qty = base_qty - total_winter_qty
             adjusted_availabilities.append({
                 'start': period_start,
                 'end': period_end,
