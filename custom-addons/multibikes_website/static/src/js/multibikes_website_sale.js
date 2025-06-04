@@ -1,3 +1,5 @@
+/* FORCE REFRESH: 2025-06-01 19:56:55 */
+/* FORCE REFRESH: 2025-06-01 19:52:25 */
 /** @odoo-module **/
 
 import { WebsiteSale } from '@website_sale/js/website_sale';
@@ -211,7 +213,7 @@ WebsiteSale.include({
 
     /**
      * Vérifie si l'heure donnée est valide selon this.dailyConfigs.
-     * @returns {Object|null} - Objet avec les infos du créneau si valide, null si invalide v10:43
+     * @returns {Object|null} - Objet avec les infos du créneau si valide, null si invalide v22
      */
     _isValidTime: function (dateTimeToCheck, type = 'pickup') {
         console.log('[WebsiteSale] _isValidTime - dateTimeToCheck:', dateTimeToCheck);
@@ -377,7 +379,7 @@ WebsiteSale.include({
         
         const minimalDuration = this._createDurationFromRequirement(minimalReq);
         
-        return selectedDuration.as('milliseconds') >= minimalDuration.as('milliseconds');
+        return selectedDuration >= minimalDuration;
     },
 
     /**

@@ -1,3 +1,5 @@
+/* FORCE REFRESH: 2025-06-01 19:56:55 */
+/* FORCE REFRESH: 2025-06-01 19:52:25 */
 /** @odoo-module **/
 
 import { patch } from "@web/core/utils/patch";
