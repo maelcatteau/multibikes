@@ -34,6 +34,7 @@
         'views/product_template_template_views.xml',
         'views/stock_warehouse_views.xml',
         'views/stock_picking_views.xml',
+        'views/menu_items.xml',
     ],
     'assets': {
         'web.assets_frontend': [

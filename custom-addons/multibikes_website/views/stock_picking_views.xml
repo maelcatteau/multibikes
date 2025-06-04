@@ -193,17 +193,5 @@
                 </p>
             </field>
         </record>
-
-        <!-- ========================================
-             MENU (OPTIONNEL)
-             ======================================== -->
-        
-        <menuitem id="menu_period_transfers"
-                  name="Transferts de Période"
-                  parent="stock.menu_stock_warehouse_mgmt"
-                  action="action_period_transfer_picking"
-                  sequence="50"
-                  groups="stock.group_stock_manager"/>
-
     </data>
 </odoo>
