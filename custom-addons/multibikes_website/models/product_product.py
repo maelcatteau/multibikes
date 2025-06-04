@@ -12,6 +12,56 @@ class ProductProduct(models.Model):
     def _get_availabilities(self, from_date, to_date, warehouse_id, with_cart=False):
         """
         Surcharge pour exclure les quantités des entrepôts d'hivernage, 
+        en tenant compte des transferts internes et de la virtualisation des transferts ratés.
+        """
+        self.ensure_one()
+        
+        _logger.info("📊 Calcul des disponibilités pour le produit %s (ID: %s) de %s à %s", 
+                    self.name, self.id, from_date, to_date)
+        
+        # Si un entrepôt spécifique est demandé, pas d'exclusion d'hivernage
+        if warehouse_id:
+            return super(ProductProduct, self)._get_availabilities(
+                from_date, to_date, warehouse_id=warehouse_id, with_cart=with_cart
+            )
+        
+        # Récupérer les entrepôts d'hivernage
+        winter_warehouses = self._get_winter_storage_warehouses()
+        if not winter_warehouses:
+            return super(ProductProduct, self)._get_availabilities(
+                from_date, to_date, warehouse_id=False, with_cart=with_cart
+            )
+        
+        # Calculs principaux
+        original_availabilities = super(ProductProduct, self)._get_availabilities(
+            from_date, to_date, warehouse_id=False, with_cart=with_cart
+        )
+        
+        # Récupérer les mouvements de transfert planifiés
+        outgoing_moves, incoming_moves = self._get_winter_transfer_moves(
+            from_date, to_date, winter_warehouses
+        )
+        
+        # 🆕 Récupérer les données de virtualisation des transferts ratés
+        failed_transfers_data = self._get_failed_transfers_virtualization_data(from_date, to_date)
+        
+        # 🆕 Convertir en mouvements virtuels et fusionner
+        virtual_outgoing, virtual_incoming = self._convert_failed_transfers_to_virtual_moves(failed_transfers_data)
+        combined_outgoing = outgoing_moves + virtual_outgoing
+        combined_incoming = incoming_moves + virtual_incoming
+        
+        # Utiliser vos méthodes existantes avec les mouvements combinés
+        new_periods = self._create_adjusted_periods(
+            from_date, to_date, original_availabilities, combined_outgoing, combined_incoming
+        )
+        
+        return self._calculate_adjusted_availabilities(
+            new_periods, original_availabilities, winter_warehouses,
+            combined_outgoing, combined_incoming
+        )
+
+        """
+        Surcharge pour exclure les quantités des entrepôts d'hivernage, 
         en tenant compte des transferts internes dans les deux sens et en ajustant les périodes.
         """
         self.ensure_one()
@@ -191,6 +241,48 @@ class ProductProduct(models.Model):
         return total_qty
 
     def _calculate_transfer_impact(self, period_start, outgoing_moves, incoming_moves):
+        """
+        Calcule l'impact net des transferts jusqu'au début de la période.
+        Compatible avec les mouvements virtuels.
+        """
+        total_outgoing = 0
+        total_incoming = 0
+        
+        # Calculer les mouvements sortants (réels + virtuels)
+        for move in outgoing_moves:
+            move_date = move.date if isinstance(move.date, datetime) else \
+                    datetime.strptime(move.date, '%Y-%m-%d %H:%M:%S')
+            
+            if move_date <= period_start:
+                qty = move.product_qty
+                total_outgoing += qty
+                
+                # Log spécial pour les mouvements virtuels
+                if hasattr(move, 'is_virtual') and move.is_virtual:
+                    _logger.debug(f"🔄 Mouvement virtuel SORTANT pris en compte: {qty} "
+                                f"unités (de {getattr(move, 'origin_picking', 'Inconnu')})")
+        
+        # Calculer les mouvements entrants (réels + virtuels)  
+        for move in incoming_moves:
+            move_date = move.date if isinstance(move.date, datetime) else \
+                    datetime.strptime(move.date, '%Y-%m-%d %H:%M:%S')
+            
+            if move_date <= period_start:
+                qty = move.product_qty
+                total_incoming += qty
+                
+                # Log spécial pour les mouvements virtuels
+                if hasattr(move, 'is_virtual') and move.is_virtual:
+                    _logger.debug(f"🔄 Mouvement virtuel ENTRANT pris en compte: {qty} "
+                                f"unités (de {getattr(move, 'origin_picking', 'Inconnu')})")
+        
+        net_impact = total_incoming - total_outgoing
+        
+        _logger.info("Impact transferts jusqu'à %s : entrants=%s, sortants=%s, net=%s",
+                    period_start, total_incoming, total_outgoing, net_impact)
+        
+        return net_impact
+
         """Calcule l'impact net des transferts jusqu'au début de la période."""
         total_outgoing = sum(
             move.product_qty for move in outgoing_moves
@@ -209,3 +301,51 @@ class ProductProduct(models.Model):
                     period_start, total_incoming, total_outgoing, net_impact)
         
         return net_impact
+
+    def _convert_failed_transfers_to_virtual_moves(self, failed_transfers_data):
+        """
+        Convertit les données de transferts ratés en mouvements virtuels 
+        pour les intégrer dans le calcul existant avec votre structure de données
+        
+        Args:
+            failed_transfers_data (dict): Données des transferts ratés
+            
+        Returns:
+            tuple: (virtual_outgoing_moves, virtual_incoming_moves)
+        """
+        virtual_outgoing = []
+        virtual_incoming = []
+        
+        # Classe pour simuler un mouvement compatible avec votre méthode _calculate_transfer_impact
+        MockMove = type('MockMove', (), {})
+        
+        # Convertir les échecs "vers hivernage" en mouvements sortants virtuels
+        for to_winter_fail in failed_transfers_data.get('to_winter', []):
+            virtual_move = MockMove()
+            virtual_move.date = to_winter_fail['scheduled_date']
+            virtual_move.product_qty = to_winter_fail['shortage_qty']  # 🔧 Utiliser product_qty comme dans votre méthode
+            virtual_move.product_id = self
+            virtual_move.is_virtual = True
+            virtual_move.origin_picking = to_winter_fail['picking_name']
+            virtual_outgoing.append(virtual_move)
+            
+            _logger.info(f"🔄 Mouvement virtuel SORTANT créé: {virtual_move.product_qty} "
+                        f"unités de {self.name} le {virtual_move.date} "
+                        f"(origine: {virtual_move.origin_picking})")
+        
+        # Convertir les échecs "depuis hivernage" en mouvements entrants virtuels
+        for from_winter_fail in failed_transfers_data.get('from_winter', []):
+            virtual_move = MockMove()
+            virtual_move.date = from_winter_fail['scheduled_date']
+            virtual_move.product_qty = from_winter_fail['shortage_qty']  # 🔧 Utiliser product_qty
+            virtual_move.product_id = self
+            virtual_move.is_virtual = True
+            virtual_move.origin_picking = from_winter_fail['picking_name']
+            virtual_incoming.append(virtual_move)
+            
+            _logger.info(f"🔄 Mouvement virtuel ENTRANT créé: {virtual_move.product_qty} "
+                        f"unités de {self.name} le {virtual_move.date} "
+                        f"(origine: {virtual_move.origin_picking})")
+        
+        return virtual_outgoing, virtual_incoming
+
