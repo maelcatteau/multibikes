@@ -304,3 +304,54 @@ class MBRentingPeriod(models.Model):
                 'default_notification': f'✅ {message}'
             },
         }
+    
+    def action_generate_all_transfers(self):
+        """
+        Génère tous les transferts nécessaires pour toutes les configurations de cette période
+        """
+        self.ensure_one()
+        
+        _logger.info(f"🚀 Génération de tous les transferts pour la période {self.name}")
+        
+        configs_with_products = self.stock_period_config_ids.filtered('storable_product_ids')
+        
+        if not configs_with_products:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': "Aucune configuration trouvée",
+                    'message': "Aucune configuration de stock avec produits n'a été trouvée pour cette période.",
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
+        
+        total_transfers = 0
+        total_errors = 0
+        
+        for config in configs_with_products:
+            result = config.action_generate_transfers()
+            # Analyser le résultat (c'est approximatif, vous pourriez vouloir une meilleure logique)
+            if result.get('params', {}).get('type') == 'success':
+                total_transfers += len(config.storable_product_ids)
+            else:
+                total_errors += 1
+        
+        if total_errors == 0:
+            message = f"✅ Génération terminée avec succès !\n{total_transfers} transfert(s) créé(s) au total."
+            notification_type = 'success'
+        else:
+            message = f"⚠️ Génération terminée avec {total_errors} erreur(s).\nConsultez les logs pour plus de détails."
+            notification_type = 'warning'
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': "Génération des transferts terminée",
+                'message': message,
+                'type': notification_type,
+                'sticky': True,
+            }
+        }

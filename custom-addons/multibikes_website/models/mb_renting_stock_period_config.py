@@ -214,3 +214,99 @@ class MBRentingStockPeriodConfig(models.Model):
         
         _logger.info(f"Transitions de période terminées - {transitions_created} transferts créés")
         return transitions_created
+    
+    def action_generate_transfers(self):
+        """
+        Action pour générer automatiquement les transferts pour cette configuration
+        
+        Returns:
+            dict: Action de notification ou redirection
+        """
+        self.ensure_one()
+        
+        _logger.info(f"🚀 Génération des transferts pour la période {self.period_id.name}")
+        
+        if not self.storable_product_ids:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': "Aucun produit sélectionné",
+                    'message': "Veuillez d'abord sélectionner des produits stockables.",
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
+        
+        # Vérifier si des transferts existent déjà pour cette configuration
+        existing_transfers = self.env['stock.picking'].search([
+            ('origin', 'ilike', f'Transition auto {self.period_id.name}'),
+            ('move_ids.product_id', 'in', self.storable_product_ids.ids)
+        ])
+        
+        if existing_transfers:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': "Transferts déjà existants",
+                    'message': f"Des transferts existent déjà pour cette période ({len(existing_transfers)} trouvé(s)). "
+                            "Voulez-vous les consulter depuis le menu Inventaire?",
+                    'type': 'warning',
+                    'sticky': True,
+                }
+            }
+        
+        transfers_created = []
+        errors = []
+        
+        # Créer un transfert pour chaque produit
+        for product in self.storable_product_ids:
+            try:
+                # Créer une configuration temporaire pour chaque produit
+                temp_config = self.copy({'storable_product_ids': [(6, 0, [product.id])]})
+                
+                if temp_config._needs_transfer():
+                    picking = temp_config._create_transfer()
+                    if picking:
+                        transfers_created.append(picking)
+                        _logger.info(f"✅ Transfert créé pour {product.name}: {picking.name}")
+                else:
+                    _logger.info(f"ℹ️ Aucun transfert nécessaire pour {product.name}")
+                
+                # Supprimer la config temporaire
+                temp_config.unlink()
+                
+            except Exception as e:
+                error_msg = f"Erreur pour {product.name}: {str(e)}"
+                errors.append(error_msg)
+                _logger.error(f"❌ {error_msg}")
+        
+        # Préparer le message de retour
+        if transfers_created and not errors:
+            message = f"✅ {len(transfers_created)} transfert(s) créé(s) avec succès !\n"
+            message += "\n".join([f"• {p.name} ({p.origin})" for p in transfers_created])
+            notification_type = 'success'
+            title = "Transferts générés"
+        elif transfers_created and errors:
+            message = f"⚠️ {len(transfers_created)} transfert(s) créé(s), {len(errors)} erreur(s):\n"
+            message += "\n".join([f"✅ {p.name}" for p in transfers_created])
+            message += "\n" + "\n".join([f"❌ {e}" for e in errors])
+            notification_type = 'warning'
+            title = "Transferts partiellement générés"
+        else:
+            message = "❌ Aucun transfert généré.\n"
+            message += "\n".join([f"• {e}" for e in errors]) if errors else "Vérifiez la configuration."
+            notification_type = 'danger'
+            title = "Échec de génération"
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': title,
+                'message': message,
+                'type': notification_type,
+                'sticky': True,
+            }
+        }

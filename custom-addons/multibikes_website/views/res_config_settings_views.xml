@@ -124,6 +124,21 @@
                                                 help="Configure automatiquement tous les produits restants"/>
                                     </div>
                                 </div>
+                                <div class="o_setting_box" invisible="remaining_products_to_configure != 0">
+                                    <div class="o_setting_left_pane">
+                                        <button name="action_generate_all_transfers" 
+                                                string="🚚 Générer tous les transferts" 
+                                                type="object" 
+                                                class="btn btn-success oe_highlight"
+                                                help="Génère automatiquement tous les transferts nécessaires pour cette période"/>
+                                    </div>
+                                    <div class="o_setting_right_pane">
+                                        <div class="text-muted">
+                                            Crée automatiquement les transferts d'hivernage nécessaires 
+                                            pour ajuster les stocks selon la configuration de chaque produit.
+                                        </div>
+                                    </div>
+                                </div>
                                 <field name="stock_period_config_ids" 
                                     context="{'default_period_id': id}" 
                                     domain="[('period_id', '=', id)]"
@@ -138,6 +153,12 @@
                                             string="Stock total"/>
                                         <field name="stock_available_for_period" 
                                             string="Stock dispo période"/>
+                                        <button name="action_generate_transfers" 
+                                            string="🚚" 
+                                            type="object"
+                                            title="Générer transfert pour cette ligne"
+                                            class="btn btn-sm btn-outline-success"
+                                            invisible="not storable_product_ids"/>
                                     </list>
                                 </field>
                             </page>
