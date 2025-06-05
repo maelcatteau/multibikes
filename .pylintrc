@@ -1,0 +1,14 @@
+[MASTER]
+load-plugins=pylint_odoo
+
+[MESSAGES CONTROL]
+# Désactivations pour Odoo
+disable=import-error,
+        too-few-public-methods,
+        no-member,
+        missing-class-docstring,
+        manifest-required-author
+
+[FORMAT]
+max-line-length=88
+good-names=id,_,i,j,k,ex,Run,fd,cr,uid,ctx,vals,res,rec,env,sudo

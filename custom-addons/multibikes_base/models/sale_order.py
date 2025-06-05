@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Model SaleOrder for multibikes_base module."""
 from odoo import models, fields, api
 
 class SaleOrder(models.Model):
@@ -19,10 +20,11 @@ class SaleOrder(models.Model):
         string="Type de caution",
         help="Type de caution pour la location"
     )
-    
+
     mb_numero_de_caution = fields.Integer(
         string="Numéro du dossier de caution",
-        help="Numéro du dossier de caution pour la location. Ce numéro est utilisé pour faire le lien avec l'empreinte de carte"
+        help=("Numéro du dossier de caution pour la location."
+            "Ce numéro est utilisé pour faire le lien avec l'empreinte de carte")
     )
 
     mb_caution_total = fields.Monetary(
@@ -42,6 +44,6 @@ class SaleOrder(models.Model):
     def _compute_mb_caution_total(self):
         for order in self:
             order.mb_caution_total = sum(
-                line.mb_caution_subtotal or 0.0 
+                line.mb_caution_subtotal or 0.0
                 for line in order.order_line
             )

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Model ProductTemplate for multibikes_base module."""
 from odoo import models, fields
 
 class ProductTemplate(models.Model):
@@ -12,16 +13,19 @@ class ProductTemplate(models.Model):
 
     # Champ pour la caution
     mb_caution = fields.Monetary(
-        string='Caution', 
-        currency_field='currency_id', 
+        string='Caution',
+        currency_field='currency_id',
         help="Montant de la caution à payer pour la location de ce produit."
     )
-    
+
     # Champ pour la valeur en cas de vol
     mb_value_in_case_of_theft = fields.Monetary(
-        string='Valeur en cas de vol', 
-        currency_field='currency_id', 
-        help="Valeur du produit en cas de vol ou de perte, utilisée pour facturer le client."
+        string='Valeur en cas de vol',
+        currency_field='currency_id',
+        help=(
+        "Valeur du produit en cas de vol ou de perte, "
+        "utilisée pour facturer le client."
+        )
     )
 
     # Champs pour la taille
