@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Template pour afficher les tailles sur les cartes produits de la grille -->
+    <template id="products_item_size_info" inherit_id="website_sale.products_item" name="Product Size Info in Grid">
+        <!-- Position après le nom du produit -->
+        <xpath expr="//div[hasclass('o_wsale_product_information')]" position="inside">
+            <div t-if="product.rent_ok and (product.mb_size_min or product.mb_size_max)" 
+                 class="product_size_info small text-muted mt-1">
+                <span t-if="product.mb_size_min">
+                    Min: <t t-out="int(product.mb_size_min // 100)"/> m <t t-out="int(product.mb_size_min % 100)"/>
+                </span>
+                <span t-if="product.mb_size_min and product.mb_size_max"> - </span>
+                <span t-if="product.mb_size_max">
+                    Max: <t t-out="int(product.mb_size_max // 100)"/> m <t t-out="int(product.mb_size_max % 100)"/>
+                </span>
+            </div>
+        </xpath>
+    </template>
+</odoo>
