@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-
-from odoo import api, fields, models
+"""Model Res Config Settings for Multibikes Website Module."""
+from odoo import fields, models
 
 class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'

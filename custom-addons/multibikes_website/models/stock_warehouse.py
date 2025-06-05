@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-
-from odoo import models, fields, api, _
+"""Model Stock Warehouse for multibikes_website module."""
+from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 
 class StockWarehouse(models.Model):
@@ -20,12 +20,12 @@ class StockWarehouse(models.Model):
 
     # Contrainte SQL : Un seul entrepôt principal par compagnie
     _sql_constraints = [
-        ('unique_main_rental_warehouse', 
+        ('unique_main_rental_warehouse',
          'EXCLUDE (company_id WITH =) WHERE (is_main_rental_warehouse = true)',
          'Un seul entrepôt principal de location est autorisé par compagnie.'),
-        
+
         ('unique_winter_storage_warehouse',
-         'EXCLUDE (company_id WITH =) WHERE (is_winter_storage_warehouse = true)', 
+         'EXCLUDE (company_id WITH =) WHERE (is_winter_storage_warehouse = true)',
          'Un seul entrepôt d\'hivernage est autorisé par compagnie.'),
     ]
 
@@ -35,11 +35,14 @@ class StockWarehouse(models.Model):
         Vérifie qu'un entrepôt ne peut pas être à la fois principal ET d'hivernage
         """
         for warehouse in self:
-            if warehouse.is_main_rental_warehouse and warehouse.is_winter_storage_warehouse:
-                raise ValidationError(_(
+            is_both_types = (warehouse.is_main_rental_warehouse and
+                 warehouse.is_winter_storage_warehouse)
+            if is_both_types:
+                raise ValidationError(self.env._(
                     "L'entrepôt '%s' ne peut pas être à la fois l'entrepôt principal "
-                    "et l'entrepôt d'hivernage."
-                ) % warehouse.name)
+                    "et l'entrepôt d'hivernage.",
+                    warehouse.name)
+                )
 
     @api.constrains('is_main_rental_warehouse')
     def _check_unique_main_rental_warehouse(self):
@@ -55,10 +58,12 @@ class StockWarehouse(models.Model):
                     ('id', '!=', warehouse.id)
                 ])
                 if other_main:
-                    raise ValidationError(_(
-                        "Il ne peut y avoir qu'un seul entrepôt principal par compagnie. "
-                        "L'entrepôt '%s' est déjà configuré comme entrepôt principal."
-                    ) % other_main[0].name)
+                    raise ValidationError(self.env._(
+                        "Il ne peut y avoir qu'un seul entrepôt"
+                        " principal par compagnie. "
+                        "L'entrepôt '%s' est déjà configuré comme entrepôt principal.",
+                        other_main[0].name)
+                    )
 
     @api.constrains('is_winter_storage_warehouse')
     def _check_unique_winter_storage_warehouse(self):
@@ -73,10 +78,12 @@ class StockWarehouse(models.Model):
                     ('id', '!=', warehouse.id)
                 ])
                 if other_winter:
-                    raise ValidationError(_(
-                        "Il ne peut y avoir qu'un seul entrepôt d'hivernage par compagnie. "
-                        "L'entrepôt '%s' est déjà configuré comme entrepôt d'hivernage."
-                    ) % other_winter[0].name)
+                    raise ValidationError(self.env._(
+                        "Il ne peut y avoir qu'un seul entrepôt"
+                        " d'hivernage par compagnie."
+                        "L'entrepôt %s est déjà configuré comme entrepôt d'hivernage.",
+                        other_winter[0].name)
+                    )
 
     # Méthodes utilitaires
     @api.model
@@ -86,7 +93,7 @@ class StockWarehouse(models.Model):
         """
         if not company_id:
             company_id = self.env.company.id
-        
+
         return self.search([
             ('is_main_rental_warehouse', '=', True),
             ('company_id', '=', company_id)
@@ -99,7 +106,7 @@ class StockWarehouse(models.Model):
         """
         if not company_id:
             company_id = self.env.company.id
-            
+
         return self.search([
             ('is_winter_storage_warehouse', '=', True),
             ('company_id', '=', company_id)

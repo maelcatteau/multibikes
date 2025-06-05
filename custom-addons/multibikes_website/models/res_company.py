@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-
-from odoo import api, fields, models
-from datetime import date
+""""Model Res Company for Multibikes Website Module."""
+from odoo import fields, models
 
 class ResCompany(models.Model):
     _inherit = 'res.company'
-    
+
     renting_periods = fields.One2many(
-        'mb.renting.period', 
-        'company_id', 
+        'mb.renting.period',
+        'company_id',
         string='Périodes de location'
     )
 
@@ -16,7 +15,8 @@ class ResCompany(models.Model):
     def get_dynamic_renting_minimal_duration(self, reference_date=None):
         """
         Calcule la durée minimale de location en fonction de la date de référence.
-        Retourne un dictionnaire contenant la durée, l'unité, et les dates de début et de fin.
+        Retourne un dictionnaire contenant la durée,
+        l'unité, et les dates de début et de fin.
         """
         self.ensure_one()
         if not reference_date:
