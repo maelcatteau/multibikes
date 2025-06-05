@@ -1,25 +1,28 @@
 # -*- coding: utf-8 -*-
-
-from odoo import models, fields, api
-from odoo.tools import format_amount
-from math import ceil
-from odoo.http import request
+"""Model Product Template for Multibikes Website Module."""
 import logging
-from datetime import datetime
-import pytz
+from math import ceil
+from odoo import models
+from odoo.tools import format_amount
+from odoo.http import request
+from odoo.addons.sale_renting.models.product_pricing import PERIOD_RATIO
 
 _logger = logging.getLogger(__name__)
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
-    def _get_additionnal_combination_info(self, product_or_template, quantity, date, website):
+    def _get_additionnal_combination_info(self, product_or_template,
+                                          quantity, date, website):
         """
         Surcharge de la méthode pour :
-        1. Filtrer les tarifs affichés dans la pricing_table en fonction de mb_website_published
+        1. Filtrer les tarifs affichés dans la pricing_table
+          en fonction de mb_website_published
         2. Calculer la quantité disponible en fonction des dates de début et de fin
         """
-        res = super()._get_additionnal_combination_info(product_or_template, quantity, date, website)
+        res = super()._get_additionnal_combination_info(
+            product_or_template, quantity, date, website
+            )
 
         if not product_or_template.rent_ok:
             return res
@@ -27,15 +30,18 @@ class ProductTemplate(models.Model):
         # Récupération des objets
         currency = website.currency_id
         pricelist = website.pricelist_id
-        ProductPricing = self.env['product.pricing']
+        Productpricing = self.env['product.pricing']
 
         # Obtenir le tarif par défaut
-        pricing = ProductPricing._get_first_suitable_pricing(product_or_template, pricelist)
+        pricing = Productpricing._get_first_suitable_pricing(
+            product_or_template, pricelist)
         if not pricing:
             return res
 
         # Récupérer les dates du contexte ou de la commande
-        order = website.sale_get_order() if website and request else self.env['sale.order']
+        order = (
+            website.sale_get_order() if website and request else self.env['sale.order']
+        )
         start_date = self.env.context.get('start_date') or order.rental_start_date
         end_date = self.env.context.get('end_date') or order.rental_return_date
 
@@ -46,7 +52,8 @@ class ProductTemplate(models.Model):
             end_date = end_date.replace(tzinfo=None)
 
         # Calcul de la quantité disponible
-        free_qty = self.calculate_min_availability_over_period(product_or_template, start_date, end_date)
+        free_qty = self.calculate_min_availability_over_period(
+            product_or_template, start_date, end_date)
         # Détermination des dates et de la durée de location
         if start_date and end_date:
             current_pricing = product_or_template._get_best_pricing_rule(
@@ -56,7 +63,8 @@ class ProductTemplate(models.Model):
                 currency=currency,
             )
             current_unit = current_pricing.recurrence_id.unit
-            current_duration = ProductPricing._compute_duration_vals(start_date, end_date)[current_unit]
+            current_duration = Productpricing._compute_duration_vals(
+                start_date, end_date)[current_unit]
         else:
             current_unit = pricing.recurrence_id.unit
             current_duration = pricing.recurrence_id.duration
@@ -75,8 +83,12 @@ class ProductTemplate(models.Model):
             start_date, end_date, current_duration, current_unit
         )
 
-        from odoo.addons.sale_renting.models.product_pricing import PERIOD_RATIO
-        ratio = ceil(current_duration or 0) / pricing.recurrence_id.duration if pricing.recurrence_id.duration else 1
+
+        ratio = (
+            ceil(current_duration or 0) / pricing.recurrence_id.duration
+            if pricing.recurrence_id.duration
+            else 1
+        )
         if current_unit != pricing.recurrence_id.unit:
             ratio *= PERIOD_RATIO[current_unit] / PERIOD_RATIO[pricing.recurrence_id.unit]
 
@@ -88,7 +100,7 @@ class ProductTemplate(models.Model):
             )
 
         # Filtrer les tarifs publiés
-        all_suitable_pricings = ProductPricing._get_suitable_pricings(product_or_template, pricelist)
+        all_suitable_pricings = Productpricing._get_suitable_pricings(product_or_template, pricelist)
         published_pricings = all_suitable_pricings.filtered(lambda p: p.mb_website_published)
 
         if not published_pricings:
@@ -148,7 +160,7 @@ class ProductTemplate(models.Model):
                 'cart_qty': 0,
             })
 
-        _logger.info(f"Valeur finale de free_qty pour le produit {product_or_template.name}: {res['free_qty']}")
+        _logger.info("Valeur finale de free_qty pour le produit %s: %s", product_or_template.name, free_qty)
 
         return {
             **res,
@@ -167,7 +179,7 @@ class ProductTemplate(models.Model):
             'pricing_table': pricing_table,
             'prevent_zero_price_sale': website.prevent_zero_price_sale and currency.is_zero(current_price),
         }
-    
+
     def calculate_min_availability_over_period(self, product_or_template, start_date, end_date):
         """
         Calcule la quantité minimale disponible sur une période donnée
@@ -179,35 +191,35 @@ class ProductTemplate(models.Model):
             warehouse_id=False,
             with_cart=True
         )
-        
+
         if not availabilities:
             return 0
-        
+
         min_qty = None
-        
+
         # Parcourir toutes les périodes et trouver celles qui chevauchent
         for availability in availabilities:
             period_start = availability['start']
             period_end = availability['end']
-            
+
             # Calculer la zone de chevauchement
             overlap_start = max(period_start, start_date)
             overlap_end = min(period_end, end_date)
-            
+
             # S'il y a un chevauchement
             if overlap_start < overlap_end:
                 quantity = int(availability.get('quantity_available', 0))
-                
+
                 if min_qty is None:
                     min_qty = quantity  # Premier résultat
                 else:
                     min_qty = min(min_qty, quantity)
-                
-                _logger.info(f"Chevauchement trouvé: {overlap_start} à {overlap_end}, quantité: {quantity}")
-        
+
+                _logger.info("Chevauchement trouvé: %s à %s, quantité: %s", overlap_start, overlap_end, quantity)
+
         # Si aucun chevauchement trouvé
         if min_qty is None:
-            _logger.warning(f"Aucun chevauchement trouvé entre les périodes disponibles et {start_date}-{end_date}")
+            _logger.warning("Aucun chevauchement trouvé entre les périodes disponibles et %s-%s", start_date, end_date)
             return 0
-        
+
         return max(0, min_qty)  # S'assurer que la quantité n'est pas négative

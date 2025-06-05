@@ -1,0 +1,19 @@
+{
+    "include": [
+        "custom-addons"
+    ],
+    "exclude": [
+        "**",
+        "!custom-addons/**"
+    ],
+    "typeCheckingMode": "off",
+    "reportMissingImports": "none",
+    "reportMissingModuleSource": "none",
+    "reportImportCycles": "none",
+    "stubPath": "./typings",
+    "extraPaths": [
+        "/opt/odoo",
+        "/opt/odoo/addons",
+        "./custom-addons"
+    ]
+}
