@@ -28,6 +28,7 @@ ADDONS_PATH=${ADDONS_PATH:-/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra
 DATA_DIR=${DATA_DIR:-/var/lib/odoo}
 PROXY_MODE=${PROXY_MODE:-true}
 WEBSITE_SERVER_URL=${WEBSITE_SERVER_URL:-""}
+WEB_BASE_URL=${WEB_BASE_URL:-""}
 ODOO_WORKERS=${ODOO_WORKERS:-4}
 
 # Variables de développement et débogage (valeurs pour production)
@@ -79,6 +80,10 @@ max_cron_threads = $MAX_CRON_THREADS
 gevent_port = $GEVENT_PORT
 websocket_rate_limit_burst = $WEBSOCKET_RATE_LIMIT_BURST
 websocket_rate_limit_delay = $WEBSOCKET_RATE_LIMIT_DELAY
+
+; URLS
+website_server_url = $WEBSITE_SERVER_URL
+web_base_url = $WEB_BASE_URL
 
 ; Logging
 EOF

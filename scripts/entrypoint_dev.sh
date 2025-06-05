@@ -163,9 +163,6 @@ done
 
 echo "🚀 Démarrage Odoo 18 en mode développement complet..."
 
-# Nettoyer le cache au démarrage
-rm -rf /var/lib/odoo/sessions/* 2>/dev/null || true
-
 if [ ${#args[@]} -eq 0 ]; then
     # CONFIGURATION CORRECTE pour Odoo 18
     exec odoo -c "$ODOO_CONF" \
