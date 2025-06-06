@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-""" Model ProductProduct for multibikes_website module."""
+"""Model ProductProduct for multibikes_website module."""
 import logging
 from datetime import datetime
 from odoo import models
 
 _logger = logging.getLogger(__name__)
 
+
 class ProductProduct(models.Model):
-    _inherit = 'product.product'
+    _inherit = "product.product"
 
     def _get_availabilities(self, from_date, to_date, warehouse_id, with_cart=False):
         """
@@ -17,9 +18,13 @@ class ProductProduct(models.Model):
         """
         self.ensure_one()
 
-        _logger.info("📊 Calcul des disponibilités pour le produit %s"
-                    " (ID: %s) de %s à %s",
-                    self.name, self.id, from_date, to_date)
+        _logger.info(
+            "📊 Calcul des disponibilités pour le produit %s" " (ID: %s) de %s à %s",
+            self.name,
+            self.id,
+            from_date,
+            to_date,
+        )
 
         # Si un entrepôt spécifique est demandé, pas d'exclusion d'hivernage
         if warehouse_id:
@@ -45,8 +50,8 @@ class ProductProduct(models.Model):
         )
 
         # 🆕 Récupérer les données de virtualisation des transferts ratés
-        failed_transfers_data = (
-            self._get_failed_transfers_virtualization_data(from_date, to_date)
+        failed_transfers_data = self._get_failed_transfers_virtualization_data(
+            from_date, to_date
         )
 
         # 🆕 Convertir en mouvements virtuels et fusionner
@@ -62,22 +67,27 @@ class ProductProduct(models.Model):
             to_date,
             original_availabilities,
             combined_outgoing,
-            combined_incoming
+            combined_incoming,
         )
 
         return self._calculate_adjusted_availabilities(
-            new_periods, original_availabilities, winter_warehouses,
-            combined_outgoing, combined_incoming
+            new_periods,
+            original_availabilities,
+            winter_warehouses,
+            combined_outgoing,
+            combined_incoming,
         )
 
     def _get_winter_storage_warehouses(self):
         """Récupère tous les entrepôts d'hivernage."""
-        warehouses = self.env['stock.warehouse'].search([
-            ('is_winter_storage_warehouse', '=', True)
-        ])
+        warehouses = self.env["stock.warehouse"].search(
+            [("is_winter_storage_warehouse", "=", True)]
+        )
 
-        _logger.info("Entrepôts d'hivernage trouvés : %s",
-                     [(wh.name, wh.id) for wh in warehouses])
+        _logger.info(
+            "Entrepôts d'hivernage trouvés : %s",
+            [(wh.name, wh.id) for wh in warehouses],
+        )
         return warehouses
 
     def _get_winter_transfer_moves(self, from_date, to_date, winter_warehouses):
@@ -90,36 +100,46 @@ class ProductProduct(models.Model):
         winter_warehouse_ids = winter_warehouses.ids
 
         # Mouvements sortants depuis les entrepôts d'hivernage
-        outgoing_moves = self.env['stock.move'].search([
-            ('product_id', '=', self.id),
-            ('state', 'not in', ['done', 'cancel']),
-            ('date', '>=', from_date),
-            ('date', '<=', to_date),
-            ('location_id.warehouse_id', 'in', winter_warehouse_ids),
-            ('location_dest_id.warehouse_id', 'not in', winter_warehouse_ids),
-        ])
+        outgoing_moves = self.env["stock.move"].search(
+            [
+                ("product_id", "=", self.id),
+                ("state", "not in", ["done", "cancel"]),
+                ("date", ">=", from_date),
+                ("date", "<=", to_date),
+                ("location_id.warehouse_id", "in", winter_warehouse_ids),
+                ("location_dest_id.warehouse_id", "not in", winter_warehouse_ids),
+            ]
+        )
 
         # Mouvements entrants vers les entrepôts d'hivernage
-        incoming_moves = self.env['stock.move'].search([
-            ('product_id', '=', self.id),
-            ('state', 'not in', ['done', 'cancel']),
-            ('date', '>=', from_date),
-            ('date', '<=', to_date),
-            ('location_id.warehouse_id', 'not in', winter_warehouse_ids),
-            ('location_dest_id.warehouse_id', 'in', winter_warehouse_ids),
-        ])
+        incoming_moves = self.env["stock.move"].search(
+            [
+                ("product_id", "=", self.id),
+                ("state", "not in", ["done", "cancel"]),
+                ("date", ">=", from_date),
+                ("date", "<=", to_date),
+                ("location_id.warehouse_id", "not in", winter_warehouse_ids),
+                ("location_dest_id.warehouse_id", "in", winter_warehouse_ids),
+            ]
+        )
 
         _logger.info(
-            "Mouvements sortants depuis entrepôts d'hivernage : %s",
-            len(outgoing_moves))
+            "Mouvements sortants depuis entrepôts d'hivernage : %s", len(outgoing_moves)
+        )
         _logger.info(
-            "Mouvements entrants vers entrepôts d'hivernage : %s",
-            len(incoming_moves))
+            "Mouvements entrants vers entrepôts d'hivernage : %s", len(incoming_moves)
+        )
 
         return outgoing_moves, incoming_moves
 
-    def _create_adjusted_periods(self, from_date, to_date, original_availabilities, # pylint: disable=too-many-arguments, too-many-positional-arguments
-                               outgoing_moves, incoming_moves):
+    def _create_adjusted_periods(
+        self,
+        from_date,
+        to_date,
+        original_availabilities,  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        outgoing_moves,
+        incoming_moves,
+    ):
         """
         Crée les nouvelles périodes basées sur les dates critiques.
 
@@ -131,13 +151,16 @@ class ProductProduct(models.Model):
 
         # Ajouter les dates des périodes originales
         for availability in original_availabilities:
-            critical_dates.add(availability['start'])
-            critical_dates.add(availability['end'])
+            critical_dates.add(availability["start"])
+            critical_dates.add(availability["end"])
 
         # Ajouter les dates des transferts
         for move in outgoing_moves + incoming_moves:
-            move_date = move.date if isinstance(move.date, datetime) else \
-                       datetime.strptime(move.date, '%Y-%m-%d %H:%M:%S')
+            move_date = (
+                move.date
+                if isinstance(move.date, datetime)
+                else datetime.strptime(move.date, "%Y-%m-%d %H:%M:%S")
+            )
             critical_dates.add(move_date)
 
         # Trier et créer les nouvelles périodes
@@ -149,17 +172,19 @@ class ProductProduct(models.Model):
             start = critical_dates[i]
             end = critical_dates[i + 1]
             if from_date <= start < end <= to_date:
-                new_periods.append({'start': start, 'end': end})
+                new_periods.append({"start": start, "end": end})
 
         _logger.info("Nouvelles périodes créées : %s", len(new_periods))
         return new_periods
 
-    def _calculate_adjusted_availabilities(self, # pylint: disable=too-many-arguments, too-many-positional-arguments
-                                         new_periods,
-                                         original_availabilities,
-                                         winter_warehouses,
-                                         outgoing_moves,
-                                         incoming_moves):
+    def _calculate_adjusted_availabilities(
+        self,  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        new_periods,
+        original_availabilities,
+        winter_warehouses,
+        outgoing_moves,
+        incoming_moves,
+    ):
         """
         Calcule les disponibilités ajustées pour chaque periode.
 
@@ -177,33 +202,43 @@ class ProductProduct(models.Model):
 
             # Calculer l'impact des transferts
             net_transfer_impact = self._calculate_transfer_impact(
-                period['start'], outgoing_moves, incoming_moves
+                period["start"], outgoing_moves, incoming_moves
             )
 
             # Ajuster la quantité
             total_winter_qty = max(0, winter_qty_total + net_transfer_impact)
             adjusted_qty = max(0, base_qty - total_winter_qty)
 
-            adjusted_availabilities.append({
-                'start': period['start'],
-                'end': period['end'],
-                'quantity_available': adjusted_qty,
-            })
+            adjusted_availabilities.append(
+                {
+                    "start": period["start"],
+                    "end": period["end"],
+                    "quantity_available": adjusted_qty,
+                }
+            )
 
-            _logger.info("Période %s à %s - Base: %s, Ajustée: %s",
-                        period['start'], period['end'], base_qty, adjusted_qty)
+            _logger.info(
+                "Période %s à %s - Base: %s, Ajustée: %s",
+                period["start"],
+                period["end"],
+                base_qty,
+                adjusted_qty,
+            )
 
         return adjusted_availabilities
 
     def _find_base_quantity(self, period, original_availabilities):
         """Trouve la quantité de base pour une période donnée."""
         for orig_avail in original_availabilities:
-            if (orig_avail['start'] <= period['start'] < orig_avail['end'] or
-                orig_avail['start'] < period['end'] <= orig_avail['end'] or
-                (period['start'] <= orig_avail['start']
-                    and period['end'] >= orig_avail['end']
-                )):
-                return orig_avail['quantity_available']
+            if (
+                orig_avail["start"] <= period["start"] < orig_avail["end"]
+                or orig_avail["start"] < period["end"] <= orig_avail["end"]
+                or (
+                    period["start"] <= orig_avail["start"]
+                    and period["end"] >= orig_avail["end"]
+                )
+            ):
+                return orig_avail["quantity_available"]
         return 0
 
     def _calculate_winter_quantities(self, winter_warehouses):
@@ -227,42 +262,53 @@ class ProductProduct(models.Model):
 
         # Calculer les mouvements sortants (réels + virtuels)
         for move in outgoing_moves:
-            move_date = move.date if isinstance(move.date, datetime) else \
-                    datetime.strptime(move.date, '%Y-%m-%d %H:%M:%S')
+            move_date = (
+                move.date
+                if isinstance(move.date, datetime)
+                else datetime.strptime(move.date, "%Y-%m-%d %H:%M:%S")
+            )
 
             if move_date <= period_start:
                 qty = move.product_qty
                 total_outgoing += qty
 
                 # Log spécial pour les mouvements virtuels
-                if hasattr(move, 'is_virtual') and move.is_virtual:
+                if hasattr(move, "is_virtual") and move.is_virtual:
                     _logger.debug(
                         "🔄 Mouvement virtuel SORTANT pris en compte: %s unités (de %s)",
                         qty,
-                        getattr(move, 'origin_picking', 'Inconnu')
+                        getattr(move, "origin_picking", "Inconnu"),
                     )
 
         # Calculer les mouvements entrants (réels + virtuels)
         for move in incoming_moves:
-            move_date = move.date if isinstance(move.date, datetime) else \
-                    datetime.strptime(move.date, '%Y-%m-%d %H:%M:%S')
+            move_date = (
+                move.date
+                if isinstance(move.date, datetime)
+                else datetime.strptime(move.date, "%Y-%m-%d %H:%M:%S")
+            )
 
             if move_date <= period_start:
                 qty = move.product_qty
                 total_incoming += qty
 
                 # Log spécial pour les mouvements virtuels
-                if hasattr(move, 'is_virtual') and move.is_virtual:
+                if hasattr(move, "is_virtual") and move.is_virtual:
                     _logger.debug(
                         "🔄 Mouvement virtuel ENTRANT pris en compte: %s unités (de %s)",
                         qty,
-                        getattr(move, 'origin_picking', 'Inconnu')
+                        getattr(move, "origin_picking", "Inconnu"),
                     )
 
         net_impact = total_incoming - total_outgoing
 
-        _logger.info("Impact transferts jusqu'à %s : entrants=%s, sortants=%s, net=%s",
-                    period_start, total_incoming, total_outgoing, net_impact)
+        _logger.info(
+            "Impact transferts jusqu'à %s : entrants=%s, sortants=%s, net=%s",
+            period_start,
+            total_incoming,
+            total_outgoing,
+            net_impact,
+        )
 
         return net_impact
 
@@ -284,35 +330,39 @@ class ProductProduct(models.Model):
                 self.origin_picking = picking_name
 
         # Convertir les échecs "vers hivernage" en mouvements sortants virtuels
-        for to_winter_fail in failed_transfers_data.get('to_winter', []):
+        for to_winter_fail in failed_transfers_data.get("to_winter", []):
             virtual_move = MockMove(
-                date_val=to_winter_fail['scheduled_date'],
-                product_qty_val=to_winter_fail['shortage_qty'],
+                date_val=to_winter_fail["scheduled_date"],
+                product_qty_val=to_winter_fail["shortage_qty"],
                 product_id_val=self,
-                picking_name=to_winter_fail['picking_name']
+                picking_name=to_winter_fail["picking_name"],
             )
             virtual_outgoing.append(virtual_move)
 
             _logger.info(
                 "🔄 Mouvement virtuel SORTANT créé: %s unités de %s le %s (origine: %s)",
-                virtual_move.product_qty, self.name, virtual_move.date,
-                virtual_move.origin_picking
+                virtual_move.product_qty,
+                self.name,
+                virtual_move.date,
+                virtual_move.origin_picking,
             )
 
         # Convertir les échecs "depuis hivernage" en mouvements entrants virtuels
-        for from_winter_fail in failed_transfers_data.get('from_winter', []):
+        for from_winter_fail in failed_transfers_data.get("from_winter", []):
             virtual_move = MockMove(
-                date_val=from_winter_fail['scheduled_date'],
-                product_qty_val=from_winter_fail['shortage_qty'],
+                date_val=from_winter_fail["scheduled_date"],
+                product_qty_val=from_winter_fail["shortage_qty"],
                 product_id_val=self,
-                picking_name=from_winter_fail['picking_name']
+                picking_name=from_winter_fail["picking_name"],
             )
             virtual_incoming.append(virtual_move)
 
             _logger.info(
                 "🔄 Mouvement virtuel ENTRANT créé: %s unités de %s le %s (origine: %s)",
-                virtual_move.product_qty, self.name, virtual_move.date,
-                virtual_move.origin_picking
+                virtual_move.product_qty,
+                self.name,
+                virtual_move.date,
+                virtual_move.origin_picking,
             )
 
         return virtual_outgoing, virtual_incoming

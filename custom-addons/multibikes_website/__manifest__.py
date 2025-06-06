@@ -1,44 +1,44 @@
 # -*- coding: utf-8 -*-
-""" Manifest for the MultiBikes Website Extensions module."""
+"""Manifest for the MultiBikes Website Extensions module."""
 {
-    'name': 'MultiBikes Website Extensions',
-    'summary': 'Fonctionnalités avancées pour le site web MultiBikes',
-    'version': '18.0.1.0.0',
-    'category': 'Sales/Rental',
-    'depends': [
-        'web',
-        'website_sale',
-        'website_sale_renting',
-        'stock',
-        'product',
-        'multibikes_base',
-        'website_sale_stock',
-        'website_sale_stock_renting'
+    "name": "MultiBikes Website Extensions",
+    "summary": "Fonctionnalités avancées pour le site web MultiBikes",
+    "version": "18.0.1.0.0",
+    "category": "Sales/Rental",
+    "depends": [
+        "web",
+        "website_sale",
+        "website_sale_renting",
+        "stock",
+        "product",
+        "multibikes_base",
+        "website_sale_stock",
+        "website_sale_stock_renting",
     ],
-    'installable': True,
-    'application': False,
-    'auto_install': False,
-    'license': 'LGPL-3',
-    'data': [
-        'security/ir.model.access.csv',
-        'data/cron.xml',
-        'views/res_config_settings_views.xml',
-        'views/product_pricing_views.xml',
-        'views/product_template_template_views.xml',
-        'views/stock_warehouse_views.xml',
-        'views/stock_picking_views.xml',
-        'views/menu_items.xml',
-        'views/product_grid_template_views.xml',
+    "installable": True,
+    "application": False,
+    "auto_install": False,
+    "license": "LGPL-3",
+    "data": [
+        "security/ir.model.access.csv",
+        "data/cron.xml",
+        "views/res_config_settings_views.xml",
+        "views/product_pricing_views.xml",
+        "views/product_template_template_views.xml",
+        "views/stock_warehouse_views.xml",
+        "views/stock_picking_views.xml",
+        "views/menu_items.xml",
+        "views/product_grid_template_views.xml",
     ],
-    'assets': {
-        'web.assets_frontend': [
-            'multibikes_website/static/src/js/'
-            'multibikes_website_sale_DaterangePicker.js',
-            'multibikes_website/static/src/js/multibikes_website_sale.js',
-            'multibikes_website/static/src/scss/custom_dates.scss',
+    "assets": {
+        "web.assets_frontend": [
+            "multibikes_website/static/src/js/"
+            "multibikes_website_sale_DaterangePicker.js",
+            "multibikes_website/static/src/js/multibikes_website_sale.js",
+            "multibikes_website/static/src/scss/custom_dates.scss",
         ],
     },
-    'author': 'MultiBikes',
-    'maintainer': 'Équipe MultiBikes',
-    'website': 'https://www.multibikes.com',
+    "author": "MultiBikes",
+    "maintainer": "Équipe MultiBikes",
+    "website": "https://www.multibikes.com",
 }

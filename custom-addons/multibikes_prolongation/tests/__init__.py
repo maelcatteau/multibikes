@@ -1,1 +1,1 @@
-from . import test_rental_extension 
+from . import test_rental_extension

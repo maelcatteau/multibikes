@@ -8,8 +8,9 @@ from odoo.exceptions import UserError, ValidationError, AccessError, MissingErro
 
 _logger = logging.getLogger(__name__)
 
+
 class StockPicking(models.Model):
-    _inherit = 'stock.picking'
+    _inherit = "stock.picking"
 
     # === Champs ===
     is_period_transfer = fields.Boolean(
@@ -18,16 +19,16 @@ class StockPicking(models.Model):
         help="Indique si ce transfert fait partie"
         " d'un transfert saisonnier automatique",
         copy=False,
-        readonly=True  # Protégé dans l'interface
+        readonly=True,  # Protégé dans l'interface
     )
 
     period_config_id = fields.Many2one(
-        'mb.renting.stock.period.config',
+        "mb.renting.stock.period.config",
         string="Configuration de période",
         help="Configuration de période associée à ce transfert",
         copy=False,
-        ondelete='set null',
-        readonly=True  # Protégé dans l'interface
+        ondelete="set null",
+        readonly=True,  # Protégé dans l'interface
     )
 
     # Nouveau champ pour identifier les transferts ratés
@@ -35,21 +36,27 @@ class StockPicking(models.Model):
         string="Transfert partiellement raté",
         default=False,
         help="Indique si certains produits du transfert n'ont pas pu être traités",
-        compute='_compute_has_failed_products',
-        store=True
+        compute="_compute_has_failed_products",
+        store=True,
     )
 
     failed_product_details = fields.Text(
         string="Détails des échecs produits",
         help="Liste des produits qui n'ont pas pu être transférés avec les quantités",
-        compute='_compute_failed_product_details',
-        store=True
+        compute="_compute_failed_product_details",
+        store=True,
     )
 
     # === Champs calculés pour l'analyse des échecs ===
 
-    @api.depends('move_ids', 'move_ids.state', 'move_ids.product_uom_qty',
-                 'move_ids.move_line_ids', 'move_ids.move_line_ids.qty_done', 'state')
+    @api.depends(
+        "move_ids",
+        "move_ids.state",
+        "move_ids.product_uom_qty",
+        "move_ids.move_line_ids",
+        "move_ids.move_line_ids.qty_done",
+        "state",
+    )
     def _compute_has_failed_products(self):
         """Détermine si le transfert a des produits en échec"""
         for picking in self:
@@ -60,13 +67,16 @@ class StockPicking(models.Model):
             has_failures = False
 
             if picking.state in [
-                'draft', 'waiting', 'confirmed', 'partially_available'
+                "draft",
+                "waiting",
+                "confirmed",
+                "partially_available",
             ]:
                 # Vérifier si certains mouvements n'ont pas assez de stock réservé
                 for move in picking.move_ids:
-                    if move.state not in ['done', 'cancel']:
+                    if move.state not in ["done", "cancel"]:
                         # Calculer la quantité effectivement réservée via les move_lines
-                        reserved_qty = sum(move.move_line_ids.mapped('quantity'))
+                        reserved_qty = sum(move.move_line_ids.mapped("quantity"))
                         if move.product_uom_qty > reserved_qty:
                             has_failures = True
                             break
@@ -79,8 +89,13 @@ class StockPicking(models.Model):
 
             picking.has_failed_products = has_failures
 
-    @api.depends('move_ids', 'move_ids.state', 'move_ids.product_uom_qty',
-                 'move_ids.move_line_ids', 'move_ids.move_line_ids.qty_done')
+    @api.depends(
+        "move_ids",
+        "move_ids.state",
+        "move_ids.product_uom_qty",
+        "move_ids.move_line_ids",
+        "move_ids.move_line_ids.qty_done",
+    )
     def _compute_failed_product_details(self):
         """Calcule les détails des produits en échec"""
         for picking in self:
@@ -91,15 +106,15 @@ class StockPicking(models.Model):
             failed_details = []
 
             for move in picking.move_ids:
-                if move.state not in ['done', 'cancel']:
+                if move.state not in ["done", "cancel"]:
                     qty_expected = move.product_uom_qty
 
                     # Quantité réservée = somme des quantités dans les move_lines
-                    qty_reserved = sum(move.move_line_ids.mapped('quantity'))
+                    qty_reserved = sum(move.move_line_ids.mapped("quantity"))
 
                     # Quantité effectivement faite =
                     # somme des qty_done dans les move_lines
-                    qty_done = sum(move.move_line_ids.mapped('qty_done'))
+                    qty_done = sum(move.move_line_ids.mapped("qty_done"))
 
                     if qty_expected > qty_reserved:
                         shortage = qty_expected - qty_reserved
@@ -144,9 +159,9 @@ class StockPicking(models.Model):
 
         # Rechercher les transferts automatiques potentiellement ratés
         domain = [
-            ('is_period_transfer', '=', True),  # Transferts de période
-            ('scheduled_date', '<=', cutoff_datetime),  # Date programmée dépassée
-            ('state', 'in', ['draft', 'waiting', 'confirmed', 'partially_available']),
+            ("is_period_transfer", "=", True),  # Transferts de période
+            ("scheduled_date", "<=", cutoff_datetime),  # Date programmée dépassée
+            ("state", "in", ["draft", "waiting", "confirmed", "partially_available"]),
         ]
 
         failed_pickings = self.search(domain)
@@ -168,17 +183,19 @@ class StockPicking(models.Model):
             if failed_products:
                 _logger.error("   - Problèmes de stock détectés:")
                 for product_issue in failed_products:
-                    _logger.error("     * %s : besoin %s, réservé %s, manque %s",
-                        product_issue['product'],
-                        product_issue['needed'],
-                        product_issue['reserved'],
-                        product_issue['shortage'])
+                    _logger.error(
+                        "     * %s : besoin %s, réservé %s, manque %s",
+                        product_issue["product"],
+                        product_issue["needed"],
+                        product_issue["reserved"],
+                        product_issue["shortage"],
+                    )
 
             failed_transfer_ids.append(picking.id)
 
         _logger.info(
             "🔍 Détection terminée: %s transferts ratés trouvés",
-            len(failed_transfer_ids)
+            len(failed_transfer_ids),
         )
 
         # Si des transferts ratés sont trouvés, log un résumé
@@ -206,26 +223,28 @@ class StockPicking(models.Model):
         failed_products = []
 
         for move in picking.move_ids:
-            if move.state in ['waiting', 'confirmed', 'partially_available']:
+            if move.state in ["waiting", "confirmed", "partially_available"]:
                 # Calculer les quantités via les move_lines
-                reserved_qty = sum(move.move_line_ids.mapped('quantity'))
-                done_qty = sum(move.move_line_ids.mapped('qty_done'))
+                reserved_qty = sum(move.move_line_ids.mapped("quantity"))
+                done_qty = sum(move.move_line_ids.mapped("qty_done"))
                 needed_qty = move.product_uom_qty
 
                 if needed_qty > reserved_qty:
                     shortage = needed_qty - reserved_qty
-                    failed_products.append({
-                        'move_id': move.id,
-                        'product': move.product_id.name,
-                        'product_id': move.product_id.id,
-                        'product_code': move.product_id.default_code or 'N/A',
-                        'needed': needed_qty,
-                        'reserved': reserved_qty,
-                        'done': done_qty,
-                        'shortage': shortage,
-                        'location_src': move.location_id.name,
-                        'location_dest': move.location_dest_id.name
-                    })
+                    failed_products.append(
+                        {
+                            "move_id": move.id,
+                            "product": move.product_id.name,
+                            "product_id": move.product_id.id,
+                            "product_code": move.product_id.default_code or "N/A",
+                            "needed": needed_qty,
+                            "reserved": reserved_qty,
+                            "done": done_qty,
+                            "shortage": shortage,
+                            "location_src": move.location_id.name,
+                            "location_dest": move.location_dest_id.name,
+                        }
+                    )
 
         return failed_products
 
@@ -244,26 +263,28 @@ class StockPicking(models.Model):
         failed_products = self._analyze_product_failures(self)
 
         virtualization_data = {
-            'picking_id': self.id,
-            'picking_name': self.name,
-            'period_config_id': self.period_config_id.id
-            if self.period_config_id
-            else False,
-            'scheduled_date': self.scheduled_date,
-            'current_state': self.state,
-            'failed_products': []
+            "picking_id": self.id,
+            "picking_name": self.name,
+            "period_config_id": (
+                self.period_config_id.id if self.period_config_id else False
+            ),
+            "scheduled_date": self.scheduled_date,
+            "current_state": self.state,
+            "failed_products": [],
         }
 
         for product_failure in failed_products:
-            virtualization_data['failed_products'].append({
-                'product_id': product_failure['product_id'],
-                'product_name': product_failure['product'],
-                'product_code': product_failure['product_code'],
-                'shortage_qty': product_failure['shortage'],
-                'location_src_id': self.location_id.id,
-                'location_dest_id': self.location_dest_id.id,
-                'transfer_direction': self._get_transfer_direction(),
-            })
+            virtualization_data["failed_products"].append(
+                {
+                    "product_id": product_failure["product_id"],
+                    "product_name": product_failure["product"],
+                    "product_code": product_failure["product_code"],
+                    "shortage_qty": product_failure["shortage"],
+                    "location_src_id": self.location_id.id,
+                    "location_dest_id": self.location_dest_id.id,
+                    "transfer_direction": self._get_transfer_direction(),
+                }
+            )
 
         return virtualization_data
 
@@ -277,19 +298,23 @@ class StockPicking(models.Model):
         self.ensure_one()
 
         # Récupérer les entrepôts
-        main_warehouse = self.env['stock.warehouse'].get_main_rental_warehouse()
-        winter_warehouse = self.env['stock.warehouse'].get_winter_storage_warehouse()
+        main_warehouse = self.env["stock.warehouse"].get_main_rental_warehouse()
+        winter_warehouse = self.env["stock.warehouse"].get_winter_storage_warehouse()
 
         if not main_warehouse or not winter_warehouse:
-            return 'unknown'
+            return "unknown"
 
-        if (self.location_id == main_warehouse.lot_stock_id and
-            self.location_dest_id == winter_warehouse.lot_stock_id):
-            return 'to_winter'
-        if (self.location_id == winter_warehouse.lot_stock_id and
-              self.location_dest_id == main_warehouse.lot_stock_id):
-            return 'from_winter'
-        return 'unknown'
+        if (
+            self.location_id == main_warehouse.lot_stock_id
+            and self.location_dest_id == winter_warehouse.lot_stock_id
+        ):
+            return "to_winter"
+        if (
+            self.location_id == winter_warehouse.lot_stock_id
+            and self.location_dest_id == main_warehouse.lot_stock_id
+        ):
+            return "from_winter"
+        return "unknown"
 
     def _notify_failed_transfers(self, failed_transfer_ids):
         """
@@ -322,24 +347,29 @@ class StockPicking(models.Model):
             """
 
             # Créer une activité pour les gestionnaires de stock
-            admin_users = self.env['res.users'].search([
-                ('groups_id', 'in', [self.env.ref('stock.group_stock_manager').id])
-            ])
+            admin_users = self.env["res.users"].search(
+                [("groups_id", "in", [self.env.ref("stock.group_stock_manager").id])]
+            )
 
             for admin in admin_users:
-                self.env['mail.activity'].create({
-                    'summary': '🚨 Transferts de stock en échec',
-                    'note': message_body,
-                    'res_model': 'stock.picking',
-                    'res_id': failed_pickings[0].id if failed_pickings else admin.id,
-                    'user_id': admin.id,
-                    'activity_type_id': self.env.ref('mail.mail_activity_data_todo').id,
-                    'date_deadline': fields.Date.today(),
-                })
+                self.env["mail.activity"].create(
+                    {
+                        "summary": "🚨 Transferts de stock en échec",
+                        "note": message_body,
+                        "res_model": "stock.picking",
+                        "res_id": (
+                            failed_pickings[0].id if failed_pickings else admin.id
+                        ),
+                        "user_id": admin.id,
+                        "activity_type_id": self.env.ref(
+                            "mail.mail_activity_data_todo"
+                        ).id,
+                        "date_deadline": fields.Date.today(),
+                    }
+                )
 
             _logger.info(
-                "📧 Notifications envoyées à %s administrateurs",
-                len(admin_users)
+                "📧 Notifications envoyées à %s administrateurs", len(admin_users)
             )
 
         except (ValidationError, AccessError, MissingError) as e:
@@ -364,12 +394,13 @@ class StockPicking(models.Model):
 
         if not failed_transfer_ids:
             return {
-                'success': 0, 'failed': 0, 'message': 'Aucun transfert raté à traiter'
+                "success": 0,
+                "failed": 0,
+                "message": "Aucun transfert raté à traiter",
             }
 
         _logger.info(
-            "💡 Tentative de relance de %s transferts",
-            len(failed_transfer_ids)
+            "💡 Tentative de relance de %s transferts", len(failed_transfer_ids)
         )
 
         success_count = 0
@@ -384,13 +415,10 @@ class StockPicking(models.Model):
                 picking.action_assign()
 
                 # Si maintenant disponible, noter le succès
-                if picking.state == 'assigned':
+                if picking.state == "assigned":
                     success_count += 1
                     results.append(f"✅ {picking.name}: réassigné avec succès")
-                    _logger.info(
-                        "✅ Transfert %s réparé automatiquement",
-                        picking.name
-                    )
+                    _logger.info("✅ Transfert %s réparé automatiquement", picking.name)
                 else:
                     still_failed_count += 1
                     results.append(
@@ -401,17 +429,19 @@ class StockPicking(models.Model):
             except Exception as e:
                 still_failed_count += 1
                 results.append(f"💥 {picking.name}: erreur lors de la relance - {e}")
-                _logger.error("💥 Erreur lors de la relance de %s : %s", picking.name, e)
+                _logger.error(
+                    "💥 Erreur lors de la relance de %s : %s", picking.name, e
+                )
 
         summary = {
-            'success': success_count,
-            'failed': still_failed_count,
-            'details': results,
-            'message': f"{success_count} transferts relancés,"
-            f" {still_failed_count} toujours en échec"
+            "success": success_count,
+            "failed": still_failed_count,
+            "details": results,
+            "message": f"{success_count} transferts relancés,"
+            f" {still_failed_count} toujours en échec",
         }
 
-        _logger.info("💡 Relance terminée: %s", {summary['message']})
+        _logger.info("💡 Relance terminée: %s", {summary["message"]})
         return summary
 
     # === Protection avec clause d'urgence ===
@@ -420,9 +450,9 @@ class StockPicking(models.Model):
         """
         Verrouillage avec possibilité de déverrouillage temporaire
         """
-        period_transfers = self.filtered('is_period_transfer')
+        period_transfers = self.filtered("is_period_transfer")
         if period_transfers:
-            transfer_names = period_transfers.mapped('name')
+            transfer_names = period_transfers.mapped("name")
             raise UserError(
                 "🚫 TRANSFERTS DE PÉRIODE VERROUILLÉS 🚫\n\n"
                 f"Transferts protégés :\n• {chr(10).join(transfer_names)}\n\n"
@@ -436,7 +466,7 @@ class StockPicking(models.Model):
         Protection avec clause de déverrouillage temporaire
         """
         # Clause d'urgence : déverrouillage temporaire
-        if self.env.context.get('admin_override'):
+        if self.env.context.get("admin_override"):
             return super().write(vals)
 
         # Protection normale
@@ -449,7 +479,7 @@ class StockPicking(models.Model):
         Protection contre la suppression avec clause d'urgence
         """
         # Clause d'urgence
-        if self.env.context.get('admin_override'):
+        if self.env.context.get("admin_override"):
             return super().unlink()
 
         # Protection normale
@@ -475,7 +505,7 @@ class StockPicking(models.Model):
 
     # === Contrainte de cohérence ===
 
-    @api.constrains('is_period_transfer', 'period_config_id')
+    @api.constrains("is_period_transfer", "period_config_id")
     def _check_period_config_consistency(self):
         """
         Vérification de cohérence
