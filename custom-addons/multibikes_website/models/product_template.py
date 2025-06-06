@@ -260,7 +260,7 @@ class ProductTemplate(models.Model):
         # Si aucun chevauchement trouvé
         if min_qty is None:
             _logger.warning(
-                "Aucun chevauchement trouvé entre les périodes" " disponibles et %s-%s",
+                ("Aucun chevauchement trouvé entre les périodes disponibles et %s-%s"),
                 start_date,
                 end_date,
             )

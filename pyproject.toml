@@ -1,0 +1,14 @@
+# pyproject.toml
+[tool.black]
+line-length = 88    # Défaut Black (bon compromis)
+target-version = ['py38']  # Version Python Odoo
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    # Exclure certains dossiers si besoin
+    \.git
+  | \.venv
+  | build
+  | dist
+)/
+'''

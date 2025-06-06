@@ -46,7 +46,8 @@ class StockWarehouse(models.Model):
             if is_both_types:
                 raise ValidationError(
                     self.env._(
-                        "L'entrepôt '%s' ne peut pas être à la fois l'entrepôt principal "
+                        "L'entrepôt '%s' ne peut pas être à la fois"
+                        " l'entrepôt principal "
                         "et l'entrepôt d'hivernage.",
                         warehouse.name,
                     )
@@ -72,7 +73,8 @@ class StockWarehouse(models.Model):
                         self.env._(
                             "Il ne peut y avoir qu'un seul entrepôt"
                             " principal par compagnie. "
-                            "L'entrepôt '%s' est déjà configuré comme entrepôt principal.",
+                            "L'entrepôt '%s' est déjà configuré"
+                            " comme entrepôt principal.",
                             other_main[0].name,
                         )
                     )
@@ -96,7 +98,8 @@ class StockWarehouse(models.Model):
                         self.env._(
                             "Il ne peut y avoir qu'un seul entrepôt"
                             " d'hivernage par compagnie."
-                            "L'entrepôt %s est déjà configuré comme entrepôt d'hivernage.",
+                            "L'entrepôt %s est déjà configuré"
+                            "comme entrepôt d'hivernage.",
                             other_winter[0].name,
                         )
                     )

@@ -19,7 +19,8 @@ class ProductProduct(models.Model):
         self.ensure_one()
 
         _logger.info(
-            "📊 Calcul des disponibilités pour le produit %s" " (ID: %s) de %s à %s",
+            ("📊 Calcul des disponibilités pour le produit %s"
+             " (ID: %s) de %s à %s"),
             self.name,
             self.id,
             from_date,
@@ -132,11 +133,11 @@ class ProductProduct(models.Model):
 
         return outgoing_moves, incoming_moves
 
-    def _create_adjusted_periods(
+    def _create_adjusted_periods(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         from_date,
         to_date,
-        original_availabilities,  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        original_availabilities,
         outgoing_moves,
         incoming_moves,
     ):
@@ -177,8 +178,8 @@ class ProductProduct(models.Model):
         _logger.info("Nouvelles périodes créées : %s", len(new_periods))
         return new_periods
 
-    def _calculate_adjusted_availabilities(
-        self,  # pylint: disable=too-many-arguments, too-many-positional-arguments
+    def _calculate_adjusted_availabilities(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self,
         new_periods,
         original_availabilities,
         winter_warehouses,
