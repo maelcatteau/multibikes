@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Manifest for the MultiBikes Website Extensions module."""
+# Manifest for the MultiBikes Website Extensions module.
 {
     "name": "MultiBikes Website Extensions",
     "summary": "Fonctionnalités avancées pour le site web MultiBikes",

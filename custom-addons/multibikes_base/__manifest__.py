@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Manifest for the multibikes_base module."""
+# Manifest for the multibikes_base module.
 {
     # Informations générales sur le module
     "name": "Multibikes base",
