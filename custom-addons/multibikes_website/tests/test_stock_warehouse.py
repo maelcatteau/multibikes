@@ -1,122 +1,278 @@
 # -*- coding: utf-8 -*-
-from odoo.tests import tagged
-from .common import MultibikesWebsiteTestCommon as MultibikesWebsiteConfigTestCommon
-from datetime import datetime, timedelta
+"""Tests for Stock Warehouse extension in multibikes_website module."""
+from odoo import fields
+from odoo.exceptions import ValidationError
+from odoo.tests.common import TransactionCase
+from odoo.tools import mute_logger
+from psycopg2 import IntegrityError
 
 
-@tagged("post_install", "-at_install")
-class TestStockWarehouse(MultibikesWebsiteConfigTestCommon):
-    """Tests pour le modèle stock.warehouse avec les extensions multibikes_website"""
+class TestStockWarehouse(TransactionCase):
+    """Test cases for StockWarehouse model extensions."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Set up test data."""
+        super().setUpClass()
+
+        # Créer des compagnies de test
+        cls.company_1 = cls.env['res.company'].create({
+            'name': 'Test Company 1',
+        })
+
+        cls.company_2 = cls.env['res.company'].create({
+            'name': 'Test Company 2',
+        })
+
+        # Créer des entrepôts de test
+        cls.warehouse_1 = cls.env['stock.warehouse'].create({
+            'name': 'Warehouse 1',
+            'code': 'WH1',
+            'company_id': cls.company_1.id,
+        })
+
+        cls.warehouse_2 = cls.env['stock.warehouse'].create({
+            'name': 'Warehouse 2',
+            'code': 'WH2',
+            'company_id': cls.company_1.id,
+        })
+
+        cls.warehouse_3 = cls.env['stock.warehouse'].create({
+            'name': 'Warehouse 3',
+            'code': 'WH3',
+            'company_id': cls.company_2.id,
+        })
 
     def setUp(self):
-        super(TestStockWarehouse, self).setUp()
-        # Définir self.product comme référence à un produit existant
-        self.product = self.rental_product
+        """Reset warehouse configurations before each test."""
+        super().setUp()
+        # Réinitialiser les configurations
+        warehouses = self.env['stock.warehouse'].search([])
+        warehouses.write({
+            'is_main_rental_warehouse': False,
+            'is_winter_storage_warehouse': False,
+        })
 
-    def test_is_excluded_from_availability_field(self):
-        """Test du champ is_excluded_from_availability"""
-        # Vérifier les valeurs initiales
-        self.assertFalse(
-            self.main_warehouse.is_excluded_from_availability,
-            "L'entrepôt principal ne devrait pas être exclu par défaut",
+    def test_default_values(self):
+        """Test that default values are correctly set."""
+        warehouse = self.env['stock.warehouse'].create({
+            'name': 'Test Warehouse',
+            'code': 'TEST',
+            'company_id': self.company_1.id,
+        })
+
+        self.assertFalse(warehouse.is_main_rental_warehouse)
+        self.assertFalse(warehouse.is_winter_storage_warehouse)
+
+    def test_set_main_rental_warehouse(self):
+        """Test setting an warehouse as main rental warehouse."""
+        self.warehouse_1.is_main_rental_warehouse = True
+
+        self.assertTrue(self.warehouse_1.is_main_rental_warehouse)
+        self.assertFalse(self.warehouse_1.is_winter_storage_warehouse)
+
+    def test_set_winter_storage_warehouse(self):
+        """Test setting an warehouse as winter storage warehouse."""
+        self.warehouse_1.is_winter_storage_warehouse = True
+
+        self.assertTrue(self.warehouse_1.is_winter_storage_warehouse)
+        self.assertFalse(self.warehouse_1.is_main_rental_warehouse)
+
+    def test_warehouse_types_exclusivity_constraint(self):
+        """Test that a warehouse cannot be both main rental and winter storage."""
+        self.warehouse_1.is_main_rental_warehouse = True
+
+        with self.assertRaises(ValidationError) as context:
+            self.warehouse_1.is_winter_storage_warehouse = True
+
+        self.assertIn("ne peut pas être à la fois", str(context.exception))
+
+    def test_warehouse_types_exclusivity_constraint_reverse(self):
+        """Test exclusivity constraint when setting main rental after winter storage."""
+        self.warehouse_1.is_winter_storage_warehouse = True
+
+        with self.assertRaises(ValidationError) as context:
+            self.warehouse_1.is_main_rental_warehouse = True
+
+        self.assertIn("ne peut pas être à la fois", str(context.exception))
+
+    def test_unique_main_rental_warehouse_per_company(self):
+        """Test that only one main rental warehouse is allowed per company."""
+        self.warehouse_1.is_main_rental_warehouse = True
+
+        with mute_logger('odoo.sql_db'):  # Supprime les logs d'erreur SQL
+            with self.assertRaises(IntegrityError):
+                self.warehouse_2.is_main_rental_warehouse = True
+
+    def test_unique_winter_storage_warehouse_per_company(self):
+        """Test that only one winter storage warehouse is allowed per company."""
+        self.warehouse_1.is_winter_storage_warehouse = True
+
+        with mute_logger('odoo.sql_db'):
+            with self.assertRaises(IntegrityError):
+                self.warehouse_2.is_winter_storage_warehouse = True
+
+    def test_different_companies_can_have_same_types(self):
+        """Test that different companies can each have their own main/winter warehouses."""
+        # Compagnie 1 - entrepôt principal
+        self.warehouse_1.is_main_rental_warehouse = True
+
+        # Compagnie 2 - entrepôt principal (devrait fonctionner)
+        self.warehouse_3.is_main_rental_warehouse = True
+
+        self.assertTrue(self.warehouse_1.is_main_rental_warehouse)
+        self.assertTrue(self.warehouse_3.is_main_rental_warehouse)
+
+        # Même test pour l'hivernage
+        self.warehouse_2.is_winter_storage_warehouse = True
+
+        warehouse_4 = self.env['stock.warehouse'].create({
+            'name': 'Warehouse 4',
+            'code': 'WH4',
+            'company_id': self.company_2.id,
+        })
+        warehouse_4.is_winter_storage_warehouse = True
+
+        self.assertTrue(self.warehouse_2.is_winter_storage_warehouse)
+        self.assertTrue(warehouse_4.is_winter_storage_warehouse)
+
+    @mute_logger('odoo.sql_db')
+    def test_sql_constraint_main_rental_warehouse(self):
+        """Test SQL constraint for unique main rental warehouse."""
+        self.warehouse_1.is_main_rental_warehouse = True
+
+        # Tenter de contourner la contrainte Python en utilisant SQL directement
+        with self.assertRaises(IntegrityError):
+            self.env.cr.execute("""
+                UPDATE stock_warehouse
+                SET is_main_rental_warehouse = true
+                WHERE id = %s
+            """, (self.warehouse_2.id,))
+            self.env.cr.commit()
+
+    @mute_logger('odoo.sql_db')
+    def test_sql_constraint_winter_storage_warehouse(self):
+        """Test SQL constraint for unique winter storage warehouse."""
+        self.warehouse_1.is_winter_storage_warehouse = True
+
+        # Tenter de contourner la contrainte Python en utilisant SQL directement
+        with self.assertRaises(IntegrityError):
+            self.env.cr.execute("""
+                UPDATE stock_warehouse
+                SET is_winter_storage_warehouse = true
+                WHERE id = %s
+            """, (self.warehouse_2.id,))
+            self.env.cr.commit()
+
+    def test_get_main_rental_warehouse_with_company_id(self):
+        """Test getting main rental warehouse for specific company."""
+        self.warehouse_1.is_main_rental_warehouse = True
+        self.warehouse_3.is_main_rental_warehouse = True
+
+        main_warehouse_company_1 = self.env['stock.warehouse'].get_main_rental_warehouse(
+            company_id=self.company_1.id
         )
-        self.assertFalse(
-            self.secondary_warehouse.is_excluded_from_availability,
-            "L'entrepôt secondaire ne devrait pas être exclu par défaut",
-        )
-        self.assertTrue(
-            self.excluded_warehouse.is_excluded_from_availability,
-            "L'entrepôt exclu devrait être marqué comme exclu",
+        main_warehouse_company_2 = self.env['stock.warehouse'].get_main_rental_warehouse(
+            company_id=self.company_2.id
         )
 
-    def test_modify_is_excluded_from_availability(self):
-        """Test de la modification du champ is_excluded_from_availability"""
-        # Modifier les valeurs
-        self.main_warehouse.is_excluded_from_availability = True
-        self.excluded_warehouse.is_excluded_from_availability = False
+        self.assertEqual(main_warehouse_company_1, self.warehouse_1)
+        self.assertEqual(main_warehouse_company_2, self.warehouse_3)
 
-        # Vérifier les nouvelles valeurs
-        self.assertTrue(
-            self.main_warehouse.is_excluded_from_availability,
-            "L'entrepôt principal devrait maintenant être exclu",
+    def test_get_main_rental_warehouse_without_company_id(self):
+        """Test getting main rental warehouse for current company."""
+        # Correct way to change company context in Odoo 18
+        self.warehouse_1.is_main_rental_warehouse = True
+
+        # Utilise with_company au lieu de modifier self.env
+        warehouse_env = self.env['stock.warehouse'].with_company(self.company_1.id)
+        main_warehouse = warehouse_env.get_main_rental_warehouse()
+
+        self.assertEqual(main_warehouse, self.warehouse_1)
+
+
+    def test_get_winter_storage_warehouse_with_company_id(self):
+        """Test getting winter storage warehouse for specific company."""
+        self.warehouse_1.is_winter_storage_warehouse = True
+        self.warehouse_3.is_winter_storage_warehouse = True
+
+        winter_warehouse_company_1 = self.env['stock.warehouse'].get_winter_storage_warehouse(
+            company_id=self.company_1.id
         )
-        self.assertFalse(
-            self.excluded_warehouse.is_excluded_from_availability,
-            "L'entrepôt exclu ne devrait plus être marqué comme exclu",
-        )
-
-    def test_impact_on_product_availability(self):
-        """Test de l'impact de l'exclusion d'un entrepôt sur les disponibilités des produits"""
-        # Définir les dates de test
-        start_date = datetime.now()
-        end_date = start_date + timedelta(days=1)
-
-        # Vérifier les disponibilités avant exclusion/inclusion
-        initial_availabilities = self.product._get_availabilities(
-            start_date, end_date, warehouse_id=False
-        )
-
-        # Marquer l'entrepôt secondaire comme exclu
-        self.secondary_warehouse.is_excluded_from_availability = True
-
-        # Vérifier les disponibilités après exclusion
-        availabilities_after_exclusion = self.product._get_availabilities(
-            start_date, end_date, warehouse_id=False
+        winter_warehouse_company_2 = self.env['stock.warehouse'].get_winter_storage_warehouse(
+            company_id=self.company_2.id
         )
 
-        # La quantité disponible devrait être diminuée du stock de l'entrepôt secondaire (3 unités)
-        # Note: cette comparaison suppose que l'implémentation de _get_availabilities tient bien compte
-        # du flag is_excluded_from_availability
-        self.assertTrue(
-            initial_availabilities[0]["quantity_available"]
-            > availabilities_after_exclusion[0]["quantity_available"],
-            "La quantité disponible devrait diminuer après avoir exclu un entrepôt",
+        self.assertEqual(winter_warehouse_company_1, self.warehouse_1)
+        self.assertEqual(winter_warehouse_company_2, self.warehouse_3)
+
+    def test_get_winter_storage_warehouse_without_company_id(self):
+        """Test getting winter storage warehouse without company_id parameter."""
+        # Utilise warehouse_3 qui appartient à company_2
+        self.warehouse_3.is_winter_storage_warehouse = True
+
+        # Test: la méthode utilise automatiquement self.env.company
+        winter_warehouse = self.env['stock.warehouse'].with_company(self.company_2).get_winter_storage_warehouse()
+        self.assertEqual(winter_warehouse, self.warehouse_3)
+
+
+    def test_get_main_rental_warehouse_none_exists(self):
+        """Test getting main rental warehouse when none exists."""
+        main_warehouse = self.env['stock.warehouse'].get_main_rental_warehouse(
+            company_id=self.company_1.id
         )
 
-        # La diminution devrait correspondre au stock de l'entrepôt secondaire
-        expected_diff = 3.0  # Stock de l'entrepôt secondaire
-        actual_diff = (
-            initial_availabilities[0]["quantity_available"]
-            - availabilities_after_exclusion[0]["quantity_available"]
-        )
-        self.assertEqual(
-            actual_diff,
-            expected_diff,
-            f"La différence de quantité disponible devrait être de {expected_diff}",
+        self.assertFalse(main_warehouse)
+
+    def test_get_winter_storage_warehouse_none_exists(self):
+        """Test getting winter storage warehouse when none exists."""
+        winter_warehouse = self.env['stock.warehouse'].get_winter_storage_warehouse(
+            company_id=self.company_1.id
         )
 
-    def test_warehouse_exclusion_with_specific_warehouse(self):
-        """Test de l'exclusion d'entrepôts lorsqu'un entrepôt spécifique est demandé"""
-        # Définir les dates de test
-        start_date = datetime.now()
-        end_date = start_date + timedelta(days=1)
+        self.assertFalse(winter_warehouse)
 
-        # Vérifier les disponibilités pour l'entrepôt principal spécifiquement
-        main_warehouse_availabilities = self.product._get_availabilities(
-            start_date, end_date, warehouse_id=self.main_warehouse.id
-        )
+    def test_unset_main_rental_warehouse(self):
+        """Test unsetting main rental warehouse."""
+        self.warehouse_1.is_main_rental_warehouse = True
+        self.assertTrue(self.warehouse_1.is_main_rental_warehouse)
 
-        # Vérifier que la quantité correspond au stock de l'entrepôt principal
-        expected_qty = 5.0  # Stock de l'entrepôt principal
-        self.assertEqual(
-            main_warehouse_availabilities[0]["quantity_available"],
-            expected_qty,
-            f"La quantité disponible dans l'entrepôt principal devrait être de {expected_qty}",
-        )
+        self.warehouse_1.is_main_rental_warehouse = False
+        self.assertFalse(self.warehouse_1.is_main_rental_warehouse)
 
-        # Même si l'entrepôt principal est marqué comme exclu, sa quantité devrait être disponible
-        # si on le demande spécifiquement
-        self.main_warehouse.is_excluded_from_availability = True
+        # Maintenant un autre entrepôt peut être défini comme principal
+        self.warehouse_2.is_main_rental_warehouse = True
+        self.assertTrue(self.warehouse_2.is_main_rental_warehouse)
 
-        main_warehouse_availabilities_after_exclusion = (
-            self.product._get_availabilities(
-                start_date, end_date, warehouse_id=self.main_warehouse.id
-            )
-        )
+    def test_unset_winter_storage_warehouse(self):
+        """Test unsetting winter storage warehouse."""
+        with mute_logger('odoo.sql_db'):
+            self.warehouse_1.is_winter_storage_warehouse = True
+            self.assertTrue(self.warehouse_1.is_winter_storage_warehouse)
 
-        # La quantité disponible devrait rester inchangée
-        self.assertEqual(
-            main_warehouse_availabilities_after_exclusion[0]["quantity_available"],
-            expected_qty,
-            "La quantité disponible ne devrait pas changer quand on demande spécifiquement l'entrepôt",
-        )
+            self.warehouse_1.is_winter_storage_warehouse = False
+            self.assertFalse(self.warehouse_1.is_winter_storage_warehouse)
+
+            # Maintenant un autre entrepôt peut être défini comme hivernage
+            self.warehouse_2.is_winter_storage_warehouse = True
+            self.assertTrue(self.warehouse_2.is_winter_storage_warehouse)
+
+    def test_constraint_on_warehouse_update(self):
+        """Test constraints when updating existing warehouses."""
+        self.warehouse_1.is_main_rental_warehouse = True
+
+        with mute_logger('odoo.sql_db'):
+            with self.assertRaises(IntegrityError):
+                self.warehouse_2.write({
+                    'is_main_rental_warehouse': True,
+                    'name': 'Updated Warehouse 2'
+                })
+
+
+    def test_batch_write_constraint(self):
+        """Test constraints when writing to multiple records."""
+        with mute_logger('odoo.sql_db'):
+            with self.assertRaises(IntegrityError):
+                warehouses = self.warehouse_1 | self.warehouse_2
+                warehouses.write({'is_main_rental_warehouse': True})
+

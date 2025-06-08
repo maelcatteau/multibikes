@@ -12,7 +12,7 @@ services:
       - odoo-network
     volumes:
       - ./custom-addons:/mnt/extra-addons:ro
-      - ./test-reports:/test-reports
+      - ./test-reports:/test-reports:rw
     environment:
       - PGHOST=db-test
       - PGPORT=5432
@@ -21,7 +21,7 @@ services:
       - ODOO_RC=/etc/odoo/odoo.conf
       - TEST_ENABLE=1
       - TEST_DB_NAME=test_multibikes_ci
-      - TEST_MODULES=multibikes_base
+      - TEST_MODULES=multibikes_website,multibikes_base
       - USE_TEST_TAGS=true
       - LOG_LEVEL=test
     entrypoint: /run_tests.sh
@@ -44,7 +44,7 @@ services:
       timeout: 5s
       retries: 5
 
-networks: 
+networks:
   odoo-network:
     driver: bridge
 
