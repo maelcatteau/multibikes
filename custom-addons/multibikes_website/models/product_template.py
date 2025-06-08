@@ -123,7 +123,7 @@ class ProductTemplate(models.Model):
             # Garder le tarif le plus bas par recurrence
             best_pricings = {}
             for p in published_pricings:
-                if best_pricings.get(p.recurrence_id, float("inf")).price > p.price:
+                if p.recurrence_id not in best_pricings or best_pricings[p.recurrence_id].price > p.price:
                     best_pricings[p.recurrence_id] = p
 
             published_pricings = best_pricings.values()

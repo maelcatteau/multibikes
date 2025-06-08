@@ -14,11 +14,11 @@
                         <strong class="attribute_name pe-0" style="border-right: none !important;">REQUIRED SIZE :</strong>
                         <div class="mt-1">
                             <span t-if="product.mb_size_min">
-                                Min: <t t-out="int(product.mb_size_min // 100)"/> m <t t-out="int(product.mb_size_min % 100)"/>
+                                Min: <t t-esc="int(product.mb_size_min // 100)"/> m <t t-esc="int(product.mb_size_min % 100)"/>
                             </span>
                             <span t-if="product.mb_size_min and product.mb_size_max"> - </span>
                             <span t-if="product.mb_size_max">
-                                Max: <t t-out="int(product.mb_size_max // 100)"/> m <t t-out="int(product.mb_size_max % 100)"/>
+                                Max: <t t-esc="int(product.mb_size_max // 100)"/> m <t t-esc="int(product.mb_size_max % 100)"/>
                             </span>
                         </div>
                     </div>

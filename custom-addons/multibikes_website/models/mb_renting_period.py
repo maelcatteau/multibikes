@@ -285,7 +285,7 @@ class MBRentingPeriod(models.Model):
             limit=1,
         )
 
-    @api.model
+    @api.model_create_multi
     def create(self, vals):
         """Création avec logique de périodes consécutives"""
         if "company_id" in vals:
