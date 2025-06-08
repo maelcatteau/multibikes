@@ -52,58 +52,6 @@ class StockWarehouse(models.Model):
                         warehouse.name,
                     )
                 )
-
-    @api.constrains("is_main_rental_warehouse")
-    def _check_unique_main_rental_warehouse(self):
-        """
-        Vérifie qu'il n'y a qu'un seul entrepôt principal par compagnie
-        (contrainte Python en complément de la contrainte SQL)
-        """
-        for warehouse in self:
-            if warehouse.is_main_rental_warehouse:
-                other_main = self.search(
-                    [
-                        ("is_main_rental_warehouse", "=", True),
-                        ("company_id", "=", warehouse.company_id.id),
-                        ("id", "!=", warehouse.id),
-                    ]
-                )
-                if other_main:
-                    raise ValidationError(
-                        self.env._(
-                            "Il ne peut y avoir qu'un seul entrepôt"
-                            " principal par compagnie. "
-                            "L'entrepôt '%s' est déjà configuré"
-                            " comme entrepôt principal.",
-                            other_main[0].name,
-                        )
-                    )
-
-    @api.constrains("is_winter_storage_warehouse")
-    def _check_unique_winter_storage_warehouse(self):
-        """
-        Vérifie qu'il n'y a qu'un seul entrepôt d'hivernage par compagnie
-        """
-        for warehouse in self:
-            if warehouse.is_winter_storage_warehouse:
-                other_winter = self.search(
-                    [
-                        ("is_winter_storage_warehouse", "=", True),
-                        ("company_id", "=", warehouse.company_id.id),
-                        ("id", "!=", warehouse.id),
-                    ]
-                )
-                if other_winter:
-                    raise ValidationError(
-                        self.env._(
-                            "Il ne peut y avoir qu'un seul entrepôt"
-                            " d'hivernage par compagnie."
-                            "L'entrepôt %s est déjà configuré"
-                            "comme entrepôt d'hivernage.",
-                            other_winter[0].name,
-                        )
-                    )
-
     # Méthodes utilitaires
     @api.model
     def get_main_rental_warehouse(self, company_id=None):
@@ -113,10 +61,10 @@ class StockWarehouse(models.Model):
         if not company_id:
             company_id = self.env.company.id
 
-        return self.search(
-            [("is_main_rental_warehouse", "=", True), ("company_id", "=", company_id)],
-            limit=1,
-        )
+        return self.search([
+            ('is_main_rental_warehouse', '=', True),
+            ('company_id', '=', company_id)
+        ], limit=1)
 
     @api.model
     def get_winter_storage_warehouse(self, company_id=None):
@@ -126,10 +74,7 @@ class StockWarehouse(models.Model):
         if not company_id:
             company_id = self.env.company.id
 
-        return self.search(
-            [
-                ("is_winter_storage_warehouse", "=", True),
-                ("company_id", "=", company_id),
-            ],
-            limit=1,
-        )
+        return self.search([
+            ('is_winter_storage_warehouse', '=', True),
+            ('company_id', '=', company_id)
+        ], limit=1)
