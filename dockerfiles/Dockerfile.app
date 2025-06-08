@@ -7,6 +7,8 @@ USER root
 # Copier les scripts nécessaires
 COPY ./scripts/entrypoint_prod.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+COPY ./scripts/run_tests.sh /run_tests.sh
+RUN chmod +x /run_tests.sh
 
 # Créer et configurer le répertoire pour les rapports de test
 RUN mkdir -p /test-reports && \
@@ -24,5 +26,4 @@ EXPOSE 8069 8072
 USER odoo
 
 ENTRYPOINT ["/entrypoint.sh"]
-# Important: nous spécifions simplement "odoo" comme commande de démarrage
 CMD ["odoo"]

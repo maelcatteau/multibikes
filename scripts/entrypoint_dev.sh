@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Optimisation inotify pour Docker
+echo "Configuration inotify pour le développement Docker..."
+echo 524288 | sudo tee /proc/sys/fs/inotify/max_user_watches 2>/dev/null || true
+echo 512 | sudo tee /proc/sys/fs/inotify/max_user_instances 2>/dev/null || true
+
 # Vérifier et corriger les permissions si nécessaire
 if [ ! -w "/var/lib/odoo" ]; then
     echo "Correction des permissions pour /var/lib/odoo"
@@ -164,15 +169,23 @@ done
 echo "🚀 Démarrage Odoo 18 en mode développement complet..."
 
 if [ ${#args[@]} -eq 0 ]; then
-    # CONFIGURATION CORRECTE pour Odoo 18
     exec odoo -c "$ODOO_CONF" \
         --dev=reload,qweb,werkzeug,xml \
         --log-level=debug \
         --limit-time-cpu=3600 \
         --limit-time-real=7200 \
-        --load=base,web
+        --load=base,web \
+        --workers=0 \
+        --max-cron-threads=0 \
+        --log-handler=werkzeug:WARNING \
+        --log-handler=odoo.addons.inotify:WARNING \
+        --log-handler=pyinotify:WARNING \
+        2>&1 | grep -v -E "(inotify|IN_|watching)"
 else
     exec odoo -c "$ODOO_CONF" \
         --dev=reload,qweb,werkzeug,xml \
+        --workers=0 \
+        --max-cron-threads=0 \
         "${args[@]}"
 fi
+

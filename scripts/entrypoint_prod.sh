@@ -53,6 +53,12 @@ WEBSOCKET_RATE_LIMIT_DELAY=${WEBSOCKET_RATE_LIMIT_DELAY:-0.5}
 # Variables de cron pour production
 MAX_CRON_THREADS=${MAX_CRON_THREADS:-2}
 
+# Variables de timeouts (pour éviter les erreurs 502)
+LIMIT_REQUEST_TIMEOUT=${LIMIT_REQUEST_TIMEOUT:-600}
+LIMIT_TIME_CPU=${LIMIT_TIME_CPU:-600}
+LIMIT_TIME_REAL=${LIMIT_TIME_REAL:-1200}
+LIMIT_TIME_REAL_CRON=${LIMIT_TIME_REAL_CRON:-1200}
+
 # Créer le fichier de configuration temporaire
 echo "Création du fichier de configuration de production: $TMP_CONF"
 cat > "$TMP_CONF" << EOF
@@ -76,6 +82,12 @@ limit_memory_hard = $LIMIT_MEMORY_HARD
 limit_memory_soft = $LIMIT_MEMORY_SOFT
 max_cron_threads = $MAX_CRON_THREADS
 
+; Timeouts (pour éviter erreurs 502)
+limit_request_timeout = $LIMIT_REQUEST_TIMEOUT
+limit_time_cpu = $LIMIT_TIME_CPU
+limit_time_real = $LIMIT_TIME_REAL
+limit_time_real_cron = $LIMIT_TIME_REAL_CRON
+
 ; WebSockets
 gevent_port = $GEVENT_PORT
 websocket_rate_limit_burst = $WEBSOCKET_RATE_LIMIT_BURST
@@ -85,21 +97,23 @@ websocket_rate_limit_delay = $WEBSOCKET_RATE_LIMIT_DELAY
 website_server_url = $WEBSITE_SERVER_URL
 web_base_url = $WEB_BASE_URL
 
-; Logging
 EOF
 
 # Configuration des logs
 if [ "$DEBUG_MODE" = true ] || [ "$DEBUG_MODE" = "True" ]; then
     cat >> "$TMP_CONF" << EOF
+; Logging
 log_level = debug
 log_handler = [':DEBUG']
 EOF
 else
     cat >> "$TMP_CONF" << EOF
+; Logging
 log_level = $LOG_LEVEL
 log_handler = ['$LOG_HANDLER']
 EOF
 fi
+
 
 # Mode développement (désactivé en prod)
 if [ "$DEV_MODE" = true ] || [ "$DEV_MODE" = "True" ]; then

@@ -1,0 +1,52 @@
+services:
+  odoo-test:
+    build:
+      context: .
+      dockerfile: ./dockerfiles/Dockerfile.app
+    image: odoo_multibikes:ci_test
+    depends_on:
+      db-test:
+        condition: service_healthy
+    networks:
+      - odoo-network
+    volumes:
+      - ./custom-addons:/mnt/extra-addons:ro
+      - ./test-reports:/test-reports
+    environment:
+      - PGHOST=db-test
+      - PGPORT=5432
+      - PGUSER=odoo
+      - PGPASSWORD=odoo
+      - ODOO_RC=/etc/odoo/odoo.conf
+      - TEST_ENABLE=1
+      - TEST_DB_NAME=test_multibikes_ci
+      - TEST_MODULES=multibikes_base
+      - USE_TEST_TAGS=true
+      - LOG_LEVEL=test
+    entrypoint: /run_tests.sh
+
+  db-test:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_DB=test_postgres
+    networks:
+      - odoo-network
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Port différent pour éviter les conflits
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d test_postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks: 
+  odoo-network:
+    driver: bridge
+
+volumes:
+  postgres-test-data:
+    driver: local
