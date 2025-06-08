@@ -82,9 +82,6 @@ class MBRentingStockPeriodConfig(models.Model):
         Calcule le stock disponible pour chaque produit
         """
         for record in self:
-            # Invalider le cache pour avoir les données fraîches
-            if record.storable_product_ids:
-                record.storable_product_ids.invalidate_cache(["qty_available"])
 
             stock_details_text = []
 
