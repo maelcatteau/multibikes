@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mb_renting_period_form" model="ir.ui.view">
+        <field name="name">mb.renting.period.form.2</field>
+        <field name="model">mb.renting.period</field>
+        <field name="arch" type="xml">
+            <form>
+                <!-- HEADER avec statut et boutons -->
+                <header>
+                    <field name="status" widget="statusbar"
+                        statusbar_visible="future,active,past,closed"/>
+                    <!-- Boutons d'action principaux -->
+                    <button name="action_create_next_period"
+                            string="Créer période suivante"
+                            type="object"
+                            class="btn-primary"
+                            invisible="status != 'active'"/>
+                </header>
+
+                <!-- SHEET principal -->
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Nom de la période..."/>
+                        </h1>
+                    </div>
+
+                    <!-- INFORMATIONS PRINCIPALES -->
+                    <group>
+                        <group string="📅 Dates">
+                            <field name="start_date"
+                                string="Date de début"
+                                widget="datetime"
+                                readonly="id != False"/>
+                            <field name="end_date"
+                                widget="datetime"
+                                string="Date de fin"/>
+                            <field name="is_closed"
+                                string="Est fermée"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+
+                        <group string="⚙️ Configuration">
+                            <field name="recurrence_id"
+                                options="{'no_create': True, 'no_edit': True}"
+                                string="Durée minimale de location"/>
+                            <field name="recurrence_name" readonly="1"/>
+                            <field name="recurrence_duration" readonly="1"/>
+                            <field name="recurrence_unit" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="🕒 Configuration des jours">
+                            <field name="day_configs_ids"
+                                view_id="%(view_mb_renting_day_config_list)d"/>
+                        </page>
+                        <page string="📦 Configuration des stocks">
+                            <field name="stock_period_config_ids"
+                                view_id="%(view_mb_renting_stock_period_config_list)d"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_mb_renting_period_list" model="ir.ui.view">
+        <field name="name">mb.renting.period.list</field>
+        <field name="model">mb.renting.period</field>
+        <field name="arch" type="xml">
+            <list string="Périodes de location"
+                  multi_edit="1"
+                  sample="1">
+
+                <!-- Nom de la période -->
+                <field name="name"
+                       string="Nom de la période"/>
+
+                <!-- Statut avec widget badge -->
+                <field name="status"
+                       string="Statut"
+                       widget="badge"
+                       decoration-success="status == 'active'"
+                       decoration-info="status == 'future'"
+                       decoration-muted="status == 'past'"
+                       decoration-danger="status == 'closed'"/>
+
+                <!-- Dates principales -->
+                <field name="start_date"
+                       string="Début"
+                       widget="datetime"/>
+
+                <field name="end_date"
+                       string="Fin"
+                       widget="datetime"/>
+
+                <!-- Indicateur fermé -->
+                <field name="is_closed"
+                       string="Fermée"
+                       widget="boolean_toggle"
+                       readonly="true"/>
+
+                <!-- Configuration récurrence -->
+                <field name="recurrence_name"
+                       string="Durée min."
+                       optional="hide"/>
+
+                <field name="recurrence_duration"
+                       string="Durée"
+                       optional="hide"/>
+
+                <field name="recurrence_unit"
+                       string="Unité"
+                       optional="hide"/>
+
+                <!-- Entreprise (si multi-company) -->
+                <field name="company_id"
+                       string="Entreprise"
+                       groups="base.group_multi_company"
+                       optional="hide"/>
+
+                <!-- Champs techniques cachés pour les décorations -->
+                <field name="id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+</odoo>

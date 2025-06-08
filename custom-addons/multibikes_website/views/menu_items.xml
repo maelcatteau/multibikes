@@ -80,17 +80,5 @@
                         parent="sale_renting.menu_rental_config"
                         action="action_mb_renting_period"
                         sequence="21"/>
-        <!--Menu pour afficher les paramètres de gestion des horaires-->
-        <menuitem id="menu_day_config"
-                        name="Horaires d'ouvertures"
-                        parent="sale_renting.menu_rental_config"
-                        action="action_mb_renting_day_config"
-                        sequence="22"/>
-        <!--Menu pour afficher les paramètres de gestion des hivernages-->
-        <menuitem id="menu_stock_period_config"
-                        name="Configuration des hivernages"
-                        parent="sale_renting.menu_rental_config"
-                        action="action_mb_renting_stock_period_config"
-                        sequence="23"/>
     </data>
 </odoo>

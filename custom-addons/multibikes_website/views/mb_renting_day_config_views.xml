@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue list pour mb.renting.day.config-->
+    <record id="view_mb_renting_day_config_list" model="ir.ui.view">
+        <field name="name">mb.renting.day.config.list</field>
+        <field name="model">mb.renting.day.config</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="day_of_week"/>
+                <field name="is_open"/>
+                <field name="allow_pickup" invisible="not is_open"/>
+                <field name="pickup_hour_from" widget="float_time" invisible="not is_open or not allow_pickup"/>
+                <field name="pickup_hour_to" widget="float_time" invisible="not is_open or not allow_pickup"/>
+                <field name="allow_return" invisible="not is_open"/>
+                <field name="return_hour_from" widget="float_time" invisible="not is_open or not allow_return"/>
+                <field name="return_hour_to" widget="float_time" invisible="not is_open or not allow_return"/>
+            </list>
+        </field>
+    </record>
+</odoo>

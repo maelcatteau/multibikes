@@ -51,7 +51,7 @@ class WebsiteSaleRentingCustom(WebsiteSaleRenting):
 
         periods_data = []
         for period in periods:
-            day_configs = self._format_day_configs(period.day_configs)
+            day_configs = self._format_day_configs(period.day_configs_ids)
 
             periods_data.append(
                 {
@@ -71,14 +71,14 @@ class WebsiteSaleRentingCustom(WebsiteSaleRenting):
 
         return periods_data
 
-    def _format_day_configs(self, day_configs):
+    def _format_day_configs(self, day_configs_ids):
         """Format day configurations data.
 
         :param day_configs: recordset of mb.renting.day.config
         :rtype: dict
         """
         configs = {}
-        for config in day_configs:
+        for config in day_configs_ids:
             configs[config.day_of_week] = {
                 "is_open": config.is_open,
                 "pickup": {

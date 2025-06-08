@@ -13,7 +13,12 @@ class MBRentingPeriod(models.Model):
     _order = "start_date"
 
     name = fields.Char("Nom", required=True)
-    company_id = fields.Many2one("res.company", required=True, ondelete="cascade")
+    company_id = fields.Many2one(
+        "res.company",
+        required=True,
+        ondelete="cascade",
+        default=lambda self: self.env.company
+    )
 
     start_date = fields.Datetime(required=True)
     end_date = fields.Datetime(required=True)
@@ -45,7 +50,7 @@ class MBRentingPeriod(models.Model):
         readonly=True,
     )
 
-    day_configs = fields.One2many(
+    day_configs_ids = fields.One2many(
         "mb.renting.day.config",
         "period_id",
         string="Day Configurations",
