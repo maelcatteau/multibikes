@@ -68,29 +68,63 @@ echo "--- Résumé des tests ---"
 
 # Vérifier s'il y a des messages d'erreur ou d'échec spécifiques
 if grep -q "FAIL:" "${TEMP_LOG}" || grep -q "ERROR:" "${TEMP_LOG}"; then
-    echo "Des tests ont échoué ou des erreurs ont été détectées:"
+    echo "❌ Des tests ont échoué ou des erreurs ont été détectées:"
     grep -B 5 -A 5 -E "(FAIL:|ERROR:)" "${TEMP_LOG}" || true
     exit 1
-else
-    # Vérifier les warnings de tests
-    if grep -q "0 failed" "${TEMP_LOG}"; then
-        # Vérifier s'il y a des tests qui ont été exécutés
-        if grep -q "0 test" "${TEMP_LOG}"; then
-            echo "ATTENTION: Aucun test n'a été exécuté!"
-            # Considérer cela comme une réussite si les modules sont chargés sans erreur
-            if grep -q "Module.*loaded" "${TEMP_LOG}"; then
-                echo "Les modules ont été chargés avec succès sans erreur."
-                exit 0
-            else
-                echo "Les modules n'ont pas pu être chargés correctement."
-                exit 1
-            fi
-        else
-            echo "Tous les tests ont réussi."
+fi
+
+# Analyser la ligne de résumé des tests : "X failed, Y error(s) of Z tests"
+RESULT_LINE=$(grep -o "[0-9]* failed, [0-9]* error(s) of [0-9]* tests" "${TEMP_LOG}" | tail -1)
+
+if [ -n "${RESULT_LINE}" ]; then
+    # Extraire les valeurs
+    FAILED_COUNT=$(echo "${RESULT_LINE}" | grep -o "^[0-9]*")
+    ERROR_COUNT=$(echo "${RESULT_LINE}" | grep -o "[0-9]* error" | grep -o "^[0-9]*")
+    TOTAL_COUNT=$(echo "${RESULT_LINE}" | grep -o "of [0-9]* tests" | grep -o "[0-9]*")
+
+    echo "📊 Résultats: ${FAILED_COUNT} échecs, ${ERROR_COUNT} erreurs sur ${TOTAL_COUNT} tests"
+
+    # Vérifier s'il y a des tests exécutés
+    if [ "${TOTAL_COUNT:-0}" -eq 0 ]; then
+        echo "⚠️ ATTENTION: Aucun test n'a été exécuté!"
+        # Vérifier si les modules se sont chargés correctement
+        if grep -q "Module.*loaded" "${TEMP_LOG}"; then
+            echo "✅ Les modules ont été chargés avec succès sans test."
             exit 0
+        else
+            echo "❌ Les modules n'ont pas pu être chargés correctement."
+            exit 1
+        fi
+    fi
+
+    # Vérifier les résultats
+    if [ "${FAILED_COUNT:-0}" -eq 0 ] && [ "${ERROR_COUNT:-0}" -eq 0 ]; then
+        echo "✅ Tous les ${TOTAL_COUNT} tests ont réussi!"
+        exit 0
+    else
+        echo "❌ ${FAILED_COUNT} tests ont échoué, ${ERROR_COUNT} erreurs détectées."
+        exit 1
+    fi
+else
+    # Fallback si le format de résumé n'est pas trouvé
+    echo "⚠️ Format de résumé non reconnu - analyse détaillée:"
+
+    # Vérifier les patterns alternatifs
+    if grep -q "0 failed" "${TEMP_LOG}" && ! grep -q "FAIL:" "${TEMP_LOG}"; then
+        # Compter les tests via les lignes de stats
+        TEST_STATS=$(grep -c "tests.*queries" "${TEMP_LOG}" || echo "0")
+        if [ "${TEST_STATS}" -gt 0 ]; then
+            echo "✅ Tests détectés et passés avec succès (${TEST_STATS} modules testés)"
+            exit 0
+        else
+            echo "❌ Aucun test détecté dans les statistiques"
+            exit 1
         fi
     else
-        echo "Statut des tests incertain - vérifiez les logs."
+        echo "❌ Statut des tests incertain - vérifiez les logs manuellement."
+        # Afficher les dernières lignes pour diagnostic
+        echo "--- Dernières lignes des logs ---"
+        tail -10 "${TEMP_LOG}"
         exit 1
     fi
 fi
