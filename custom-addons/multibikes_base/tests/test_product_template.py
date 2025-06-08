@@ -13,7 +13,7 @@ class TestProductTemplate(MultibikesBaseTestCommon):
         # Vérification des valeurs initiales
         self.assertEqual(self.product.mb_caution, 200.0)
         self.assertEqual(self.product.mb_value_in_case_of_theft, 500.0)
-        self.assertEqual(self.product.mb_currency_id, self.env.company.currency_id)
+        self.assertEqual(self.product.currency_id, self.env.company.currency_id)
 
         # Modification de la caution et vérification
         self.product.mb_caution = 300.0

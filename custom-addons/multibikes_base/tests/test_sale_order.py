@@ -52,3 +52,21 @@ class TestSaleOrder(MultibikesBaseTestCommon):
         # Vérification que la ligne a été ajoutée
         self.assertEqual(len(self.sale_order.order_line), 1)
         self.assertTrue(self.sale_order.order_line[0].is_rental)
+        self.assertEqual(self.sale_order.order_line[0].mb_caution_subtotal, self.product.mb_caution)
+
+        # Ajout d'une seconde ligne de location à la commande
+        self.env["sale.order.line"].create(
+            {
+                "order_id": self.sale_order.id,
+                "product_id": product_variant.id,
+                "product_uom_qty": 1,
+                "product_uom": product_variant.uom_id.id,
+                "price_unit": product_variant.list_price,
+                "name": product_variant.name,
+                "is_rental": True,
+            }
+        )
+
+        self.assertEqual(len(self.sale_order.order_line), 2)
+        self.assertEqual(self.sale_order.mb_caution_total, 2*self.product.mb_caution)
+
