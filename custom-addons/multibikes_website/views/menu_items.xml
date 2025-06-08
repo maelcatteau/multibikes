@@ -1,35 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!--Menu pour afficher tout les transferts généré-->
-        <menuitem id="menu_period_transfers"
-                        name="Transferts de Période"
-                        parent="stock.menu_stock_warehouse_mgmt"
-                        action="action_period_transfer_picking"
-                        sequence="50"/>
-        <!--Menu pour afficher les paramètres de gestion des saisons-->
-        <menuitem id="menu_season"
-                        name="Gestion des saisons"
-                        parent="rental_menu_root.menu_rental_config"
-                        action="action_mb_renting_period"
-                        sequence="21"/>
-        <!--Menu pour afficher les paramètres de gestion des horaires-->
-        <menuitem id="menu_day_config"
-                        name="Horaires d'ouvertures"
-                        parent="rental_menu_root.menu_rental_config"
-                        action="action_mb_renting_day_config"
-                        sequence="22"/>
-        <!--Menu pour afficher les paramètres de gestion des hivernages-->
-        <menuitem id="menu_stock_period_config"
-                        name="Configuration des hivernages"
-                        parent="rental_menu_root.menu_rental_config"
-                        action="action_mb_renting_stock_period_config"
-                        sequence="23"/>
         <!-- Action pour la configuration des saisons -->
         <record id="action_mb_renting_period" model="ir.actions.act_window">
             <field name="name">Périodes de Location</field>
             <field name="res_model">mb.renting.period</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="context">{}</field>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
@@ -45,7 +21,7 @@
         <record id="action_mb_renting_day_config" model="ir.actions.act_window">
             <field name="name">Horaires d'ouverture</field>
             <field name="res_model">mb.renting.day.config</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="context">{}</field>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
@@ -57,10 +33,10 @@
             </field>
         </record>
         <!-- Action pour la configuration des stocks -->
-        <record id="action_mb_renting_stock_config" model="ir.actions.act_window">
+        <record id="action_mb_renting_stock_period_config" model="ir.actions.act_window">
             <field name="name">Configuration Stock</field>
             <field name="res_model">mb.renting.stock.period.config</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="context">{}</field>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
@@ -92,5 +68,29 @@
                 </p>
             </field>
         </record>
+        <!--Menu pour afficher tout les transferts généré-->
+        <menuitem id="menu_period_transfers"
+                        name="Transferts de Période"
+                        parent="stock.menu_stock_warehouse_mgmt"
+                        action="action_period_transfer_picking"
+                        sequence="50"/>
+        <!--Menu pour afficher les paramètres de gestion des saisons-->
+        <menuitem id="menu_season"
+                        name="Gestion des saisons"
+                        parent="sale_renting.menu_rental_config"
+                        action="action_mb_renting_period"
+                        sequence="21"/>
+        <!--Menu pour afficher les paramètres de gestion des horaires-->
+        <menuitem id="menu_day_config"
+                        name="Horaires d'ouvertures"
+                        parent="sale_renting.menu_rental_config"
+                        action="action_mb_renting_day_config"
+                        sequence="22"/>
+        <!--Menu pour afficher les paramètres de gestion des hivernages-->
+        <menuitem id="menu_stock_period_config"
+                        name="Configuration des hivernages"
+                        parent="sale_renting.menu_rental_config"
+                        action="action_mb_renting_stock_period_config"
+                        sequence="23"/>
     </data>
 </odoo>
