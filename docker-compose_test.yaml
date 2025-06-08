@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: ./dockerfiles/Dockerfile.app
     image: odoo_multibikes:ci_test
+    container_name: odoo-test
     depends_on:
       db-test:
         condition: service_healthy
