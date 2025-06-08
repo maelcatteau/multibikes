@@ -30,3 +30,22 @@ class TestProductTemplate(MultibikesBaseTestCommon):
         self.product.mb_size_max = 190.0
         self.assertEqual(self.product.mb_size_min, 150.0)
         self.assertEqual(self.product.mb_size_max, 190.0)
+
+    def test_negative_caution_values(self):
+        """Test avec des valeurs négatives"""
+        # Les valeurs négatives devraient être autorisées ou non ?
+        self.product.mb_caution = -100.0
+        self.assertEqual(self.product.mb_caution, -100.0)
+
+    def test_very_large_values(self):
+        """Test avec des valeurs très importantes"""
+        self.product.mb_caution = 999999.99
+        self.product.mb_value_in_case_of_theft = 999999.99
+        self.assertEqual(self.product.mb_caution, 999999.99)
+
+    def test_size_range_validation(self):
+        """Test de cohérence des tailles min/max"""
+        # Cas où taille_min > taille_max (devrait-il y avoir une contrainte ?)
+        self.product.mb_size_min = 200.0
+        self.product.mb_size_max = 150.0
+        # Aucune erreur actuellement - besoin d'ajouter une contrainte ?

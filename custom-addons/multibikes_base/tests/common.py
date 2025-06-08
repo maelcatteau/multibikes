@@ -49,3 +49,32 @@ class MultibikesBaseTestCommon(TransactionCase):
                 "mb_numero_de_caution": 12345,
             }
         )
+
+        cls.products = cls.env["product.template"].create([
+            {
+                "name": f"Vélo {i}",
+                "type": "consu",
+                "list_price": 50.0 + i * 10,
+                "mb_caution": 200.0 + i * 50,
+                "mb_value_in_case_of_theft": 500.0 + i * 100,
+            } for i in range(5)
+        ])
+
+
+    def test_multiple_products_performance(self):
+        """Test de performance avec plusieurs produits"""
+        variants = self.products.product_variant_ids
+
+        # Création massive de lignes
+        lines_data = [{
+            "order_id": self.sale_order.id,
+            "product_id": variant.id,
+            "product_uom_qty": 2,
+            "price_unit": variant.list_price,
+        } for variant in variants]
+
+        lines = self.env["sale.order.line"].create(lines_data)
+
+        # Vérification que les calculs sont corrects
+        expected_total = sum(line.mb_caution_subtotal for line in lines)
+        self.assertEqual(self.sale_order.mb_caution_total, expected_total)

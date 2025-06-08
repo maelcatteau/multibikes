@@ -70,3 +70,47 @@ class TestSaleOrder(MultibikesBaseTestCommon):
         self.assertEqual(len(self.sale_order.order_line), 2)
         self.assertEqual(self.sale_order.mb_caution_total, 2*self.product.mb_caution)
 
+    def test_caution_total_computation(self):
+        """Test du calcul automatique du total des cautions"""
+        product_variant = self.product.product_variant_id
+
+        # Commande sans ligne
+        self.assertEqual(self.sale_order.mb_caution_total, 0.0)
+
+        # Ajout de lignes avec différentes quantités
+        line1 = self.env["sale.order.line"].create({
+            "order_id": self.sale_order.id,
+            "product_id": product_variant.id,
+            "product_uom_qty": 2,
+            "price_unit": 50.0,
+        })
+
+        line2 = self.env["sale.order.line"].create({
+            "order_id": self.sale_order.id,
+            "product_id": product_variant.id,
+            "product_uom_qty": 1,
+            "price_unit": 50.0,
+        })
+
+        expected_total = (200.0 * 2) + (200.0 * 1)  # 600.0
+        self.assertEqual(self.sale_order.mb_caution_total, expected_total)
+
+    def test_caution_discount_product(self):
+        """Test du produit de remise de caution"""
+        discount_product = self.env["product.product"].create({
+            "name": "Remise Caution",
+            "type": "service",
+            "list_price": -50.0,
+        })
+
+        self.sale_order.mb_caution_discount_product_id = discount_product
+        self.assertEqual(
+            self.sale_order.mb_caution_discount_product_id.id,
+            discount_product.id
+        )
+
+    def test_invalid_caution_type(self):
+        """Test avec type de caution invalide"""
+        with self.assertRaises(ValueError):
+            self.sale_order.mb_type_de_caution = "invalid_type"
+
