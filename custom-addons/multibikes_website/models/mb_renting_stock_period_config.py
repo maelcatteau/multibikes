@@ -179,8 +179,10 @@ class MBRentingStockPeriodConfig(models.Model):
                 )
             ],
         }
+        picking = self.env["stock.picking"].create(picking_vals)
 
-        return self.env["stock.picking"].create(picking_vals)
+        picking.action_confirm()  # Confirmer le picking pour créer les mouvements
+        return picking
 
     @api.model
     def execute_period_transitions(self):
@@ -218,9 +220,6 @@ class MBRentingStockPeriodConfig(models.Model):
     def action_generate_transfers(self):
         """
         Action pour générer automatiquement les transferts pour cette configuration
-
-        Returns:
-            dict: Action de notification ou redirection
         """
         self.ensure_one()
 
@@ -237,12 +236,11 @@ class MBRentingStockPeriodConfig(models.Model):
             }
 
         # Vérifier si des transferts existent déjà pour cette configuration
-        existing_transfers = self.env["stock.picking"].search(
-            [
-                ("origin", "ilike", f"Transition auto {self.period_id.name}"),
-                ("move_ids.product_id", "in", self.storable_product_ids.ids),
-            ]
-        )
+        domain = [("origin", "ilike", f"Transition auto {self.period_id.name}")]
+        if self.storable_product_ids.ids:  # Sécurité pour éviter liste vide
+            domain.append(("move_ids.product_id", "in", self.storable_product_ids.ids))
+
+        existing_transfers = self.env["stock.picking"].search(domain)
 
         if existing_transfers:
             return {
@@ -253,7 +251,7 @@ class MBRentingStockPeriodConfig(models.Model):
                     "message": (
                         f"Des transferts existent déjà pour cette période "
                         f"({len(existing_transfers)} trouvé(s)). "
-                        "Voulez-vous les consulter depuis le menu Inventaire?",
+                        "Voulez-vous les consulter depuis le menu Inventaire?"
                     ),
                     "type": "warning",
                     "sticky": True,
@@ -263,56 +261,45 @@ class MBRentingStockPeriodConfig(models.Model):
         transfers_created = []
         errors = []
 
-        # Créer un transfert pour chaque produit
+        # Traiter chaque produit individuellement avec savepoint
         for product in self.storable_product_ids:
             try:
-                # Créer une configuration temporaire pour chaque produit
-                temp_config = self.copy(
-                    {"storable_product_ids": [(6, 0, [product.id])]}
-                )
+                with self.env.cr.savepoint():
+                    # Créer une config temporaire pour ce produit uniquement
+                    single_product_config = self.copy({
+                        "storable_product_ids": [(6, 0, [product.id])]
+                    })
 
-                if temp_config.needs_transfer():
-                    picking = temp_config.create_transfer()
-                    if picking:
-                        transfers_created.append(picking)
+                    # Utiliser tes méthodes existantes
+                    if single_product_config._needs_transfer():
+                        picking = single_product_config._create_transfer()
+                        if picking:
+                            transfers_created.append(picking)
 
-                # Supprimer la config temporaire
-                temp_config.unlink()
-            except Exception as e:  # pylint: disable=broad-exception-caught
-                # Fonction automatique : doit continuer même en cas d'erreur
+                    # Nettoyer la config temporaire
+                    single_product_config.unlink()
+
+            except Exception as e:
                 error_msg = f"Erreur pour {product.name}: {str(e)}"
                 errors.append(error_msg)
-                # Log détaillé pour le debugging
-                _logger.exception(
-                    "Erreur lors du transfert automatique pour %s", product.name
-                )
+                _logger.exception("Erreur lors du transfert automatique pour %s", product.name)
+                # Le savepoint fait automatiquement le rollback en cas d'erreur
 
-        # Préparer le message de retour
+        # Le reste de ta méthode reste identique...
         if transfers_created and not errors:
-            message = (
-                f"✅ {len(transfers_created)}" f" transfert(s) créé(s) avec succès !\n"
-            )
-            message += "\n".join(
-                [f"• {p.name} ({p.origin})" for p in transfers_created]
-            )
+            message = f"✅ {len(transfers_created)} transfert(s) créé(s) avec succès !\n"
+            message += "\n".join([f"• {p.name} ({p.origin})" for p in transfers_created])
             notification_type = "success"
             title = "Transferts générés"
         elif transfers_created and errors:
-            message = (
-                f"⚠️ {len(transfers_created)} transfert(s) créé(s),"
-                f" {len(errors)} erreur(s):\n"
-            )
+            message = f"⚠️ {len(transfers_created)} transfert(s) créé(s), {len(errors)} erreur(s):\n"
             message += "\n".join([f"✅ {p.name}" for p in transfers_created])
             message += "\n" + "\n".join([f"❌ {e}" for e in errors])
             notification_type = "warning"
             title = "Transferts partiellement générés"
         else:
             message = "❌ Aucun transfert généré.\n"
-            message += (
-                "\n".join([f"• {e}" for e in errors])
-                if errors
-                else "Vérifiez la configuration."
-            )
+            message += "\n".join([f"• {e}" for e in errors]) if errors else "Vérifiez la configuration."
             notification_type = "danger"
             title = "Échec de génération"
 

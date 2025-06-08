@@ -15,7 +15,11 @@ class MBRentingDayConfig(models.Model):
         "mb.renting.period", required=True, ondelete="cascade", string="Période"
     )
     company_id = fields.Many2one(
-        "res.company", required=True, ondelete="cascade", string="Société"
+        "res.company",
+        required=True,
+        ondelete="cascade",
+        string="Société",
+        default=lambda self: self.env.company
     )
 
     day_of_week = fields.Selection(

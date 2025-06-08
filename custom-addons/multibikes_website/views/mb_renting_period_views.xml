@@ -13,8 +13,23 @@
                     <button name="action_create_next_period"
                             string="Créer période suivante"
                             type="object"
+                            class="btn-secondary"
+                            invisible="not recurrence_id or not name"/>
+                    <button name="action_create_default_day_configs"
+                            string="Créer jours de la semaine"
+                            type="object"
                             class="btn-primary"
-                            invisible="status != 'active'"/>
+                            invisible="not recurrence_id or not name or remaining_days_to_configure == 0"/>
+                    <button name="action_auto_configure_all_products"
+                            string="Créer tout les produits"
+                            type="object"
+                            class="btn-primary"
+                            invisible="not recurrence_id or not name or remaining_products_to_configure == 0"/>
+                    <button name="action_generate_all_transfers"
+                            string="Générer transferts"
+                            type="object"
+                            class="btn-primary"
+                            invisible="not recurrence_id or not name or not remaining_products_to_configure == 0"/>
                 </header>
 
                 <!-- SHEET principal -->
@@ -38,6 +53,9 @@
                             <field name="is_closed"
                                 string="Est fermée"/>
                             <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="remaining_days_to_configure"
+                                string="Jours à configurer"
+                                readonly="1"/>
                         </group>
 
                         <group string="⚙️ Configuration">

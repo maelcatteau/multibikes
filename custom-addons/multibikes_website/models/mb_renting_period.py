@@ -76,6 +76,14 @@ class MBRentingPeriod(models.Model):
         help="Nombre de produits stockables qui n'ont pas encore été configurés",
     )
 
+    # Champ pour indiquer combien de jours restent à configurer
+    remaining_days_to_configure = fields.Integer(
+        string="Jours restants à configurer",
+        compute="_compute_days_to_configure",
+        store=False,
+        help="Nombre de jours de la semaine qui n'ont pas encore été configurés",
+    )
+
     status = fields.Selection(
         [
             ("draft", "Brouillon"),
@@ -153,6 +161,22 @@ class MBRentingPeriod(models.Model):
 
             period.remaining_products_to_configure = unconfigured_count
 
+    @api.depends("day_configs_ids")
+    def _compute_days_to_configure(self):
+        """
+        Calcule le nombre de jours restants à configurer.
+        """
+        for period in self:
+            domain = [('period_id', '=', period.id)]
+            if period.company_id:
+                domain.append(('company_id', '=', period.company_id.id))
+
+            configured_count = self.env['mb.renting.day.config'].search_count(domain)
+            period.remaining_days_to_configure = 7 - configured_count
+
+
+
+
     @api.depends("start_date", "end_date", "is_closed")
     def _compute_status(self):
         """Calcule le statut de la période"""
@@ -221,17 +245,24 @@ class MBRentingPeriod(models.Model):
 
         self.env.cr.flush()
 
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": "mb.renting.period",
-            "res_id": self.id,
-            "view_mode": "form",
-            "target": "new",
-            # Notification en plus
-            "context": {
-                "default_notification": f"✅ {created_count} configuration(s) ajoutée(s)"
-            },
-        }
+        if created_count > 0:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'reload',
+                'params': {
+                    'message': f"✅ {created_count} configuration(s) ajoutée(s)",
+                    'type': 'success'
+                }
+            }
+        else:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'reload',
+                'params': {
+                    'message': "ℹ️ Toutes les configurations existent déjà",
+                    'type': 'info'
+                }
+            }
 
     @api.model
     def find_period_for_date(self, target_date):
@@ -349,12 +380,12 @@ class MBRentingPeriod(models.Model):
             message = "Tous les produits sont déjà configurés pour cette période."
 
         return {
-            "type": "ir.actions.act_window",
-            "res_model": "mb.renting.period",
-            "res_id": self.id,
-            "view_mode": "form",
-            "target": "new",
-            "context": {"default_notification": f"✅ {message}"},
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+            "params": {
+                "message": f"✅ {message}",
+                "type": "success",
+            },
         }
 
     def action_generate_all_transfers(self):
