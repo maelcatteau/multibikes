@@ -1,11 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+        <!--Menu pour afficher tout les transferts généré-->
         <menuitem id="menu_period_transfers"
                         name="Transferts de Période"
                         parent="stock.menu_stock_warehouse_mgmt"
                         action="action_period_transfer_picking"
-                        sequence="50"
-                        groups="stock.group_stock_manager"/>
+                        sequence="50"/>
+        <!--Menu pour afficher les paramètres de gestion des saisons-->
+        <menuitem id="menu_season"
+                        name="Gestion des saisons"
+                        parent="rental_menu_root.menu_rental_config"
+                        action="action_mb_renting_period"
+                        sequence="21"/>
+        <!--Menu pour afficher les paramètres de gestion des horaires-->
+        <menuitem id="menu_day_config"
+                        name="Horaires d'ouvertures"
+                        parent="rental_menu_root.menu_rental_config"
+                        action="action_mb_renting_day_config"
+                        sequence="22"/>
+        <!--Menu pour afficher les paramètres de gestion des hivernages-->
+        <menuitem id="menu_stock_period_config"
+                        name="Configuration des hivernages"
+                        parent="rental_menu_root.menu_rental_config"
+                        action="action_mb_renting_stock_period_config"
+                        sequence="23"/>
+        <!-- Action pour la configuration des saisons -->
+        <record id="action_mb_renting_period" model="ir.actions.act_window">
+            <field name="name">Périodes de Location</field>
+            <field name="res_model">mb.renting.period</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Créez votre première période de location !
+                </p>
+                <p>
+                    Les périodes permettent de définir les horaires d'ouverture et
+                    la disponibilité des vélos selon les saisons.
+                </p>
+            </field>
+        </record>
+        <!-- Action pour la configuration des horaires d'ouverture-->
+        <record id="action_mb_renting_day_config" model="ir.actions.act_window">
+            <field name="name">Horaires d'ouverture</field>
+            <field name="res_model">mb.renting.day.config</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Configurez les horaires d'ouverture !
+                </p>
+                <p>
+                    Définissez les horaires d'ouverture pour chaque période et jour de la semaine.
+                </p>
+            </field>
+        </record>
+        <!-- Action pour la configuration des stocks -->
+        <record id="action_mb_renting_stock_config" model="ir.actions.act_window">
+            <field name="name">Configuration Stock</field>
+            <field name="res_model">mb.renting.stock.period.config</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Configurez les stocks par période !
+                </p>
+                <p>
+                    Définissez la disponibilité des vélos pour chaque période de location.
+                </p>
+            </field>
+        </record>
+        <!-- Action pour les transferts de périodes -->
+        <record id="action_period_transfer_picking" model="ir.actions.act_window">
+            <field name="name">🔄 Transferts de Période</field>
+            <field name="res_model">stock.picking</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('is_period_transfer', '=', True)]</field>
+            <field name="context">{}</field>
+            <field name="view_ids"
+                   eval="[(5, 0, 0),
+                          (0, 0, {'view_mode': 'list', 'view_id': ref('view_period_transfer_list')}),
+                          (0, 0, {'view_mode': 'form', 'view_id': ref('view_period_transfer_form')})]"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Aucun transfert de période automatique trouvé !
+                </p>
+                <p>
+                    Les transferts de période sont créés automatiquement par le système
+                    lors des changements saisonniers pour déplacer les vélos entre les dépôts.
+                </p>
+            </field>
+        </record>
     </data>
 </odoo>
