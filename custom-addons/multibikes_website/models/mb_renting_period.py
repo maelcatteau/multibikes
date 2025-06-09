@@ -2,7 +2,7 @@
 """Model MBRentingDayConfig for multibikes_base module."""
 import logging
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -84,10 +84,19 @@ class MBRentingPeriod(models.Model):
         help="Nombre de jours de la semaine qui n'ont pas encore été configurés",
     )
 
+    state = fields.Selection(
+        [
+        ('draft', 'Brouillon'),
+        ('confirmed', 'Confirmé'),
+    ],
+    string='État',
+    default='draft',
+    tracking=True)
+
     status = fields.Selection(
         [
             ("draft", "Brouillon"),
-            ("future", "À venir"),
+            ("confirmed", "Confirmée"),
             ("active", "Active"),
             ("past", "Passée"),
             ("closed", "Fermée"),
@@ -177,23 +186,24 @@ class MBRentingPeriod(models.Model):
 
 
 
-    @api.depends("start_date", "end_date", "is_closed")
+    @api.depends('state', 'is_closed', 'start_date', 'end_date')
     def _compute_status(self):
-        """Calcule le statut de la période"""
+        """Calcule le statut en fonction de l'état et des dates."""
         now = fields.Datetime.now()
-        for period in self:
-            if period.is_closed:
-                period.status = "closed"
-            elif not period.start_date:
-                period.status = "draft"  # ou 'future'
-            elif not period.end_date:
-                period.status = "future"
-            elif now < period.start_date:
-                period.status = "future"
-            elif now > period.end_date:
-                period.status = "past"
+
+        for record in self:
+            if record.state == 'draft':
+                record.status = 'draft'
+            elif record.is_closed:
+                record.status = 'closed'
+            elif record.end_date and now > record.end_date:
+                record.status = 'past'
+            elif record.start_date and now >= record.start_date and record.end_date and now <= record.end_date:
+                record.status = 'active'
+            elif record.state == 'confirmed':
+                record.status = 'confirmed'  # Période confirmée mais pas encore active
             else:
-                period.status = "active"
+                record.status = 'confirmed'
 
     @api.constrains("start_date", "end_date", "company_id")
     def _check_no_overlap(self):
@@ -449,3 +459,69 @@ class MBRentingPeriod(models.Model):
                 "sticky": True,
             },
         }
+    # Actions pour la gestion des états
+    def action_confirm(self):
+        """Confirme la période de location."""
+        for record in self:
+            if record.state != 'draft':
+                raise UserError("Seules les périodes en brouillon peuvent être confirmées.")
+
+            # Validations avant confirmation
+            self._validate_before_confirm()
+            record.state = 'confirmed'
+
+    def action_reset_to_draft(self):
+        """Remet la période en brouillon (pour les administrateurs uniquement)."""
+        if not self.env.user.has_group('base.group_system'):
+            raise UserError("Seuls les administrateurs peuvent remettre en brouillon.")
+
+        for record in self:
+            record.state = 'draft'
+
+    def _validate_before_confirm(self):
+        """Validations à effectuer avant confirmation."""
+        for record in self:
+            if not record.start_date or not record.end_date:
+                raise ValidationError("Les dates de début et fin sont obligatoires.")
+            if record.start_date >= record.end_date:
+                raise ValidationError("La date de fin doit être postérieure à la date de début.")
+            if record.remaining_days_to_configure > 0:
+                raise ValidationError(
+                    f"Il reste {record.remaining_days_to_configure} jour(s) à configurer avant de confirmer."
+                )
+            if record.remaining_products_to_configure > 0:
+                raise ValidationError(
+                    f"Il reste {record.remaining_products_to_configure} produit(s) à configurer avant de confirmer."
+                )
+            if not record.recurrence_id:
+                raise ValidationError(
+                    "La durée minimale de location est obligatoire pour confirmer la période."
+                )
+
+    def write(self, vals):
+        """Empêche toute modification une fois confirmé."""
+        for record in self:
+            if record.state == 'confirmed' and not self.env.user.has_group('base.group_system'):
+                # Filtrer uniquement les champs système automatiques
+                system_fields = ['__last_update', 'write_date', 'write_uid', 'display_name']
+
+                user_modified_fields = [
+                    field for field in vals.keys()
+                    if field not in system_fields
+                    and not field.startswith('__')
+                ]
+
+                if user_modified_fields:
+                    raise UserError(
+                        "Cette période est confirmée et ne peut plus être modifiée. "
+                        "Contactez un administrateur pour effectuer des modifications."
+                    )
+
+        return super().write(vals)
+
+    def unlink(self):
+        """Empêche la suppression des périodes confirmées."""
+        for record in self:
+            if record.state == 'confirmed':
+                raise UserError("Impossible de supprimer une période confirmée.")
+        return super().unlink()
