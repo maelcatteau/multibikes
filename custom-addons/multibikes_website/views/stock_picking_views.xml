@@ -11,23 +11,23 @@
             <field name="model">stock.picking</field>
             <field name="inherit_id" ref="stock.view_picking_form"/>
             <field name="arch" type="xml">
-                <!-- Ajout d'un groupe "Transfert de Période" après les informations principales -->
-                <xpath expr="//group[@name='other_infos']" position="after">
+                <!-- Cibler le groupe qui contient scheduled_date -->
+                <xpath expr="//group[field[@name='origin']]" position="after">
                     <group string="🔄 Transfert de Période"
-                           invisible="not is_period_transfer"
-                           name="period_transfer_info">
+                        name="period_transfer_info">
                         <field name="is_period_transfer" readonly="1"/>
                         <field name="period_config_id" readonly="1"
-                               options="{'no_create': True, 'no_edit': True}"/>
+                            options="{'no_create': True, 'no_edit': True}"/>
                     </group>
                 </xpath>
 
-                <!-- Ajout des champs invisibles pour la logique -->
+                <!-- Ajout du champ invisible pour la logique (après origin qui est dans ce groupe) -->
                 <xpath expr="//field[@name='origin']" position="after">
                     <field name="is_period_transfer" invisible="1"/>
                 </xpath>
             </field>
         </record>
+
 
         <!-- ========================================
              EXTENSION DE LA VUE LISTE/TREE

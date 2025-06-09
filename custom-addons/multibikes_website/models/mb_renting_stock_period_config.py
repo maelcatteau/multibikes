@@ -168,6 +168,7 @@ class MBRentingStockPeriodConfig(models.Model):
             "location_id": source_location.id,
             "location_dest_id": dest_location.id,
             "scheduled_date": self.period_id.start_date,  # 🎯 DATE DE TRANSITION !
+            "period_config_id": self.period_id.id,
             "origin": f"Transition auto {self.period_id.name} - {transfer_type}",
             "move_ids": [
                 (
@@ -186,8 +187,12 @@ class MBRentingStockPeriodConfig(models.Model):
             ],
         }
         picking = self.env["stock.picking"].create(picking_vals)
-
         picking.action_confirm()  # Confirmer le picking pour créer les mouvements
+
+        # MAINTENANT marquer comme transfert de période (après toutes les modifications)
+        picking.with_context(skip_period_transfer_check=True).write({
+            'is_period_transfer': True
+        })
         return picking
 
     @api.model
