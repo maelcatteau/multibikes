@@ -98,7 +98,6 @@ class MBRentingPeriod(models.Model):
         ],
         string='État',
         default='draft',
-        tracking=True
     )
 
     status = fields.Selection(

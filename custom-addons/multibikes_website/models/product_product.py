@@ -20,7 +20,7 @@ class ProductProduct(models.Model):
 
         _logger.info(
             ("📊 Calcul des disponibilités pour le produit %s"
-             " (ID: %s) de %s à %s"),
+            " (ID: %s) de %s à %s"),
             self.name,
             self.id,
             from_date,
@@ -45,22 +45,35 @@ class ProductProduct(models.Model):
             from_date, to_date, warehouse_id=False, with_cart=with_cart
         )
 
-        # Récupérer les mouvements de transfert planifiés
+        # Récupérer les mouvements de transfert planifiés (recordsets)
         outgoing_moves, incoming_moves = self._get_winter_transfer_moves(
             from_date, to_date, winter_warehouses
         )
 
-        # 🆕 Récupérer les données de virtualisation des transferts ratés
+        # Récupérer les données de virtualisation des transferts ratés
         failed_transfers_data = self._get_failed_transfers_virtualization_data(
             from_date, to_date
         )
 
-        # 🆕 Convertir en mouvements virtuels et fusionner
+        # Convertir en mouvements virtuels (listes de MockMove)
         virtual_outgoing, virtual_incoming = (
             self._convert_failed_transfers_to_virtual_moves(failed_transfers_data)
         )
-        combined_outgoing = outgoing_moves + virtual_outgoing
-        combined_incoming = incoming_moves + virtual_incoming
+
+        # ✅ CORRECTION: Combiner différemment selon le type
+        # Convertir les recordsets en listes pour uniformiser
+        outgoing_moves_list = list(outgoing_moves)
+        incoming_moves_list = list(incoming_moves)
+
+        # Combiner les listes
+        combined_outgoing = outgoing_moves_list + virtual_outgoing
+        combined_incoming = incoming_moves_list + virtual_incoming
+
+        _logger.info(
+            "🔄 Mouvements combinés: %d sortants (%d réels + %d virtuels), %d entrants (%d réels + %d virtuels)",
+            len(combined_outgoing), len(outgoing_moves_list), len(virtual_outgoing),
+            len(combined_incoming), len(incoming_moves_list), len(virtual_incoming)
+        )
 
         # Utiliser vos méthodes existantes avec les mouvements combinés
         new_periods = self._create_adjusted_periods(
@@ -78,6 +91,7 @@ class ProductProduct(models.Model):
             combined_outgoing,
             combined_incoming,
         )
+
 
     def _get_winter_storage_warehouses(self):
         """Récupère tous les entrepôts d'hivernage."""
@@ -367,3 +381,101 @@ class ProductProduct(models.Model):
             )
 
         return virtual_outgoing, virtual_incoming
+
+
+    def _get_failed_transfers_virtualization_data(self, start_datetime, end_datetime):
+        """
+        Récupère les données de virtualisation des transferts échoués pour ce produit
+        sur la période donnée, structurées pour la méthode _convert_failed_transfers_to_virtual_moves.
+        """
+        self.ensure_one()
+
+        # Détecter les transferts échoués
+        StockPicking = self.env['stock.picking']
+        failed_transfer_ids = StockPicking.detect_failed_transfers()
+
+        if not failed_transfer_ids:
+            return {
+                'to_winter': [],  # ✅ Structure attendue par _convert_failed_transfers_to_virtual_moves
+                'from_winter': [],
+                'failed_qty': 0,
+                'virtualization_impact': 0,
+            }
+
+        # Récupérer les entrepôts d'hivernage
+        winter_warehouses = self._get_winter_storage_warehouses()
+        winter_warehouse_ids = [wh.id for wh in winter_warehouses]
+
+        # Récupérer les transferts échoués qui concernent ce produit et cette période
+        failed_pickings = StockPicking.browse(failed_transfer_ids).filtered(
+            lambda p: p.scheduled_date >= start_datetime and p.scheduled_date <= end_datetime
+        )
+
+        to_winter_failures = []
+        from_winter_failures = []
+        total_failed_qty = 0
+
+        for picking in failed_pickings:
+            # Chercher les mouvements de stock pour ce produit dans ce picking
+            moves = picking.move_ids.filtered(lambda m: m.product_id == self)
+
+            for move in moves:
+                failed_qty = move.product_uom_qty - move.reserved_availability
+
+                if failed_qty > 0:
+                    total_failed_qty += failed_qty
+
+                    # ✅ Déterminer la direction du transfert
+                    is_to_winter = move.location_dest_id.warehouse_id.id in winter_warehouse_ids
+                    is_from_winter = move.location_id.warehouse_id.id in winter_warehouse_ids
+
+                    failure_data = {
+                        'picking_id': picking.id,
+                        'picking_name': picking.name,
+                        'move_id': move.id,
+                        'scheduled_date': picking.scheduled_date,
+                        'needed_qty': move.product_uom_qty,
+                        'reserved_qty': move.reserved_availability,
+                        'shortage_qty': failed_qty,  # ✅ Nom attendu par _convert_failed_transfers_to_virtual_moves
+                        'origin': picking.origin,
+                        'state': picking.state,
+                    }
+
+                    if is_to_winter:
+                        to_winter_failures.append(failure_data)
+                        _logger.warning(
+                            "📦 Transfert VERS hivernage échoué pour %s: %s unités (picking: %s)",
+                            self.name, failed_qty, picking.name
+                        )
+                    elif is_from_winter:
+                        from_winter_failures.append(failure_data)
+                        _logger.warning(
+                            "📦 Transfert DEPUIS hivernage échoué pour %s: %s unités (picking: %s)",
+                            self.name, failed_qty, picking.name
+                        )
+                    else:
+                        # Transfert général, on l'ajoute aux sorties par défaut
+                        to_winter_failures.append(failure_data)
+                        _logger.warning(
+                            "📦 Transfert général échoué pour %s: %s unités (picking: %s)",
+                            self.name, failed_qty, picking.name
+                        )
+
+        result = {
+            'to_winter': to_winter_failures,      # ✅ Structure attendue
+            'from_winter': from_winter_failures,  # ✅ Structure attendue
+            'failed_qty': total_failed_qty,
+            'virtualization_impact': total_failed_qty,
+            'affected_period': {
+                'start': start_datetime,
+                'end': end_datetime,
+            }
+        }
+
+        if total_failed_qty > 0:
+            _logger.info(
+                "🔴 Virtualisation impactée pour %s: %s unités (%d vers hivernage, %d depuis hivernage)",
+                self.name, total_failed_qty, len(to_winter_failures), len(from_winter_failures)
+            )
+
+        return result
