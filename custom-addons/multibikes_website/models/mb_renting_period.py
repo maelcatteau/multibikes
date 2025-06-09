@@ -93,12 +93,13 @@ class MBRentingPeriod(models.Model):
 
     state = fields.Selection(
         [
-        ('draft', 'Brouillon'),
-        ('confirmed', 'Confirmé'),
-    ],
-    string='État',
-    default='draft',
-    tracking=True)
+            ('draft', 'Brouillon'),
+            ('confirmed', 'Confirmé'),
+        ],
+        string='État',
+        default='draft',
+        tracking=True
+    )
 
     status = fields.Selection(
         [
@@ -474,14 +475,6 @@ class MBRentingPeriod(models.Model):
             self._validate_before_confirm()
             record.state = 'confirmed'
 
-    def action_reset_to_draft(self):
-        """Remet la période en brouillon (pour les administrateurs uniquement)."""
-        if not self.env.user.has_group('base.group_system'):
-            raise UserError("Seuls les administrateurs peuvent remettre en brouillon.")
-
-        for record in self:
-            record.state = 'draft'
-
     def _validate_before_confirm(self):
         """Validations à effectuer avant confirmation."""
         for record in self:
@@ -503,9 +496,9 @@ class MBRentingPeriod(models.Model):
                 )
 
     def write(self, vals):
-        """Empêche toute modification une fois confirmé."""
+        """Empêche toute modification une fois confirmé, sauf override administrateur."""
         for record in self:
-            if record.state == 'confirmed' and not self.env.user.has_group('base.group_system'):
+            if record._check_period_immutability():
                 # Filtrer uniquement les champs système automatiques
                 system_fields = ['__last_update', 'write_date', 'write_uid', 'display_name']
 
@@ -517,17 +510,21 @@ class MBRentingPeriod(models.Model):
 
                 if user_modified_fields:
                     raise UserError(
-                        "Cette période est confirmée et ne peut plus être modifiée. "
+                        f"🔒 La période '{record.name}' est confirmée et ne peut plus être modifiée. "
                         "Contactez un administrateur pour effectuer des modifications."
                     )
 
         return super().write(vals)
 
+
     def unlink(self):
-        """Empêche la suppression des périodes confirmées."""
+        """Empêche la suppression des périodes confirmées, sauf override administrateur."""
         for record in self:
-            if record.state == 'confirmed':
-                raise UserError("Impossible de supprimer une période confirmée.")
+            if record._check_period_immutability():
+                raise UserError(
+                    f"🔒 Impossible de supprimer la période confirmée '{record.name}'. "
+                    "Contactez un administrateur si nécessaire."
+                )
         return super().unlink()
 
     def _compute_remaining_products_to_configure(self):
@@ -540,3 +537,33 @@ class MBRentingPeriod(models.Model):
             configured_count = self.env['mb.renting.stock.period.config'].search_count(domain_with_config)
 
             period.remaining_products_to_configure = period.total_storable_products - configured_count
+
+
+    # === Protection avec clause d'urgence ===
+
+    def _check_period_immutability(self):
+        """
+        Verrouillage basé sur l'état 'confirmed' avec possibilité de déverrouillage temporaire
+        """
+        # Permettre les modifications si override administrateur activé
+        if self.env.context.get('admin_override', False):
+            return False
+
+        # Vérifier si la période est confirmée
+        if self.state == 'confirmed':
+            return True
+
+        return False
+    def action_emergency_unlock(self):
+        """Bouton pour déverrouiller temporairement une période confirmée"""
+        if not self.env.user.has_group('base.group_system'):
+            raise UserError("❌ Seuls les administrateurs peuvent déverrouiller les périodes")
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Déverrouiller la période',
+            'res_model': 'mb.renting.period.unlock.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_period_id': self.id}
+        }

@@ -487,22 +487,6 @@ class StockPicking(models.Model):
 
         return super().unlink()
 
-    # === Méthode d'urgence cachée ===
-
-    def _emergency_admin_override(self, confirmation_code, action_vals):
-        """
-        Méthode d'urgence pour modifications temporaires
-
-        :param confirmation_code: Code de confirmation
-        :param action_vals: Dictionnaire des valeurs à modifier
-        :return: Résultat de l'opération
-        """
-        if confirmation_code != "ADMIN_OVERRIDE_2024":
-            raise UserError(self.env._("Code de confirmation incorrect"))
-
-        # Modification avec bypass temporaire
-        return self.with_context(admin_override=True).write(action_vals)
-
     # === Contrainte de cohérence ===
 
     @api.constrains("is_period_transfer", "period_config_id")

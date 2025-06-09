@@ -11,15 +11,10 @@
                         statusbar_visible="draft,confirmed,active,past,closed"/>
                     <!-- Boutons d'action principaux -->
                     <button name="action_confirm"
-                            string="Confirmer"
+                            string="Confirmer et 🔒 verrouiller"
                             type="object"
-                            class="btn-primary"
+                            class="btn-success"
                             invisible="status != 'draft'"/>
-                    <button name="action_reset_to_draft"
-                            string="Remettre en brouillon"
-                            type="object"
-                            class="btn-primary"
-                            invisible="status != 'confirmed'"/>
                     <button name="action_create_next_period"
                             string="Créer période suivante"
                             type="object"
@@ -40,6 +35,11 @@
                             type="object"
                             class="btn-primary"
                             invisible="not recurrence_id or not name or not remaining_products_to_configure == 0"/>
+                    <button name="action_emergency_unlock"
+                            string="🔓 Déverrouiller"
+                            type="object"
+                            class="btn-warning"
+                            invisible="state != 'confirmed'"/>
                 </header>
 
                 <!-- SHEET principal -->

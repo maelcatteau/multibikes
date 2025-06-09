@@ -36,6 +36,7 @@
         "views/menu_items.xml",
         "views/product_grid_template_views.xml",
         "wizards/stock_picking_unlock_wizard_views.xml",
+        "wizards/mb_renting_period_unlock_wizard_views.xml",
     ],
     "assets": {
         "web.assets_frontend": [
