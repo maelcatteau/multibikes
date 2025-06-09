@@ -516,3 +516,48 @@ class StockPicking(models.Model):
                     f"Le transfert de période {picking.name} doit avoir "
                     "une configuration de période associée."
                 )
+
+    def action_emergency_unlock_wizard(self):
+        """Ouvrir le wizard de déverrouillage avec mot de passe"""
+
+        if not self.is_period_transfer:
+            raise UserError("❌ Ce transfert n'est pas verrouillé")
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Déverrouiller Transfert de Période',
+            'res_model': 'stock.picking.unlock.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_picking_id': self.id,
+            }
+        }
+    def action_emergency_relock(self):
+        """Bouton pour re-verrouiller un transfert de période après test"""
+        if not self.env.user.has_group('base.group_system'):
+            raise UserError("Seuls les administrateurs peuvent verrouiller les transferts")
+
+        if not self.period_config_id:
+            raise UserError("Ce transfert n'est pas associé à une configuration de période")
+
+        self.with_context(admin_override=True).write({
+            'is_period_transfer': True,
+            'note': f"🔒 Re-verrouillé manuellement le {fields.Datetime.now()} par {self.env.user.name}"
+        })
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',  # Refresh complet de la page
+            'params': {
+                'next': {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': '🔒 Transfert re-verrouillé',
+                        'message': f'Le transfert {self.name} est maintenant protégé',
+                        'type': 'success',
+                    }
+                }
+            }
+        }

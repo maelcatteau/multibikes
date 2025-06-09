@@ -2,3 +2,4 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 mb_renting_period_user,mb.renting.period.user,model_mb_renting_period,sales_team.group_sale_salesman,1,1,1,1
 mb_renting_stock_period_config_user,mb.renting.stock.period.config.user,model_mb_renting_stock_period_config,sales_team.group_sale_salesman,1,1,1,1
 mb_renting_day_config_user,mb.renting.day.config.user,model_mb_renting_day_config,sales_team.group_sale_salesman,1,1,1,1
+stock_picking_unlock_wizard,stock.picking.unlock.wizard.user,model_stock_picking_unlock_wizard,sales_team.group_sale_salesman,1,1,1,1

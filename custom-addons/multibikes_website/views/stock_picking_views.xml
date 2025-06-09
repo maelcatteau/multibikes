@@ -20,6 +20,23 @@
                             options="{'no_create': True, 'no_edit': True}"/>
                     </group>
                 </xpath>
+                <xpath expr="//button[@name='action_cancel']" position="after">
+                    <button name="action_emergency_unlock_wizard"
+                        string="🔓 Déverrouiller"
+                        type="object"
+                        class="btn-warning"
+                        invisible="not is_period_transfer or not period_config_id"
+                        groups="base.group_system"/>
+
+                    <!-- Bouton re-verrouiller (visible si déverrouillé) -->
+                    <button name="action_emergency_relock"
+                            string="🔒 Re-verrouiller"
+                            type="object"
+                            class="btn-success"
+                            invisible="is_period_transfer or not period_config_id"
+                            groups="base.group_system"
+                            confirm="✅ Re-verrouiller ce transfert de période ?"/>
+                </xpath>
 
                 <!-- Ajout du champ invisible pour la logique (après origin qui est dans ce groupe) -->
                 <xpath expr="//field[@name='origin']" position="after">
