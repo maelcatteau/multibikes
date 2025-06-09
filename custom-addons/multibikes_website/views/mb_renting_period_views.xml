@@ -55,8 +55,7 @@
                         <group string="📅 Dates">
                             <field name="start_date"
                                 string="Date de début"
-                                widget="datetime"
-                                readonly="id != False"/>
+                                widget="datetime"/>
                             <field name="end_date"
                                 widget="datetime"
                                 string="Date de fin"/>

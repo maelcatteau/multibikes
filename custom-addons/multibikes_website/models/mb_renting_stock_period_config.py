@@ -15,6 +15,12 @@ class MBRentingStockPeriodConfig(models.Model):
         "mb.renting.period", required=True, ondelete="cascade", string="Période"
     )
 
+    product_configured = fields.Boolean(
+        string="Produit configuré",
+        help="Permet de vérifier qu'une configuration de produit a été faite pour cette période",
+        default=False,
+    )
+
     # Champ pour lier les produits stockables
     storable_product_ids = fields.Many2many(
         "product.product",

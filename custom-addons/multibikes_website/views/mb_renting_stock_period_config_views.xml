@@ -10,6 +10,7 @@
                 <field name="total_stock_by_product" string="Détail du stock par produit"/>
                 <!-- Élargit la colonne en définissant une largeur spécifique -->
                 <field name="stock_available_for_period" string="Stock disponible pour la période" width="200"/>
+                <field name="product_configured" string="Produits configurés" widget="boolean_toggle"/>
             </list>
         </field>
     </record>

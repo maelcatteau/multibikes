@@ -68,12 +68,19 @@ class MBRentingPeriod(models.Model):
         help="Nombre total de produits stockables à configurer",
     )
 
+    # Champ pour indiquer combien de produits restent à créer
+    remaining_products_to_create = fields.Integer(
+        string="Produits restants à configurer",
+        compute="_compute_products_to_create",
+        store=False,
+        help="Nombre de produits stockables qui n'ont pas encore été configurés",
+    )
     # Champ pour indiquer combien de produits restent à configurer
     remaining_products_to_configure = fields.Integer(
         string="Produits restants à configurer",
-        compute="_compute_products_to_configure",
+        compute="_compute_remaining_products_to_configure",
         store=False,
-        help="Nombre de produits stockables qui n'ont pas encore été configurés",
+        help="Nombre de produits stockables qui n'ont pas encore été configurés pour cette période",
     )
 
     # Champ pour indiquer combien de jours restent à configurer
@@ -138,9 +145,9 @@ class MBRentingPeriod(models.Model):
             period.total_storable_products = product_count
 
     @api.depends("stock_period_config_ids.storable_product_ids")
-    def _compute_products_to_configure(self):
+    def _compute_products_to_create(self):
         """
-        Calcule le nombre de produits stockables qui n'ont PAS encore été configurés.
+        Calcule le nombre de produits stockables qui n'ont PAS encore été crées.
         Ce sont les produits qui sont stockables mais qui ne figurent pas
         dans stock_period_config_ids.storable_product_ids.
         """
@@ -168,7 +175,7 @@ class MBRentingPeriod(models.Model):
                 if product.id not in configured_product_ids:
                     unconfigured_count += 1
 
-            period.remaining_products_to_configure = unconfigured_count
+            period.remaining_products_to_create = unconfigured_count
 
     @api.depends("day_configs_ids")
     def _compute_days_to_configure(self):
@@ -182,9 +189,6 @@ class MBRentingPeriod(models.Model):
 
             configured_count = self.env['mb.renting.day.config'].search_count(domain)
             period.remaining_days_to_configure = 7 - configured_count
-
-
-
 
     @api.depends('state', 'is_closed', 'start_date', 'end_date')
     def _compute_status(self):
@@ -525,3 +529,14 @@ class MBRentingPeriod(models.Model):
             if record.state == 'confirmed':
                 raise UserError("Impossible de supprimer une période confirmée.")
         return super().unlink()
+
+    def _compute_remaining_products_to_configure(self):
+        """Calcule le nombre de produits restants à configurer pour la période."""
+        for period in self:
+            domain = [('period_id', '=', period.id)]
+
+            # Ajouter la condition pour compter seulement les produits configurés
+            domain_with_config = domain + [('product_configured', '=', True)]
+            configured_count = self.env['mb.renting.stock.period.config'].search_count(domain_with_config)
+
+            period.remaining_products_to_configure = period.total_storable_products - configured_count
