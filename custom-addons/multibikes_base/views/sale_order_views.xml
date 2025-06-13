@@ -7,9 +7,25 @@
         <field name="inherit_id" ref="sale_renting.rental_order_primary_form_view"/>
         <field name="arch" type="xml">
             
+            <!-- Remplacement de l'adresse de facturation par l'email -->
+            <xpath expr="//field[@name='partner_invoice_id']" position="replace">
+                <field name="partner_email" 
+                       string="Email client" 
+                       readonly="state in ['cancel', 'sale']"/>
+            </xpath>
+            
             <!-- Remplacement de l'adresse de livraison par le numéro de téléphone -->
             <xpath expr="//field[@name='partner_shipping_id']" position="replace">
-                <field name="partner_phone" string="Téléphone client" readonly="1"/>
+                <field name="partner_phone" 
+                       string="Téléphone client" 
+                       readonly="state in ['cancel', 'sale']"/>
+            </xpath>
+            
+            <!-- Ajout de la langue après le téléphone -->
+            <xpath expr="//field[@name='partner_phone']" position="after">
+                <field name="partner_lang" 
+                       string="Langue client" 
+                       readonly="state in ['cancel', 'sale']"/>
             </xpath>
             
             <!-- Ajout du champ de caution dans la section des détails du partenaire -->
