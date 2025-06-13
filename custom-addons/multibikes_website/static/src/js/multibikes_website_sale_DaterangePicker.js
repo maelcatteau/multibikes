@@ -52,24 +52,24 @@ patch(publicWidget.registry.WebsiteSaleDaterangePicker.prototype, {
         if (!this.rentingPeriods || this.rentingPeriods.length === 0) {
             return false;
         }
-        
+
         const activePeriod = this.rentingPeriods.find(period => {
             const startDate = deserializeDateTime(period.start_date);
             const endDate = deserializeDateTime(period.end_date);
             return date >= startDate && date <= endDate;
         });
-        
+
         if (!activePeriod || activePeriod.is_closed) {
             return false;
         }
         const dayConfig = activePeriod.day_configs[date.weekday];
         const isValid = Boolean(dayConfig && dayConfig.is_open);
-        
-        
-        
+
+
+
         return isValid;
     },
-    
+
     /**
      * Get CSS classes for date cells based on stock availability and pickup/return availability.
      *
@@ -80,43 +80,43 @@ patch(publicWidget.registry.WebsiteSaleDaterangePicker.prototype, {
     _isCustomDate(date) {
         // D'abord, récupérer le comportement par défaut (gestion stock)
         const result = originalIsCustomDate.call(this, date);
-        
-        // Si le stock indique que la date est dangereuse (indisponible), 
+
+        // Si le stock indique que la date est dangereuse (indisponible),
         // on garde cette indication prioritaire
         if (result.includes('o_daterangepicker_danger')) {
             return result;
         }
-        
+
         // Sinon, appliquer notre logique de pickup/return
         if (!this.rentingPeriods || this.rentingPeriods.length === 0) {
-            return result;   
+            return result;
         }
-        
+
         const activePeriod = this.rentingPeriods.find(period => {
             const startDate = deserializeDateTime(period.start_date);
             const endDate = deserializeDateTime(period.end_date);
             return date >= startDate && date <= endDate;
         });
-        
+
         if (!activePeriod || activePeriod.is_closed) {
             return result;
         }
-        
+
         const dayConfig = activePeriod.day_configs[date.weekday];
         if (!dayConfig || !dayConfig.is_open) {
             return result;
         }
-        
+
         // Ajouter nos classes personnalisées
         const canPickup = dayConfig.pickup.allowed;
         const canReturn = dayConfig.return.allowed;
-        
+
         if (canPickup && !canReturn) {
             result.push('rental-pickup-only');
         } else if (!canPickup && canReturn) {
-            result.push('rental-return-only'); 
+            result.push('rental-return-only');
         }
-        
+
         return result;
     },
 });

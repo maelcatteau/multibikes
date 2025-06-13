@@ -48,12 +48,6 @@ class ProductTemplate(models.Model):
         start_date = self.env.context.get("start_date") or order.rental_start_date
         end_date = self.env.context.get("end_date") or order.rental_return_date
 
-        # Convertir les dates en objets datetime naïfs
-        if start_date:
-            start_date = start_date.replace(tzinfo=None)
-        if end_date:
-            end_date = end_date.replace(tzinfo=None)
-
         # Calcul de la quantité disponible
         free_qty = self.calculate_min_availability_over_period(
             product_or_template, start_date, end_date
