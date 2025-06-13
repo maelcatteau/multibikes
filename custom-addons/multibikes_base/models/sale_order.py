@@ -13,6 +13,14 @@ class SaleOrder(models.Model):
 
     _inherit = "sale.order"
 
+
+    partner_phone = fields.Char(
+        string="Téléphone client",
+        related='partner_id.mobile',
+        readonly=True,
+        store=False
+    )
+    
     mb_type_de_caution = fields.Selection(
         selection=[
             ("espece", "Espèces"),

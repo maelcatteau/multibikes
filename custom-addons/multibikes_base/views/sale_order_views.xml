@@ -4,13 +4,19 @@
     <record id="view_sale_order_form_inherit_multibikes" model="ir.ui.view">
         <field name="name">sale.order.form.inherit.multibikes</field>
         <field name="model">sale.order</field>
-        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="inherit_id" ref="sale_renting.rental_order_primary_form_view"/>
         <field name="arch" type="xml">
+            
+            <!-- Remplacement de l'adresse de livraison par le numéro de téléphone -->
+            <xpath expr="//field[@name='partner_shipping_id']" position="replace">
+                <field name="partner_phone" string="Téléphone client" readonly="1"/>
+            </xpath>
             
             <!-- Ajout du champ de caution dans la section des détails du partenaire -->
             <xpath expr="//group[@name='partner_details']" position="inside">
                 <field name="mb_type_de_caution"/>
-                <field name="mb_numero_de_caution" invisible="mb_type_de_caution != 'carte_bancaire'"/>
+                <field name="mb_numero_de_caution" 
+                       invisible="mb_type_de_caution != 'carte_bancaire'"/>
             </xpath>
             
             <!-- Ajout des champs dans les lignes de commande - vue liste -->
