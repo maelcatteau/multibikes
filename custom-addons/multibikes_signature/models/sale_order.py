@@ -60,74 +60,54 @@ class SaleOrder(models.Model):
 
         return action
 
-    def action_send_for_signature(self):
-        """Votre action originale - génération automatique + signature"""
+    def action_send_signature_by_email(self):
+        """Envoie la demande de signature par email uniquement"""
         self.ensure_one()
 
         if not self.partner_id.email:
             raise UserError("Le client doit avoir une adresse email pour pouvoir signer le devis.")
 
         try:
-            # Vérifier s'il y a déjà une demande en cours pour éviter les doublons
-            existing_request = self.sign_request_ids.filtered(
-                lambda r: r.state == 'sent' and not r.completed_by_all()
-            )
+            # Vérifier s'il y a déjà une demande en cours
+            existing_request = self.sign_request_ids
 
             if existing_request:
                 _logger.info(f"Demande existante trouvée: {existing_request.id}")
-                self.signature_status = 'sent'
-                return existing_request.go_to_document()
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': 'Opération invalide',
+                        'message': 'Une demande de signature a déjà été envoyée !',
+                        'type': 'error',
+                    }
+                }
 
-            # Votre logique existante : générer template depuis QWeb
+            # Créer template et demande
             sign_template = self._create_sign_template()
-            _logger.info(f"Template créé: {sign_template.id}")
-
-            # Créer la demande de signature avec la sauvegarde améliorée
             sign_request = self._create_sign_request(sign_template)
-            _logger.info(f"Sign request créé: {sign_request.id}")
-
-            # NOUVEAU : Lier via reference_doc (comme sale_rental_sign)
             sign_request.reference_doc = f"sale.order,{self.id}"
 
-            # Générer le nom du fichier
-            filename = f"Devis_{self.name}_{self.partner_id.name}.pdf"
-
-            # Récupérer l'attachment du template (créé dans _create_sign_template)
-            attachment = sign_template.attachment_id
-            if not attachment:
-                raise UserError("Erreur lors de la création du document PDF.")
-
-            # Ouvrir le wizard d'envoi Sign avec nos paramètres
-            action = self.env['ir.actions.act_window']._for_xml_id('sign.action_sign_send_request')
-            action.update({
-                "context": {
-                    "default_template_id": sign_template.id,
-                    "default_filename": filename,
-                    "default_attachment_ids": [(6, 0, [attachment.id])],
-                    "sign_directly_without_mail": True,
-                    "default_res_model": "sale.order",
-                    "default_res_id": self.id,
-                    "default_reference_doc": f"sale.order,{self.id}",
-                    "default_signers_data": [{
-                        'partner_id': self.partner_id.id,
-                        'role': 1,
-                        'mail': self.partner_id.email,
-                    }],
-                },
-                "target": "new",
-            })
-
             self.signature_status = 'sent'
-            return action
+
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Email envoyé!',
+                    'message': f'La demande de signature a été envoyée à {self.partner_id.email}',
+                    'type': 'success',
+                }
+            }
 
         except Exception as e:
-            _logger.error(f"Erreur lors de l'envoi pour signature: {e}")
+            _logger.error(f"Erreur lors de l'envoi par email: {e}")
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
                     'title': 'Erreur!',
-                    'message': f'Impossible d\'envoyer le devis pour signature: {str(e)}',
+                    'message': f'Impossible d\'envoyer le devis par email: {str(e)}',
                     'type': 'danger',
                     'sticky': True,
                 }

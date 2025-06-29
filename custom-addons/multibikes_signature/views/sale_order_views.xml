@@ -16,10 +16,11 @@
             </div>
 
             <xpath expr="//header" position="inside">
-                <button name="action_send_for_signature"
+                <button name="action_send_signature_by_email"
                         type="object"
                         string="Signature"
-                        class="btn-primary"/>
+                        class="btn-primary"
+                        invisible="state != 'sale'"/>
             </xpath>
 
             <!-- Votre bouton original + infos -->
