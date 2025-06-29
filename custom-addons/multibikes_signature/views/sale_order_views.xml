@@ -20,7 +20,7 @@
                         type="object"
                         string="Signature"
                         class="btn-primary"
-                        invisible="state != 'sale'"/>
+                        invisible="state != 'sale'or signature_status != 'none'"/>
             </xpath>
 
             <!-- Votre bouton original + infos -->
