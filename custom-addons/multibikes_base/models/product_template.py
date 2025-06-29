@@ -15,28 +15,28 @@ class ProductTemplate(models.Model):
 
     # Champ pour la caution
     mb_caution = fields.Monetary(
-        string="Caution",
+        string="Deposit",
         currency_field="currency_id",
-        help="Montant de la caution à payer pour la location de ce produit.",
+        help="Amount of deposit for renting this product",
     )
 
     # Champ pour la valeur en cas de vol
     mb_value_in_case_of_theft = fields.Monetary(
-        string="Valeur en cas de vol",
+        string="Value in case of theft",
         currency_field="currency_id",
         help=(
-            "Valeur du produit en cas de vol ou de perte, "
-            "utilisée pour facturer le client."
+            "Value of the product in case of theft or loss, "
+            "used to bill the customer."
         ),
     )
 
     # Champs pour la taille
     mb_size_min = fields.Float(
-        string="Taille minimale (cm)",
-        help="Taille minimale du cycliste en centimètres.",
+        string="Minimal size (cm)",
+        help="Minimal size of the cyclist in cm",
     )
 
     mb_size_max = fields.Float(
-        string="Taille maximale (cm)",
-        help="Taille maximale du cycliste en centimètres.",
+        string="Maximal size (cm)",
+        help="Maximal size of the cyclist in cm",
     )

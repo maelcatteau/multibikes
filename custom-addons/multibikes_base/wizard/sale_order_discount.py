@@ -27,7 +27,7 @@ class SaleOrderDiscount(models.TransientModel):
                 )
             ):
                 caution_discount_product_vals = {
-                    "name": self.env._("Remise Caution"),
+                    "name": self.env._("Deposit discount"),
                     "type": "service",
                     "invoice_policy": "order",
                     "list_price": 0.0,
@@ -66,7 +66,7 @@ class SaleOrderDiscount(models.TransientModel):
             "order_id": self.sale_order_id.id,
             "product_id": caution_discount_product.id,
             "sequence": 999,
-            "name": self.env._("Caution Discount"),
+            "name": self.env._("Deposit Discount"),
         }
 
         return self.env["sale.order.line"].create(vals)

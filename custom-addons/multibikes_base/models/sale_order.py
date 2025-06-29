@@ -16,58 +16,58 @@ class SaleOrder(models.Model):
 
     # Champs related modifiables pour les informations du partenaire
     partner_phone = fields.Char(
-        string="Téléphone client",
+        string="Customer phone",
         related='partner_id.mobile',
         readonly=False,
         store=False,
-        help="Numéro de téléphone du client"
+        help="Customer's phone number"
     )
-    
+
     partner_email = fields.Char(
-        string="Email client",
+        string="Customer Email",
         related='partner_id.email',
         readonly=False,
         store=False,
-        help="Adresse email du client"
+        help="Customer's email adress"
     )
-    
+
     partner_lang = fields.Selection(
-        string="Langue client",
+        string="Customer's language",
         related='partner_id.lang',
         readonly=False,
         store=False,
-        help="Langue préférée du client"
+        help="Preferred language of the customer"
     )
-    
+
     mb_type_de_caution = fields.Selection(
         selection=[
-            ("espece", "Espèces"),
-            ("cheque", "Chèque"),
-            ("carte_bancaire", "Carte Bancaire"),
+            ("espece", "Cash"),
+            ("cheque", "Check"),
+            ("carte_bancaire", "Credit card"),
         ],
-        string="Type de caution",
-        help="Type de caution pour la location",
+        string="Type of deposit",
+        help="Type of deposit for the rental",
     )
 
     mb_numero_de_caution = fields.Integer(
-        string="Numéro du dossier de caution",
+        string="Deposit file n°",
         help=(
-            "Numéro du dossier de caution pour la location."
-            "Ce numéro est utilisé pour faire le lien avec l'empreinte de carte"
+            "Deposit file n° used for this rental"
+            "This number is used to link with the credit card imprint"
         ),
     )
 
     mb_caution_total = fields.Monetary(
-        string="Caution totale",
+        string="Total deposit",
         compute="_compute_mb_caution_total",
         store=True,
-        help="Montant total de la caution pour la location",
+        help="Total amount of the deposit for the rental",
     )
 
     mb_caution_discount_product_id = fields.Many2one(
         "product.product",
-        string="Produit remise caution",
-        help="Produit utilisé pour les remises de caution dans le wizard",
+        string="Deposit discount",
+        help="Product used for deposit discounts in the wizard",
     )
 
     @api.depends("order_line.mb_caution_subtotal")
@@ -82,19 +82,19 @@ class SaleOrder(models.Model):
         """Synchronise le téléphone avec le partenaire"""
         if self.partner_id and self.partner_phone:
             self.partner_id.phone = self.partner_phone
-    
+
     @api.onchange('partner_email')
     def _onchange_partner_email(self):
         """Synchronise l'email avec le partenaire"""
         if self.partner_id and self.partner_email:
             self.partner_id.email = self.partner_email
-    
+
     @api.onchange('partner_lang')
     def _onchange_partner_lang(self):
         """Synchronise la langue avec le partenaire"""
         if self.partner_id and self.partner_lang:
             self.partner_id.lang = self.partner_lang
-    
+
     @api.onchange('partner_id')
     def _onchange_partner_id_custom(self):
         """Met à jour les champs quand le partenaire change"""

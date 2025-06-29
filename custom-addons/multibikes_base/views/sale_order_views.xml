@@ -6,40 +6,40 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale_renting.rental_order_primary_form_view"/>
         <field name="arch" type="xml">
-            
+
             <!-- Remplacement de l'adresse de facturation par l'email -->
             <xpath expr="//field[@name='partner_invoice_id']" position="replace">
-                <field name="partner_email" 
-                       string="Email client" />
+                <field name="partner_email"
+                       string="Customer email" />
             </xpath>
-            
+
             <!-- Remplacement de l'adresse de livraison par le numéro de téléphone -->
             <xpath expr="//field[@name='partner_shipping_id']" position="replace">
-                <field name="partner_phone" 
-                       string="Téléphone client" />
+                <field name="partner_phone"
+                       string="Customer phone number" />
             </xpath>
-            
+
             <!-- Ajout de la langue après le téléphone -->
             <xpath expr="//field[@name='partner_phone']" position="after">
-                <field name="partner_lang" 
-                       string="Langue client" />
+                <field name="partner_lang"
+                       string="Customer language" />
             </xpath>
-            
+
             <!-- Ajout du champ de caution dans la section des détails du partenaire -->
             <xpath expr="//group[@name='partner_details']" position="inside">
                 <field name="mb_type_de_caution"/>
-                <field name="mb_numero_de_caution" 
+                <field name="mb_numero_de_caution"
                        invisible="mb_type_de_caution != 'carte_bancaire'"/>
             </xpath>
-            
+
             <!-- Ajout des champs dans les lignes de commande - vue liste -->
             <xpath expr="//notebook/page[@name='order_lines']/field/list/field[@name='price_unit']" position="after">
-                <field name="mb_caution_unit" string="Caution unit." optional="show" widget="monetary"/>
-                <field name="mb_value_in_case_of_theft" string="Valeur vol" optional="hide" widget="monetary"/>
+                <field name="mb_caution_unit" string="Unit deposit" optional="show" widget="monetary"/>
+                <field name="mb_value_in_case_of_theft" string="Value in case of theft" optional="hide" widget="monetary"/>
             </xpath>
-            
+
             <xpath expr="//notebook/page[@name='order_lines']/field/list/field[@name='price_subtotal']" position="after">
-                <field name="mb_caution_subtotal" string="Caution total" optional="show" widget="monetary"/>
+                <field name="mb_caution_subtotal" string="Total deposit" optional="show" widget="monetary"/>
             </xpath>
 
             <!-- Ajout des champs dans les lignes de commande - vue formulaire (popup) -->
@@ -47,16 +47,16 @@
                 <field name="mb_caution_unit" readonly="1"/>
                 <field name="mb_value_in_case_of_theft" readonly="1"/>
             </xpath>
-            
+
             <xpath expr="//field[@name='order_line']//form//field[@name='price_subtotal']" position="after">
                 <field name="mb_caution_subtotal" readonly="1" widget="monetary"/>
             </xpath>
 
             <!-- Ajout du total caution dans la section des totaux -->
             <xpath expr="//group[@name='sale_total']" position="inside">
-                <field name="mb_caution_total" 
-                       string="Total Cautions" 
-                       widget="monetary" 
+                <field name="mb_caution_total"
+                       string="Total Deposit"
+                       widget="monetary"
                        class="oe_subtotal_footer_separator"
                        invisible="mb_caution_total == 0"/>
             </xpath>

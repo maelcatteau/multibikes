@@ -10,7 +10,7 @@ msgstr ""
 "PO-Revision-Date: 2025-06-20 09:28+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
-"Language: de\n"
+"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -19,22 +19,22 @@ msgstr ""
 #. module: multibikes_base
 #: model:ir.actions.report,print_report_name:multibikes_base.action_report_caution_only
 msgid "'Deposit invoice - %s' % (object.name)"
-msgstr "'Kautionsrechnung - %s' % (object.name)"
+msgstr "'Factura de fianza - %s' % (object.name)"
 
 #. module: multibikes_base
 #: model:ir.actions.report,print_report_name:multibikes_base.action_report_saleorder_with_caution
 msgid "'Quotation - %s' % (object.name)"
-msgstr "'Angebot - %s' % (object.name)"
+msgstr "'Presupuesto - %s' % (object.name)"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
 msgid "<span>Deposit Invoice # </span>"
-msgstr "<span>Kautionsrechnung Nr. </span>"
+msgstr "<span>Factura de fianza n° </span>"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
 msgid "<strong>Date:</strong>"
-msgstr "<strong>Datum:</strong>"
+msgstr "<strong>Fecha:</strong>"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
@@ -43,144 +43,144 @@ msgid ""
 "                    This invoice covers security deposits for rented items. Deposits will be refunded upon return of items in good condition.\n"
 "                    In case of theft or total loss, the amounts listed in \"Value if Theft\" column will be charged."
 msgstr ""
-"<strong>Kautionsinformationen:</strong><br/>\n"
-"                    Diese Rechnung umfasst Sicherheitskautionen für gemietete Gegenstände. Kautionen werden bei Rückgabe der Gegenstände in gutem Zustand zurückerstattet.\n"
-"                    Bei Diebstahl oder Totalverlust werden die in der Spalte \"Wert bei Diebstahl\" aufgeführten Beträge in Rechnung gestellt."
+"<strong>Información de fianza:</strong><br/>\n"
+"                    Esta factura cubre las fianzas de seguridad para artículos alquilados. Las fianzas serán reembolsadas al devolver los artículos en buen estado.\n"
+"                    En caso de robo o pérdida total, se cobrarán los importes listados en la columna \"Valor en caso de robo\"."
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
 msgid "<strong>Order Reference:</strong>"
-msgstr "<strong>Bestellreferenz:</strong>"
+msgstr "<strong>Referencia del pedido:</strong>"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
 msgid "<strong>Salesperson:</strong>"
-msgstr "<strong>Verkäufer:</strong>"
+msgstr "<strong>Vendedor:</strong>"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
 msgid "<strong>Total Deposits:</strong>"
-msgstr "<strong>Gesamtkautionen:</strong>"
+msgstr "<strong>Total de fianzas:</strong>"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
 msgid "<strong>Total deposit :</strong>"
-msgstr "<strong>Gesamtkaution:</strong>"
+msgstr "<strong>Total fianza:</strong>"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.sale_order_line_wizard_form_inherit
 msgid "Amount"
-msgstr "Betrag"
+msgstr "Cantidad"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_product_product__mb_caution
 #: model:ir.model.fields,help:multibikes_base.field_product_template__mb_caution
 msgid "Amount of deposit for renting this product"
-msgstr "Kautionsbetrag für die Miete dieses Produkts"
+msgstr "Cantidad de fianza para alquilar este producto"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_sale_order_line__mb_caution_unit
 msgid "Amount of the unit deposit"
-msgstr "Betrag der Einzelkaution"
+msgstr "Cantidad de la fianza unitaria"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_sale_order_discount__apply_caution_discount
 msgid "Apply Caution Discount"
-msgstr "Kautionsrabatt anwenden"
+msgstr "Aplicar descuento en fianza"
 
 #. module: multibikes_base
 #: model:ir.model.fields.selection,name:multibikes_base.selection__sale_order__mb_type_de_caution__espece
 msgid "Cash"
-msgstr "Bargeld"
+msgstr "Efectivo"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_sale_order_discount__caution_discount_amount
 msgid "Caution Discount Amount"
-msgstr "Kautionsrabattbetrag"
+msgstr "Cantidad de descuento en fianza"
 
 #. module: multibikes_base
 #: model:ir.model.fields.selection,name:multibikes_base.selection__sale_order__mb_type_de_caution__cheque
 msgid "Check"
-msgstr "Scheck"
+msgstr "Cheque"
 
 #. module: multibikes_base
 #: model:ir.model.fields.selection,name:multibikes_base.selection__sale_order__mb_type_de_caution__carte_bancaire
 msgid "Credit card"
-msgstr "Kreditkarte"
+msgstr "Tarjeta de crédito"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_sale_order__partner_email
 msgid "Customer Email"
-msgstr "Kunden-E-Mail"
+msgstr "Email del cliente"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
 msgid "Customer email"
-msgstr "Kunden-E-Mail"
+msgstr "Email del cliente"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
 msgid "Customer language"
-msgstr "Kundensprache"
+msgstr "Idioma del cliente"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_sale_order__partner_phone
 msgid "Customer phone"
-msgstr "Kunden-Telefon"
+msgstr "Teléfono del cliente"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
 msgid "Customer phone number"
-msgstr "Kunden-Telefonnummer"
+msgstr "Número de teléfono del cliente"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_sale_order__partner_email
 msgid "Customer's email adress"
-msgstr "E-Mail-Adresse des Kunden"
+msgstr "Dirección de email del cliente"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_sale_order__partner_lang
 msgid "Customer's language"
-msgstr "Kundensprache"
+msgstr "Idioma del cliente"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_sale_order__partner_phone
 msgid "Customer's phone number"
-msgstr "Telefonnummer des Kunden"
+msgstr "Número de teléfono del cliente"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_product_product__mb_caution
 #: model:ir.model.fields,field_description:multibikes_base.field_product_template__mb_caution
 msgid "Deposit"
-msgstr "Kaution"
+msgstr "Fianza"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.sale_order_line_wizard_form_inherit
 msgid "Deposit - Discount"
-msgstr "Kaution - Rabatt"
+msgstr "Fianza - Descuento"
 
 #. module: multibikes_base
 #. odoo-python
 #: code:addons/multibikes_base/wizard/sale_order_discount.py:0
 msgid "Deposit Discount"
-msgstr "Kautionsrabatt"
+msgstr "Descuento en fianza"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
 msgid "Deposit Total"
-msgstr "Gesamtkaution"
+msgstr "Total de fianza"
 
 #. module: multibikes_base
 #. odoo-python
 #: code:addons/multibikes_base/wizard/sale_order_discount.py:0
 #: model:ir.model.fields,field_description:multibikes_base.field_sale_order__mb_caution_discount_product_id
 msgid "Deposit discount"
-msgstr "Kautionsrabatt"
+msgstr "Descuento en fianza"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_sale_order__mb_numero_de_caution
 msgid "Deposit file n°"
-msgstr "Kautionsakte Nr."
+msgstr "N° de expediente de fianza"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_sale_order__mb_numero_de_caution
@@ -188,91 +188,91 @@ msgid ""
 "Deposit file n° used for this rentalThis number is used to link with the "
 "credit card imprint"
 msgstr ""
-"Kautionsakte Nr. für diese Miete. Diese Nummer wird verwendet, um mit dem Kreditkartenabdruck zu verknüpfen"
+"N° de expediente de fianza usado para este alquiler. Este número se usa para vincular con la huella de la tarjeta de crédito"
 
 #. module: multibikes_base
 #: model:ir.actions.report,name:multibikes_base.action_report_caution_only
 msgid "Deposit invoice only"
-msgstr "Nur Kautionsrechnung"
+msgstr "Solo factura de fianza"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
 msgid "Description"
-msgstr "Beschreibung"
+msgstr "Descripción"
 
 #. module: multibikes_base
 #: model:ir.model,name:multibikes_base.model_sale_order_discount
 msgid "Discount Wizard"
-msgstr "Rabatt-Assistent"
+msgstr "Asistente de descuento"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.sale_order_line_wizard_form_inherit
 msgid "Discount by global amount on order"
-msgstr "Rabatt nach Gesamtbetrag der Bestellung"
+msgstr "Descuento por cantidad global en pedido"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_product_product__mb_size_max
 #: model:ir.model.fields,field_description:multibikes_base.field_product_template__mb_size_max
 msgid "Maximal size (cm)"
-msgstr "Maximale Größe (cm)"
+msgstr "Tamaño máximo (cm)"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_product_product__mb_size_max
 #: model:ir.model.fields,help:multibikes_base.field_product_template__mb_size_max
 msgid "Maximal size of the cyclist in cm"
-msgstr "Maximale Größe des Radfahrers in cm"
+msgstr "Tamaño máximo del ciclista en cm"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_product_product__mb_size_min
 #: model:ir.model.fields,field_description:multibikes_base.field_product_template__mb_size_min
 msgid "Minimal size (cm)"
-msgstr "Minimale Größe (cm)"
+msgstr "Tamaño mínimo (cm)"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_product_product__mb_size_min
 #: model:ir.model.fields,help:multibikes_base.field_product_template__mb_size_min
 msgid "Minimal size of the cyclist in cm"
-msgstr "Minimale Größe des Radfahrers in cm"
+msgstr "Tamaño mínimo del ciclista en cm"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_sale_order__partner_lang
 msgid "Preferred language of the customer"
-msgstr "Bevorzugte Sprache des Kunden"
+msgstr "Idioma preferido del cliente"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.sale_order_line_wizard_form_inherit
 msgid "Price - Discount"
-msgstr "Preis - Rabatt"
+msgstr "Precio - Descuento"
 
 #. module: multibikes_base
 #: model:ir.model,name:multibikes_base.model_product_template
 msgid "Product"
-msgstr "Produkt"
+msgstr "Producto"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_sale_order__mb_caution_discount_product_id
 msgid "Product used for deposit discounts in the wizard"
-msgstr "Produkt für Kautionsrabatte im Assistenten"
+msgstr "Producto usado para descuentos en fianza en el asistente"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
 msgid "Quantity"
-msgstr "Menge"
+msgstr "Cantidad"
 
 #. module: multibikes_base
 #: model:ir.actions.report,name:multibikes_base.action_report_saleorder_with_caution
 msgid "Quotation with deposit"
-msgstr "Angebot mit Kaution"
+msgstr "Presupuesto con fianza"
 
 #. module: multibikes_base
 #: model:ir.model,name:multibikes_base.model_sale_order
 msgid "Sales Order"
-msgstr "Verkaufsauftrag"
+msgstr "Pedido de venta"
 
 #. module: multibikes_base
 #: model:ir.model,name:multibikes_base.model_sale_order_line
 msgid "Sales Order Line"
-msgstr "Verkaufsauftragszeile"
+msgstr "Línea de pedido de venta"
 
 #. module: multibikes_base
 #. odoo-python
@@ -281,22 +281,23 @@ msgid ""
 "There does not seem to be any caution discount product configured for this "
 "order yet. Please ask an administrator to configure it first."
 msgstr ""
-"Es scheint noch kein Kautionsrabattprodukt für diese Bestellung konfiguriert zu sein. Bitte bitten Sie einen Administrator, es zuerst zu konfigurieren."
+"No parece haber ningún producto de descuento en fianza configurado para este "
+"pedido aún. Por favor, pida a un administrador que lo configure primero."
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
 msgid "Total Deposit"
-msgstr "Gesamtkaution"
+msgstr "Fianza total"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_sale_order_line__mb_caution_subtotal
 msgid "Total amount of the deposit (unit deposit x quantity)"
-msgstr "Gesamtbetrag der Kaution (Einzelkaution x Menge)"
+msgstr "Cantidad total de la fianza (fianza unitaria x cantidad)"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_sale_order__mb_caution_total
 msgid "Total amount of the deposit for the rental"
-msgstr "Gesamtbetrag der Kaution für die Miete"
+msgstr "Cantidad total de la fianza para el alquiler"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_sale_order__mb_caution_total
@@ -304,30 +305,30 @@ msgstr "Gesamtbetrag der Kaution für die Miete"
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
 #: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
 msgid "Total deposit"
-msgstr "Gesamtkaution"
+msgstr "Fianza total"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_sale_order__mb_type_de_caution
 msgid "Type of deposit"
-msgstr "Art der Kaution"
+msgstr "Tipo de fianza"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_sale_order__mb_type_de_caution
 msgid "Type of deposit for the rental"
-msgstr "Art der Kaution für die Miete"
+msgstr "Tipo de fianza para el alquiler"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_sale_order_line__mb_caution_unit
-#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
 #: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
 msgid "Unit deposit"
-msgstr "Einzelkaution"
+msgstr "Fianza unitaria"
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
 msgid "Value if Theft"
-msgstr "Wert bei Diebstahl"
+msgstr "Valor en caso de robo"
 
 #. module: multibikes_base
 #: model:ir.model.fields,field_description:multibikes_base.field_product_product__mb_value_in_case_of_theft
@@ -335,12 +336,12 @@ msgstr "Wert bei Diebstahl"
 #: model:ir.model.fields,field_description:multibikes_base.field_sale_order_line__mb_value_in_case_of_theft
 #: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
 msgid "Value in case of theft"
-msgstr "Wert bei Diebstahl"
+msgstr "Valor en caso de robo"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_sale_order_line__mb_value_in_case_of_theft
 msgid "Value of the product in case of theft or loss"
-msgstr "Wert des Produkts bei Diebstahl oder Verlust"
+msgstr "Valor del producto en caso de robo o pérdida"
 
 #. module: multibikes_base
 #: model:ir.model.fields,help:multibikes_base.field_product_product__mb_value_in_case_of_theft
@@ -348,4 +349,4 @@ msgstr "Wert des Produkts bei Diebstahl oder Verlust"
 msgid ""
 "Value of the product in case of theft or loss, used to bill the customer."
 msgstr ""
-"Wert des Produkts bei Diebstahl oder Verlust, verwendet für die Abrechnung mit dem Kunden."
+"Valor del producto en caso de robo o pérdida, usado para facturar al cliente."

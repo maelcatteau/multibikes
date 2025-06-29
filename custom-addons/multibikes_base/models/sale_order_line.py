@@ -8,30 +8,30 @@ class SaleOrderLine(models.Model):
 
     # Champs reliés sur le produit
     mb_caution_unit = fields.Monetary(
-        string="Caution unitaire",
+        string="Unit deposit",
         related="product_id.mb_caution",
         currency_field="currency_id",
         readonly=True,
         store=True,
-        help="Montant de la caution unitaire",
+        help="Amount of the unit deposit",
         precompute=True,
     )
 
     mb_value_in_case_of_theft = fields.Monetary(
-        string="Valeur en cas de vol",
+        string="Value in case of theft",
         related="product_id.mb_value_in_case_of_theft",
         currency_field="currency_id",
         readonly=True,
         store=True,
-        help="Valeur du produit en cas de vol",
+        help="Value of the product in case of theft or loss",
     )
 
     mb_caution_subtotal = fields.Monetary(
-        string="Caution totale",
+        string="Total deposit",
         compute="_compute_mb_subtotal",
         store=True,
         currency_field="currency_id",
-        help="Montant total de la caution (caution unitaire × quantité)",
+        help="Total amount of the deposit (unit deposit x quantity)",
         precompute=True,
     )
 

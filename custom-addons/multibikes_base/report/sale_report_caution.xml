@@ -11,21 +11,21 @@
 
     <!-- TON TEMPLATE QUI MARCHE - ON LE GARDE TEL QUEL -->
     <template id="report_saleorder_document_with_caution" inherit_id="sale.report_saleorder_document">
-        
+
         <!-- Ajout d'une colonne pour les cautions dans l'en-tête du tableau -->
         <xpath expr="//th[@name='th_subtotal']" position="before">
-            <th name="th_caution_unit" class="text-end">Caution Unitaire</th>
-            <th name="th_caution_subtotal" class="text-end">Total Caution</th>
+            <th name="th_caution_unit" class="text-end">Unit deposit</th>
+            <th name="th_caution_subtotal" class="text-end">Total deposit</th>
         </xpath>
 
         <!-- Ajout des cellules caution dans le corps du tableau -->
         <xpath expr="//td[@name='td_subtotal']" position="before">
             <td name="td_caution_unit" class="text-end">
-                <span t-if="line.mb_caution_unit != 0" t-field="line.mb_caution_unit" 
+                <span t-if="line.mb_caution_unit != 0" t-field="line.mb_caution_unit"
                     t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
             </td>
             <td name="td_caution_subtotal" class="text-end">
-                <span t-if="line.mb_caution_subtotal != 0" t-field="line.mb_caution_subtotal" 
+                <span t-if="line.mb_caution_subtotal != 0" t-field="line.mb_caution_subtotal"
                     t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
             </td>
         </xpath>
@@ -33,9 +33,9 @@
         <!-- Ajout du total des cautions dans la section des totaux -->
         <xpath expr="//div[@id='total']//table//t[@t-call='sale.document_tax_totals']" position="after">
             <tr t-if="doc.mb_caution_total != 0" class="border-black o_total">
-                <td><strong>Total Cautions :</strong></td>
+                <td><strong>Total deposit :</strong></td>
                 <td class="text-end">
-                    <span t-field="doc.mb_caution_total" 
+                    <span t-field="doc.mb_caution_total"
                           t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
                 </td>
             </tr>
@@ -60,22 +60,22 @@
                 <div t-field="doc.partner_id" t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}'/>
                 <p t-if="doc.partner_id.vat">
                     <t t-if="doc.company_id.account_fiscal_country_id.vat_label" t-out="doc.company_id.account_fiscal_country_id.vat_label"/>
-                    <t t-else="">N° TVA</t>: <span t-field="doc.partner_id.vat"/>
+                    <t t-else="">VAT N°</t>: <span t-field="doc.partner_id.vat"/>
                 </p>
             </t>
             <t t-if="doc.partner_shipping_id == doc.partner_invoice_id and doc.partner_invoice_id != doc.partner_id or doc.partner_shipping_id != doc.partner_invoice_id">
                 <t t-set="information_block">
                     <strong>
                         <t t-if="doc.partner_shipping_id == doc.partner_invoice_id">
-                            Adresse de facturation et de livraison
+                            Shipping and billing adress
                         </t>
                         <t t-else="">
-                            Adresse de facturation
+                            Billing adress
                         </t>
                     </strong>
                     <div t-field="doc.partner_invoice_id" t-options='{"widget": "contact", "fields": ["address", "name", "phone"], "no_marker": True, "phone_icons": True}'/>
                     <t t-if="doc.partner_shipping_id != doc.partner_invoice_id">
-                        <strong>Adresse de livraison</strong>
+                        <strong>Shipping adresse</strong>
                         <div t-field="doc.partner_shipping_id" t-options='{"widget": "contact", "fields": ["address", "name", "phone"], "no_marker": True, "phone_icons": True}'/>
                     </t>
                 </t>
@@ -85,21 +85,21 @@
 
                 <!-- TITRE MODIFIÉ POUR CAUTION -->
                 <t t-set="layout_document_title">
-                    <span>Facture de caution n° </span>
+                    <span>Deposit invoice n° </span>
                     <span t-field="doc.name">SO0000</span>
                 </t>
 
                 <div class="row mb-4" id="informations">
                     <div t-if="doc.client_order_ref" class="col" name="informations_reference">
-                        <strong>Votre référence</strong>
+                        <strong>Your reference</strong>
                         <div t-field="doc.client_order_ref">SO0000</div>
                     </div>
                     <div t-if="doc.date_order" class="col" name="informations_date">
-                        <strong>Date de caution</strong>
+                        <strong>Deposit date</strong>
                         <div t-field="doc.date_order" t-options='{"widget": "date"}'>2023-12-31</div>
                     </div>
                     <div t-if="doc.user_id.name" class="col">
-                        <strong>Vendeur</strong>
+                        <strong>Seller</strong>
                         <div t-field="doc.user_id">Mitchell Admin</div>
                     </div>
                 </div>
@@ -114,10 +114,10 @@
                     <thead style="display: table-row-group">
                         <tr>
                             <th name="th_description" class="text-start">Description</th>
-                            <th name="th_quantity" class="text-end text-nowrap">Quantité</th>
-                            <th name="th_theft_value" class="text-end">Valeur de vol</th>
-                            <th name="th_deposit_unit" class="text-end">Caution unitaire</th>
-                            <th name="th_deposit_subtotal" class="text-end">Sous-total</th>
+                            <th name="th_quantity" class="text-end text-nowrap">Quantity</th>
+                            <th name="th_theft_value" class="text-end">Value in case of theft</th>
+                            <th name="th_deposit_unit" class="text-end">Unit deposit</th>
+                            <th name="th_deposit_subtotal" class="text-end">Sub-total</th>
                         </tr>
                     </thead>
                     <tbody class="sale_tbody">
@@ -162,9 +162,9 @@
                         <div class="col-6 ms-auto">
                             <table class="o_total_table table table-borderless">
                                 <tr class="border-black o_total">
-                                    <td><strong>Total des cautions :</strong></td>
+                                    <td><strong>Total deposit :</strong></td>
                                     <td class="text-end">
-                                        <span t-field="doc.mb_caution_total" 
+                                        <span t-field="doc.mb_caution_total"
                                             t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
                                     </td>
                                 </tr>
@@ -196,7 +196,7 @@
                     </p>
                     <div class="oe_structure"/>
                     <p t-if="doc.fiscal_position_id and not is_html_empty(doc.fiscal_position_id.sudo().note)" id="fiscal_position_remark">
-                        <strong>Remarque sur la position fiscale :</strong>
+                        <strong>Remark regarding fiscal posiion </strong>
                         <span t-field="doc.fiscal_position_id.sudo().note"/>
                     </p>
                 </div>
@@ -208,23 +208,23 @@
 
     <!-- Actions restent pareil -->
     <record id="action_report_saleorder_with_caution" model="ir.actions.report">
-        <field name="name">Devis / Commande avec Cautions</field>
+        <field name="name">Quotation with deposit</field>
         <field name="model">sale.order</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">multibikes_base.report_saleorder_with_caution</field>
         <field name="report_file">multibikes_base.report_saleorder_with_caution</field>
-        <field name="print_report_name">'Devis - %s' % (object.name)</field>
+        <field name="print_report_name">'Quotation - %s' % (object.name)</field>
         <field name="binding_model_id" ref="sale.model_sale_order"/>
         <field name="binding_type">report</field>
     </record>
 
     <record id="action_report_caution_only" model="ir.actions.report">
-        <field name="name">Facture de Caution Uniquement</field>
+        <field name="name">Deposit invoice only</field>
         <field name="model">sale.order</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">multibikes_base.report_caution_only</field>
         <field name="report_file">multibikes_base.report_caution_only</field>
-        <field name="print_report_name">'Facture Caution - %s' % (object.name)</field>
+        <field name="print_report_name">'Deposit invoice - %s' % (object.name)</field>
         <field name="binding_model_id" ref="sale.model_sale_order"/>
         <field name="binding_type">report</field>
     </record>

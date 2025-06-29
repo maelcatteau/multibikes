@@ -1,63 +1,193 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-#   * multibikes_base
+# 	* multibikes_base
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0\n"
+"Project-Id-Version: Odoo Server 18.0+e-20250505\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 10:00+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"POT-Creation-Date: 2025-06-20 09:28+0000\n"
+"PO-Revision-Date: 2025-06-20 09:28+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
 
 #. module: multibikes_base
-#: model:ir.actions.report,name:multibikes_base.action_report_saleorder_with_caution
-msgid "Devis / Commande avec Cautions"
+#: model:ir.actions.report,print_report_name:multibikes_base.action_report_caution_only
+msgid "'Deposit invoice - %s' % (object.name)"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.actions.report,print_report_name:multibikes_base.action_report_saleorder_with_caution
+msgid "'Quotation - %s' % (object.name)"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "<span>Deposit Invoice # </span>"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "<strong>Date:</strong>"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid ""
+"<strong>Deposit Information:</strong><br/>\n"
+"                    This invoice covers security deposits for rented items. Deposits will be refunded upon return of items in good condition.\n"
+"                    In case of theft or total loss, the amounts listed in \"Value if Theft\" column will be charged."
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "<strong>Order Reference:</strong>"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "<strong>Salesperson:</strong>"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "<strong>Total Deposits:</strong>"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
+msgid "<strong>Total deposit :</strong>"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.sale_order_line_wizard_form_inherit
+msgid "Amount"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_product_product__mb_caution
+#: model:ir.model.fields,help:multibikes_base.field_product_template__mb_caution
+msgid "Amount of deposit for renting this product"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_sale_order_line__mb_caution_unit
+msgid "Amount of the unit deposit"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order_discount__apply_caution_discount
+msgid "Apply Caution Discount"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields.selection,name:multibikes_base.selection__sale_order__mb_type_de_caution__espece
+msgid "Cash"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order_discount__caution_discount_amount
+msgid "Caution Discount Amount"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields.selection,name:multibikes_base.selection__sale_order__mb_type_de_caution__cheque
+msgid "Check"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields.selection,name:multibikes_base.selection__sale_order__mb_type_de_caution__carte_bancaire
+msgid "Credit card"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order__partner_email
+msgid "Customer Email"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
+msgid "Customer email"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
+msgid "Customer language"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order__partner_phone
+msgid "Customer phone"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
+msgid "Customer phone number"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_sale_order__partner_email
+msgid "Customer's email adress"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order__partner_lang
+msgid "Customer's language"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_sale_order__partner_phone
+msgid "Customer's phone number"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_product_product__mb_caution
+#: model:ir.model.fields,field_description:multibikes_base.field_product_template__mb_caution
+msgid "Deposit"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.sale_order_line_wizard_form_inherit
+msgid "Deposit - Discount"
+msgstr ""
+
+#. module: multibikes_base
+#. odoo-python
+#: code:addons/multibikes_base/wizard/sale_order_discount.py:0
+msgid "Deposit Discount"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+msgid "Deposit Total"
+msgstr ""
+
+#. module: multibikes_base
+#. odoo-python
+#: code:addons/multibikes_base/wizard/sale_order_discount.py:0
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order__mb_caution_discount_product_id
+msgid "Deposit discount"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order__mb_numero_de_caution
+msgid "Deposit file n°"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_sale_order__mb_numero_de_caution
+msgid ""
+"Deposit file n° used for this rentalThis number is used to link with the "
+"credit card imprint"
 msgstr ""
 
 #. module: multibikes_base
 #: model:ir.actions.report,name:multibikes_base.action_report_caution_only
-msgid "Facture de Caution Uniquement"
-msgstr ""
-
-#. module: multibikes_base
-#: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
-msgid "Caution Unitaire"
-msgstr ""
-
-#. module: multibikes_base
-#: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
-msgid "Total Caution"
-msgstr ""
-
-#. module: multibikes_base
-#: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
-#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
-msgid "Total Cautions :"
-msgstr ""
-
-#. module: multibikes_base
-#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
-msgid "Facture de Caution n° "
-msgstr ""
-
-#. module: multibikes_base
-#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
-msgid "Référence Commande :"
-msgstr ""
-
-#. module: multibikes_base
-#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
-msgid "Date :"
-msgstr ""
-
-#. module: multibikes_base
-#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
-msgid "Commercial :"
+msgid "Deposit invoice only"
 msgstr ""
 
 #. module: multibikes_base
@@ -66,21 +196,149 @@ msgid "Description"
 msgstr ""
 
 #. module: multibikes_base
-#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
-msgid "Quantité"
+#: model:ir.model,name:multibikes_base.model_sale_order_discount
+msgid "Discount Wizard"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.sale_order_line_wizard_form_inherit
+msgid "Discount by global amount on order"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_product_product__mb_size_max
+#: model:ir.model.fields,field_description:multibikes_base.field_product_template__mb_size_max
+msgid "Maximal size (cm)"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_product_product__mb_size_max
+#: model:ir.model.fields,help:multibikes_base.field_product_template__mb_size_max
+msgid "Maximal size of the cyclist in cm"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_product_product__mb_size_min
+#: model:ir.model.fields,field_description:multibikes_base.field_product_template__mb_size_min
+msgid "Minimal size (cm)"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_product_product__mb_size_min
+#: model:ir.model.fields,help:multibikes_base.field_product_template__mb_size_min
+msgid "Minimal size of the cyclist in cm"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_sale_order__partner_lang
+msgid "Preferred language of the customer"
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.sale_order_line_wizard_form_inherit
+msgid "Price - Discount"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model,name:multibikes_base.model_product_template
+msgid "Product"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_sale_order__mb_caution_discount_product_id
+msgid "Product used for deposit discounts in the wizard"
 msgstr ""
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
-msgid "Valeur en cas de Vol"
+msgid "Quantity"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.actions.report,name:multibikes_base.action_report_saleorder_with_caution
+msgid "Quotation with deposit"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model,name:multibikes_base.model_sale_order
+msgid "Sales Order"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model,name:multibikes_base.model_sale_order_line
+msgid "Sales Order Line"
+msgstr ""
+
+#. module: multibikes_base
+#. odoo-python
+#: code:addons/multibikes_base/wizard/sale_order_discount.py:0
+msgid ""
+"There does not seem to be any caution discount product configured for this "
+"order yet. Please ask an administrator to configure it first."
+msgstr ""
+
+#. module: multibikes_base
+#: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
+msgid "Total Deposit"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_sale_order_line__mb_caution_subtotal
+msgid "Total amount of the deposit (unit deposit x quantity)"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_sale_order__mb_caution_total
+msgid "Total amount of the deposit for the rental"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order__mb_caution_total
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order_line__mb_caution_subtotal
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
+#: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
+msgid "Total deposit"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order__mb_type_de_caution
+msgid "Type of deposit"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_sale_order__mb_type_de_caution
+msgid "Type of deposit for the rental"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order_line__mb_caution_unit
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
+#: model_terms:ir.ui.view,arch_db:multibikes_base.report_saleorder_document_with_caution
+#: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
+msgid "Unit deposit"
 msgstr ""
 
 #. module: multibikes_base
 #: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
-msgid "Informations sur les Cautions :"
+msgid "Value if Theft"
 msgstr ""
 
 #. module: multibikes_base
-#: model_terms:ir.ui.view,arch_db:multibikes_base.report_caution_only_document
-msgid "Cette facture couvre les cautions de sécurité pour les articles loués. Les cautions seront remboursées lors du retour des articles en bon état. En cas de vol ou de perte totale, les montants listés dans la colonne \"Valeur en cas de Vol\" seront facturés."
-msgstr "" 
+#: model:ir.model.fields,field_description:multibikes_base.field_product_product__mb_value_in_case_of_theft
+#: model:ir.model.fields,field_description:multibikes_base.field_product_template__mb_value_in_case_of_theft
+#: model:ir.model.fields,field_description:multibikes_base.field_sale_order_line__mb_value_in_case_of_theft
+#: model_terms:ir.ui.view,arch_db:multibikes_base.view_sale_order_form_inherit_multibikes
+msgid "Value in case of theft"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_sale_order_line__mb_value_in_case_of_theft
+msgid "Value of the product in case of theft or loss"
+msgstr ""
+
+#. module: multibikes_base
+#: model:ir.model.fields,help:multibikes_base.field_product_product__mb_value_in_case_of_theft
+#: model:ir.model.fields,help:multibikes_base.field_product_template__mb_value_in_case_of_theft
+msgid ""
+"Value of the product in case of theft or loss, used to bill the customer."
+msgstr ""
