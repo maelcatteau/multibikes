@@ -1,3 +1,4 @@
+```markdown
 # Déploiement Odoo Enterprise MultiBikes
 
 Ce projet contient les fichiers de configuration nécessaires pour déployer Odoo 18.0 Enterprise dans un environnement Docker pour MultiBikes.
@@ -21,7 +22,8 @@ Ce projet contient les fichiers de configuration nécessaires pour déployer Odo
 └── custom-addons/        # Modules personnalisés
     ├── multibikes_base/  # Module de base MultiBikes
     ├── multibikes_prolongation/ # Module de prolongation de location
-    └── multibikes_website/ # Module de fonctionnalités pour le site web
+    ├── multibikes_website/ # Module de fonctionnalités pour le site web
+    └── multibikes_signature/ # Module de signature électronique pour les contrats
 ```
 
 ## Structure d'un module
@@ -109,6 +111,18 @@ Module regroupant toutes les fonctionnalités liées au site web, notamment :
 - Filtrage dynamique des tarifs affichés aux utilisateurs
 - Adaptation automatique des contraintes de location en fonction des dates
 
+### multibikes_signature
+
+Module de signature électronique pour les contrats de location, offrant :
+
+- Génération automatique de documents à signer lors de la confirmation de commande
+- Gestion des zones de signature positionnables sur les documents PDF
+- Workflow de signature électronique intégré à Odoo
+- Support de signatures multiples (client, représentant, etc.)
+- Envoi automatique de demandes de signature par email
+- Suivi du statut des signatures et relances automatiques
+- Intégration avec les rapports QWeb pour personnaliser les documents à signer
+
 ## Maintenance
 
 ### Sauvegarde
@@ -152,6 +166,7 @@ Tous les modules personnalisés doivent avoir un nom qui commence par `multibike
 - `multibikes_base`
 - `multibikes_prolongation`
 - `multibikes_website`
+- `multibikes_signature`
 
 ### Champs
 
@@ -187,6 +202,7 @@ Nous suivons une convention spécifique pour les messages de commit afin de main
 - `[BASE]` : Module `multibikes_base`
 - `[WEBSITE]` : Module `multibikes_website`
 - `[PROLONG]` : Module `multibikes_prolongation`
+- `[SIGNATURE]` : Module `multibikes_signature`
 - `[GENERAL]` : Changement affectant la structure globale
 
 ### Exemples
@@ -199,3 +215,5 @@ Nous suivons une convention spécifique pour les messages de commit afin de main
 - `[PERF][WEBSITE] Optimise les requêtes à la base de données`
 - `[TEST][PROLONG] Ajoute des tests unitaires pour le module de prolongation`
 - `[CHORE][WEBSITE] Met à jour les dépendances obsolètes`
+- `[FEAT][SIGNATURE] Configure signature automatique sur les contrats de location`
+```
