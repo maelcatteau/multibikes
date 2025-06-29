@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, Command
 from odoo.exceptions import UserError
 import base64
 import logging
@@ -8,179 +8,210 @@ _logger = logging.getLogger(__name__)
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    sign_request_id = fields.Many2one('sign.request', string='Demande de signature', readonly=True)
+    # NOUVEAU : Champs pour l'intégration native Sign
+    sign_request_ids = fields.One2many(
+        "sign.request",
+        string="Demandes de Signature",
+        compute="_compute_sign_request"
+    )
+    sign_request_count = fields.Integer(
+        "# Demandes de Signature",
+        compute="_compute_sign_request"
+    )
+    signature_status = fields.Selection([
+        ('none', 'Aucune'),
+        ('sent', 'Envoyée'),
+        ('signed', 'Signée')
+    ], string='Statut signature', default='none')
+
+    def _compute_sign_request(self):
+        """NOUVEAU : Calculer les demandes de signature liées via reference_doc"""
+        ref_values = [f"sale.order,{rec.id}" for rec in self]
+        sign_data = self.env["sign.request"]._read_group(
+            domain=[('reference_doc', 'in', ref_values)],
+            groupby=['reference_doc'],
+            aggregates=['id:recordset'],
+        )
+
+        # Initialiser
+        self.sign_request_ids = False
+        self.sign_request_count = 0
+
+        # Grouper les demandes par commande
+        for dummy, sign_requests in sign_data:
+            if sign_requests:
+                order = sign_requests[:1].reference_doc
+                order.sign_request_ids = [Command.set(sign_requests.ids)]
+                order.sign_request_count = len(sign_requests)
+
+    def action_view_sign(self):
+        """NOUVEAU : Action pour voir les demandes de signature"""
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("sign.sign_request_action")
+
+        if self.sign_request_count > 1:
+            ref_values = [f"sale.order,{self.id}"]
+            action["domain"] = [('reference_doc', 'in', ref_values)]
+        elif self.sign_request_count == 1:
+            action["views"] = [(False, "form")]
+            action["res_id"] = self.sign_request_ids.ids[0]
+        else:
+            action = {"type": "ir.actions.act_window_close"}
+
+        return action
 
     def action_send_for_signature(self):
-        """Envoyer le devis pour signature - Version avec gestion d'états"""
+        """Votre action originale - génération automatique + signature"""
         self.ensure_one()
 
         if not self.partner_id.email:
-            raise UserError("Le client doit avoir une adresse email pour recevoir la demande de signature.")
+            raise UserError("Le client doit avoir une adresse email pour pouvoir signer le devis.")
 
         try:
-            # Générer le PDF
-            pdf_content = self._generate_quotation_pdf()
+            # Vérifier s'il y a déjà une demande en cours pour éviter les doublons
+            existing_request = self.sign_request_ids.filtered(
+                lambda r: r.state == 'sent' and not r.completed_by_all()
+            )
 
-            # Créer le template de signature
-            sign_template = self._create_sign_template(pdf_content)
+            if existing_request:
+                _logger.info(f"Demande existante trouvée: {existing_request.id}")
+                self.signature_status = 'sent'
+                return existing_request.go_to_document()
 
-            # Créer la demande de signature
+            # Votre logique existante : générer template depuis QWeb
+            sign_template = self._create_sign_template()
+            _logger.info(f"Template créé: {sign_template.id}")
+
+            # Créer la demande de signature avec la sauvegarde améliorée
             sign_request = self._create_sign_request(sign_template)
+            _logger.info(f"Sign request créé: {sign_request.id}")
 
-            # Lier la demande au devis
-            self.sign_request_id = sign_request.id
+            # NOUVEAU : Lier via reference_doc (comme sale_rental_sign)
+            sign_request.reference_doc = f"sale.order,{self.id}"
 
-            # CORRECTION: Gestion intelligente des états
-            _logger.info(f"État initial: {sign_request.state}")
+            # Générer le nom du fichier
+            filename = f"Devis_{self.name}_{self.partner_id.name}.pdf"
 
-            # Vérifier si on peut changer l'état
-            try:
-                # Option 1: Méthode spécifique
-                if hasattr(sign_request, 'action_sent') and callable(getattr(sign_request, 'action_sent')):
-                    sign_request.action_sent()
-                    _logger.info("Utilisé action_sent()")
+            # Récupérer l'attachment du template (créé dans _create_sign_template)
+            attachment = sign_template.attachment_id
+            if not attachment:
+                raise UserError("Erreur lors de la création du document PDF.")
 
-                # Option 2: Changement d'état direct si pas d'autres contraintes
-                elif sign_request.state == 'draft':
-                    # Vérifier que tous les prérequis sont remplis
-                    if len(sign_request.request_item_ids) > 0 and len(sign_request.template_id.sign_item_ids) > 0:
-                        sign_request.write({'state': 'sent'})
-                        _logger.info("État changé manuellement à 'sent'")
-                    else:
-                        _logger.warning("Prérequis non remplis pour l'envoi")
+            # Ouvrir le wizard d'envoi Sign avec nos paramètres
+            action = self.env['ir.actions.act_window']._for_xml_id('sign.action_sign_send_request')
+            action.update({
+                "context": {
+                    "default_template_id": sign_template.id,
+                    "default_filename": filename,
+                    "default_attachment_ids": [(6, 0, [attachment.id])],
+                    "sign_directly_without_mail": True,
+                    "default_res_model": "sale.order",
+                    "default_res_id": self.id,
+                    "default_reference_doc": f"sale.order,{self.id}",
+                    "default_signers_data": [{
+                        'partner_id': self.partner_id.id,
+                        'role': 1,
+                        'mail': self.partner_id.email,
+                    }],
+                },
+                "target": "new",
+            })
 
-            except Exception as state_error:
-                _logger.error(f"Impossible de changer l'état: {state_error}")
-                # On continue mais on laisse en draft
-
-            _logger.info(f"État final: {sign_request.state}")
-
-            return {
-                'type': 'ir.actions.act_window',
-                'name': 'Demande de signature',
-                'res_model': 'sign.request',
-                'res_id': sign_request.id,
-                'view_mode': 'form',
-                'target': 'current',
-            }
+            self.signature_status = 'sent'
+            return action
 
         except Exception as e:
             _logger.error(f"Erreur lors de l'envoi pour signature: {e}")
-            import traceback
-            _logger.error(traceback.format_exc())
-            raise UserError(f"Impossible d'envoyer le devis pour signature: {e}")
-
-    def _generate_quotation_pdf(self):
-        """Version simple inspirée du code account"""
-        try:
-            # Utiliser exactement la même approche que dans votre code account
-            report = self.env['ir.actions.report']
-
-            # Préparer les données comme dans _get_rendering_context
-            data = {
-                'doc_ids': [self.id],
-                'doc_model': 'sale.order',
-                'docs': self.browse([self.id]),
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Erreur!',
+                    'message': f'Impossible d\'envoyer le devis pour signature: {str(e)}',
+                    'type': 'danger',
+                    'sticky': True,
+                }
             }
 
-            # Pré-traitement comme dans _pre_render_qweb_pdf
-            report_ref = self.env.ref('sale.action_report_saleorder')
-
-            # Générer le PDF
-            pdf_content = report._render_qweb_pdf(
-                report_ref,
-                res_ids=[self.id],
-                data=data
-            )
-
-            # Traiter le résultat
-            if isinstance(pdf_content, tuple):
-                pdf_data = pdf_content[0]
-            else:
-                pdf_data = pdf_content
-
-            _logger.info(f"PDF généré: {len(pdf_data)} bytes")
-            return base64.b64encode(pdf_data).decode('utf-8')
-
-        except Exception as e:
-            _logger.error(f"Erreur génération PDF: {e}")
-            raise UserError(f"Impossible de générer le PDF: {e}")
-
-    def _create_sign_template(self, pdf_content):
-        """Créer un template de signature - Version corrigée"""
+    # GARDER : Toutes vos fonctions de génération QWeb
+    def _create_sign_template(self):
+        """Votre logique existante - génération auto template depuis QWeb"""
         try:
-            _logger.info("=== CRÉATION TEMPLATE SIGNATURE ===")
+            _logger.info("=== GÉNÉRATION PDF DEPUIS QWEB ===")
 
-            # Créer l'attachment pour le PDF
+            # Générer le PDF depuis le rapport QWeb
+            pdf_content, _ = self.env['ir.actions.report']._render_qweb_pdf(
+                'sale.report_saleorder', self.ids
+            )
+            _logger.info(f"PDF généré: {len(pdf_content)} bytes")
+
+            # Créer l'attachment
             attachment = self.env['ir.attachment'].create({
                 'name': f'Devis_{self.name}.pdf',
                 'type': 'binary',
-                'datas': pdf_content,
+                'datas': base64.b64encode(pdf_content),
                 'res_model': 'sale.order',
                 'res_id': self.id,
-                'mimetype': 'application/pdf'
+                'mimetype': 'application/pdf',
             })
             _logger.info(f"Attachment créé: {attachment.id}")
 
-            # Créer le template de signature
-            sign_template = self.env['sign.template'].create({
-                'name': f'Template_Devis_{self.name}',
+            # Créer le template Sign
+            template = self.env['sign.template'].create({
                 'attachment_id': attachment.id,
-                'active': True,  # Assurer que le template est actif
+                'name': f'Template_Devis_{self.name}',
             })
-            _logger.info(f"Template créé: {sign_template.id}")
+            _logger.info(f"Template créé: {template.id}")
 
-            # CORRECTION 1: Vérifier que les références existent
-            try:
-                signature_type = self.env.ref('sign.sign_item_type_signature')
-                customer_role = self.env.ref('sign.sign_item_role_customer')
-                _logger.info(f"Types trouvés - Signature: {signature_type.id}, Customer: {customer_role.id}")
-            except Exception as e:
-                _logger.error(f"Erreur références: {e}")
-                # Chercher manuellement si les refs n'existent pas
-                signature_type = self.env['sign.item.type'].search([('name', 'ilike', 'signature')], limit=1)
-                customer_role = self.env['sign.item.role'].search([('name', 'ilike', 'customer')], limit=1)
+            # Ajouter zone de signature
+            self._add_signature_field(template)
 
-                if not signature_type:
-                    signature_type = self.env['sign.item.type'].search([], limit=1)
-                if not customer_role:
-                    customer_role = self.env['sign.item.role'].search([], limit=1)
+            return template
 
-            # CORRECTION 2: Ajouter une zone de signature avec des valeurs plus robustes
-            sign_item = self.env['sign.item'].create({
-                'template_id': sign_template.id,
+        except Exception as e:
+            _logger.error(f"Erreur création template: {e}")
+            raise
+
+    def _add_signature_field(self, template):
+        """Votre logique existante - ajout zone signature"""
+        try:
+            signature_type = self.env.ref('sign.sign_item_type_signature', raise_if_not_found=False)
+            customer_role = self.env.ref('sign.sign_item_role_customer', raise_if_not_found=False)
+
+            if not signature_type or not customer_role:
+                _logger.warning("Types de signature non trouvés")
+                return
+
+            _logger.info(f"Types trouvés - Signature: {signature_type.id}, Customer: {customer_role.id}")
+
+            signature_item = self.env['sign.item'].create({
+                'template_id': template.id,
                 'type_id': signature_type.id,
                 'required': True,
                 'responsible_id': customer_role.id,
                 'page': 1,
-                'posX': 0.65,  # Position X (65% de la largeur)
-                'posY': 0.75,  # Position Y (75% de la hauteur)
-                'width': 0.25,  # Largeur (25% de la page)
-                'height': 0.12, # Hauteur (12% de la page)
-                'name': 'signature_client',
+                'posX': 0.7,
+                'posY': 0.8,
+                'width': 0.2,
+                'height': 0.05,
             })
-            _logger.info(f"Zone de signature créée: {sign_item.id}")
 
-            return sign_template
+            _logger.info(f"Zone de signature créée: {signature_item.id}")
 
         except Exception as e:
-            _logger.error(f"Erreur création template: {e}")
-            import traceback
-            _logger.error(traceback.format_exc())
+            _logger.error(f"Erreur ajout signature: {e}")
             raise
 
     def _create_sign_request(self, sign_template):
-        """Créer une demande de signature avec les items en une seule fois"""
+        """Votre logique existante - création demande avec items"""
         try:
             _logger.info("=== CRÉATION DEMANDE SIGNATURE ===")
 
-            # CORRECTION: Créer la demande avec les items directement
             sign_request_data = {
                 'template_id': sign_template.id,
                 'reference': f'Signature_Devis_{self.name}',
                 'subject': f'Signature du devis {self.name}',
                 'message': f'Veuillez signer le devis {self.name}',
-                # Créer les items en même temps
                 'request_item_ids': [(0, 0, {
                     'role_id': self.env.ref('sign.sign_item_role_customer').id,
                     'partner_id': self.partner_id.id,
@@ -190,7 +221,6 @@ class SaleOrder(models.Model):
 
             sign_request = self.env['sign.request'].create(sign_request_data)
             _logger.info(f"Sign request créé: {sign_request.id}, état: {sign_request.state}")
-            _logger.info(f"Nombre d'items: {len(sign_request.request_item_ids)}")
 
             return sign_request
 
@@ -199,33 +229,3 @@ class SaleOrder(models.Model):
             import traceback
             _logger.error(traceback.format_exc())
             raise
-
-    def _debug_sign_request_states(self, sign_request):
-        """Debug pour voir les états et méthodes disponibles"""
-        try:
-            _logger.info("=== DEBUG ÉTATS SIGNATURE ===")
-
-            # États de la demande
-            if hasattr(sign_request, '_fields') and 'state' in sign_request._fields:
-                state_field = sign_request._fields['state']
-                if hasattr(state_field, 'selection'):
-                    if callable(state_field.selection):
-                        try:
-                            states = state_field.selection(sign_request)
-                            _logger.info(f"États sign.request possibles: {states}")
-                        except:
-                            _logger.info("États sign.request: fonction dynamique")
-                    else:
-                        _logger.info(f"États sign.request possibles: {state_field.selection}")
-
-            # Méthodes disponibles
-            methods = [m for m in dir(sign_request) if not m.startswith('_') and ('sent' in m.lower() or 'send' in m.lower() or 'sign' in m.lower())]
-            _logger.info(f"Méthodes signature disponibles: {methods}")
-
-            # Vérifier les items
-            _logger.info(f"Nombre d'items: {len(sign_request.request_item_ids)}")
-            for item in sign_request.request_item_ids:
-                _logger.info(f"Item: partner={item.partner_id.name}, mail={item.mail}, état={getattr(item, 'state', 'N/A')}")
-
-        except Exception as e:
-            _logger.error(f"Erreur debug états: {e}")

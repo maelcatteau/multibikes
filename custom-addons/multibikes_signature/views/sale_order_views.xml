@@ -1,16 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- views/sale_order_views.xml -->
-    <record id="view_order_form_signature_button" model="ir.ui.view">
-        <field name="name">sale.order.form.signature.button</field>
+    <record id="view_order_form_signature" model="ir.ui.view">
+        <field name="name">sale.order.form.signature</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+            <!-- Smart Button pour voir les demandes -->
+            <div name="button_box" position="inside">
+                <button name="action_view_sign" type="object"
+                        class="oe_stat_button" icon="fa-file-text-o"
+                        invisible="sign_request_count == 0">
+                    <field name="sign_request_count" widget="statinfo"
+                           string="Signatures"/>
+                </button>
+            </div>
+
             <xpath expr="//header" position="inside">
                 <button name="action_send_for_signature"
                         type="object"
                         string="Signature"
                         class="btn-primary"/>
+            </xpath>
+
+            <!-- Votre bouton original + infos -->
+            <xpath expr="//page[@name='customer_signature']" position="replace">
             </xpath>
         </field>
     </record>
