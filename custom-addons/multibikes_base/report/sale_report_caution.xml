@@ -40,6 +40,32 @@
                 </td>
             </tr>
         </xpath>
+        <!-- Ajout du texte d'engagement contractuel -->
+        <xpath expr="//div[@id='total']" position="after">
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="border p-3 bg-light">
+                        <h5><strong>Engagement contractuel</strong></h5>
+                        <p class="mb-2">
+                            En signant ce contrat, je m'engage à :
+                        </p>
+                        <ul class="mb-3">
+                            <li>Respecter les conditions générales de location</li>
+                            <li>Respecter les consignes de sécurité</li>
+                            <li>Respecter les règles d'utilisation du matériel</li>
+                            <li>Ramener le matériel au jour correspondant à la date de fin de location</li>
+                        </ul>
+                        <p class="mb-2">
+                            <strong>Horaires de retour :</strong>
+                        </p>
+                        <ul class="mb-3">
+                            <li>Du lundi au jeudi : dans la période d'une heure avant à une heure après l'heure indiquée sur le contrat</li>
+                            <li>Le vendredi : entre 9h30 et 18h30</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </xpath>
     </template>
 
     <!-- Template wrapper pour le rapport caution uniquement -->
