@@ -301,7 +301,7 @@ class SaleOrder(models.Model):
                 'type_id': signature_type.id,
                 'required': True,
                 'responsible_id': customer_role.id,
-                'page': 1,
+                'page': 2,
                 'posX': 0.7,
                 'posY': 0.8,
                 'width': 0.2,
