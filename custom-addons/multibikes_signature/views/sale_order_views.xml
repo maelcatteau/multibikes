@@ -5,6 +5,7 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+
             <!-- Smart Button pour voir les demandes -->
             <div name="button_box" position="inside">
                 <button name="action_view_sign" type="object"
@@ -15,17 +16,24 @@
                 </button>
             </div>
 
+            <!-- Ajouter le bouton Signature -->
             <xpath expr="//header" position="inside">
                 <button name="action_send_signature_by_email"
                         type="object"
                         string="Signature"
                         class="btn-primary"
-                        invisible="state != 'sale'or signature_status != 'none'"/>
+                        invisible="state != 'sale' or signature_status != 'none'"/>
             </xpath>
 
-            <!-- Votre bouton original + infos -->
+            <!-- Ajouter les champs nécessaires (invisibles) -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="signature_status" invisible="1"/>
+            </xpath>
+
+            <!-- Suppression ancienne page si elle existe -->
             <xpath expr="//page[@name='customer_signature']" position="replace">
             </xpath>
+
         </field>
     </record>
 </odoo>
