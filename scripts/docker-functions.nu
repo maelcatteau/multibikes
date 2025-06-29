@@ -41,7 +41,7 @@ def down [
 ] {
     let compose_file = $"docker-compose_($environment).yaml"
     print $"🛑 Stopping ($environment) stack..."
-    cd ..
+    cd /home/ngner/multibikes/odoo-deployment/
     if $volumes {
         print "⚠️  Also removing volumes..."
         docker compose -f $compose_file down --volumes
@@ -56,7 +56,7 @@ def down [
 export def up [environment: string] {
     let compose_file = $"docker-compose_($environment).yaml"
     print $"🚀 Starting ($environment) stack..."
-    cd ..  # Remonter au dossier principal depuis /scripts
+    cd /home/ngner/multibikes/odoo-deployment/
     docker compose -f $compose_file up -d
     print $"✅ ($environment) stack started!"
 }
@@ -71,7 +71,7 @@ export def restart [environment: string] {
 }
 
 export def build [target?: string] {
-    cd ..  # Remonter au dossier principal depuis /scripts
+    cd /home/ngner/multibikes/odoo-deployment/
 
     match $target {
         "prod" => {
