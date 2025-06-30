@@ -8,7 +8,7 @@
     "summary": "Module de base pour la gestion des signatures sur les contrats de location",
     "author": "Maël CATTEAU",
     # Dépendances du module
-    "depends": ["base", "sale", "sale_renting", "sale_management", "web", "sign"],
+    "depends": ["base", "sale", "sale_renting", "sale_management", "web", "sign", "multibikes_base"],
     # Fichiers de données (vues, menus, actions, etc.)
     "data": [
         "views/sale_order_views.xml",
