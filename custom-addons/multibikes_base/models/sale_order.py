@@ -49,7 +49,7 @@ class SaleOrder(models.Model):
         help="Type of deposit for the rental",
     )
 
-    mb_numero_de_caution = fields.Integer(
+    mb_numero_de_caution = fields.Char(
         string="Deposit file n°",
         help=(
             "Deposit file n° used for this rental"
