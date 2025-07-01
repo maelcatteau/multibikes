@@ -6,6 +6,25 @@ _logger = logging.getLogger(__name__)
 class SignRequest(models.Model):
     _inherit = 'sign.request'
 
+    sale_order_id = fields.Many2one(
+        'sale.order',
+        string='Commande de vente',
+        compute='_compute_sale_order_id',
+        store=True
+    )
+
+
+    @api.depends('reference_doc')
+    def _compute_sale_order_id(self):
+        """Extraire l'ID de sale.order depuis reference_doc"""
+        for record in self:
+            if (record.reference_doc and
+                hasattr(record.reference_doc, '_name') and
+                record.reference_doc._name == 'sale.order'):
+                record.sale_order_id = record.reference_doc.id
+            else:
+                record.sale_order_id = False
+
     def _message_post_after_sign(self):
         """Appelé après signature - logique améliorée"""
         super()._message_post_after_sign()

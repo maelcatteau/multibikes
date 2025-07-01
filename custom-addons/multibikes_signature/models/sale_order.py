@@ -11,11 +11,8 @@ class SaleOrder(models.Model):
     # NOUVEAU : Champs pour l'intégration native Sign
     sign_request_ids = fields.One2many(
         "sign.request",
-        "reference_doc",  # ← Champ dans sign.request qui pointe vers sale.order
-        string="Demandes de Signature",
-        compute="_compute_sign_request",
-        store=True,  # ← Rend le champ searchable
-        readonly=True
+        "sale_order_id",
+        string="Demandes de Signature"
     )
     sign_request_count = fields.Integer(
         "# Demandes de Signature",
