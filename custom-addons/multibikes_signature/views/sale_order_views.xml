@@ -30,10 +30,6 @@
                 <field name="signature_status" invisible="1"/>
             </xpath>
 
-            <!-- Suppression ancienne page si elle existe -->
-            <xpath expr="//page[@name='customer_signature']" position="replace">
-            </xpath>
-
         </field>
     </record>
 </odoo>
