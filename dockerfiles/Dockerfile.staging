@@ -11,7 +11,7 @@ ENV DEV_MODE=true \
 
 # Copier le script en tant que root (avant USER odoo)
 USER root
-COPY scripts/entrypoint_dev.sh /entrypoint.sh
+COPY scripts/entrypoint_staging.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && chown odoo:odoo /entrypoint.sh
 
 # Exposition des ports
