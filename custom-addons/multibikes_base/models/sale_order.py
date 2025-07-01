@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Model SaleOrder for multibikes_base module."""
 from odoo import models, fields, api
-
+from odoo.exceptions import UserError
 
 class SaleOrder(models.Model):
     """
@@ -69,6 +69,29 @@ class SaleOrder(models.Model):
         string="Deposit discount",
         help="Product used for deposit discounts in the wizard",
     )
+
+    def action_cancel(self):
+        """Surcharger l'annulation pour vérifier les retours de location"""
+        for order in self:
+            if order.is_rental_order:
+                unreturned_lines = []
+
+                for line in order.order_line:
+                    if line.qty_delivered > line.qty_returned:
+                        qty_unreturned = line.qty_delivered - line.qty_returned
+                        unreturned_lines.append(
+                            f"• {line.product_id.name}: {qty_unreturned} unité(s) non retournée(s)"
+                        )
+
+                if unreturned_lines:
+                    raise UserError(
+                        f"Impossible d'annuler la commande {order.name}\n\n"
+                        f"Produits de location non retournés:\n"
+                        f"{chr(10).join(unreturned_lines)}\n\n"
+                        f"Veuillez effectuer le retour complet avant d'annuler."
+                    )
+
+        return super().action_cancel()
 
     @api.depends("order_line.mb_caution_subtotal")
     def _compute_mb_caution_total(self):
