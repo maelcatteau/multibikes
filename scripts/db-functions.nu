@@ -2,206 +2,387 @@
 
 use config.nu CONTAINERS
 
-# Backup via API Odoo
-export def backup [environment: string, --output (-o): string] {
-    # Configuration par environnement
-    let config = {
-        dev: {
-            url: "https://dev.multibikes.fr"
-        },
-        staging: {
-            url: "https://staging.multibikes.fr"
-        },
-        prod: {
-            url: "https://odoo.multibikes.fr"
-        }
+# Fonction utilitaire pour parser la config Odoo
+def parse_odoo_config [config_content: string] {
+    $config_content
+    | lines
+    | where {|line| not ($line | str starts-with "#") and not ($line | str trim | is-empty)}
+    | parse "{key} = {value}"
+    | reduce -f {} {|it, acc| $acc | insert $it.key $it.value}
+}
+
+export def backup [...args] {
+    let environment = $args | get 0?
+    let database = $args | get 1?
+
+    if $environment == null or $database == null {
+        error make {msg: "Usage: backup <environment> <database>"}
     }
 
-    let env_config = ($config | get $environment)
+    # Configuration des chemins
+    let backup_base_dir = "/home/ngner/multibikes/odoo-deployment/backups"
+    let backup_env_dir = $"($backup_base_dir)/($environment)"
     let timestamp = (date now | format date "%Y%m%d_%H%M%S")
-    let filename = if $output != null {
-        $output
-    } else {
-        $"backup_($environment)_($timestamp).zip"
-    }
+    let backup_filename = $"($database)_backup_($timestamp)"
 
-    print $"💾 Starting backup from ($environment)..."
-    print $"🌐 URL: ($env_config.url)"
+    # Créer le répertoire de backup pour l'environnement
+    mkdir $backup_env_dir
 
-    # Demander le nom de la base de données
-    print "🗃️ Please enter database name:"
-    let db_name = (input)
+    print "🚀 SAUVEGARDE ODOO"
+    print "============================================"
+    print $"📋 Environnement   : ($environment)"
+    print $"📋 Base de données : ($database)"
+    print $"📋 Dossier        : ($backup_env_dir)"
 
-    # Demander le mot de passe master
-    print "🔐 Please enter Odoo master password:"
-    let master_password = (input --suppress-output)
-
-    # URL de l'API backup
-    let backup_url = $"($env_config.url)/web/database/backup"
-
-    print $"⏳ Creating backup..."
-
-    # Appel API avec les données de formulaire
     try {
-        let form_data = {
-            master_pwd: $master_password,
-            name: $db_name,
-            backup_format: "zip"
+        let container = ($CONTAINERS | get $environment | get odoo)
+        print $"📋 Conteneur       : ($container)"
+
+        # Vérifier que le conteneur existe et tourne
+        let container_check = (docker ps -q -f $"name=^($container)$" | complete)
+        if ($container_check.stdout | str trim | is-empty) {
+            error make {msg: $"❌ Le conteneur '($container)' n'existe pas ou n'est pas démarré"}
         }
 
-        http post $backup_url $form_data --content-type "application/x-www-form-urlencoded" | save $filename
+        # Récupérer et parser la configuration Odoo
+        print "🔍 Récupération de la configuration de base de données..."
+        let config_result = (connect $environment odoo "cat /etc/odoo/odoo.conf" | complete)
 
-        print $"✅ Backup completed: ($filename)"
+        if $config_result.exit_code != 0 {
+            error make {msg: "❌ Impossible de récupérer la configuration Odoo"}
+        }
 
-        # Afficher la taille du fichier
-        let file_size = (ls $filename | get size | first)
-        print $"📦 File size: ($file_size)"
+        let odoo_config = (parse_odoo_config $config_result.stdout)
+
+        let db_host = ($odoo_config | get db_host? | default "localhost")
+        let db_port = ($odoo_config | get db_port? | default "5432")
+        let db_user = ($odoo_config | get db_user? | default "odoo")
+        let db_password = ($odoo_config | get db_password? | default "")
+
+        if ($db_password | is-empty) {
+            error make {msg: "❌ Mot de passe de base de données introuvable dans la configuration"}
+        }
+
+        print $"🔍 Connexion DB : ($db_user)@($db_host):($db_port)"
+
+        # Créer le dump PostgreSQL
+        print "💾 Création du dump PostgreSQL..."
+        let dump_command = $"PGPASSWORD='($db_password)' pg_dump -h '($db_host)' -p '($db_port)' -U '($db_user)' -d \"($database)\" -f /tmp/($backup_filename).sql"
+        let dump_result = (connect $environment odoo $dump_command | complete)
+
+        if $dump_result.exit_code != 0 {
+            error make {msg: $"❌ Échec du dump PostgreSQL: ($dump_result.stderr)"}
+        }
+
+        # Créer l'archive du filestore si le répertoire existe
+        let filestore_path = $"/var/lib/odoo/filestore/($database)"
+        let filestore_check = (connect $environment odoo $"[ -d \"($filestore_path)\" ] && echo exists" | complete)
+
+        if ($filestore_check.stdout | str trim) == "exists" {
+            print "📁 Archivage du filestore..."
+            let filestore_command = $"cd /var/lib/odoo && tar -czf /tmp/($backup_filename)_filestore.tar.gz filestore/($database)/"
+            let filestore_result = (connect $environment odoo $filestore_command | complete)
+            if $filestore_result.exit_code != 0 {
+                print $"⚠️ Avertissement : Échec de l'archivage du filestore: ($filestore_result.stderr)"
+            }
+        } else {
+            print "📁 Aucun filestore trouvé, création d'un répertoire vide..."
+            connect $environment odoo $"mkdir -p /tmp/empty_filestore/($database) && cd /tmp && tar -czf /tmp/($backup_filename)_filestore.tar.gz empty_filestore/ && rm -rf empty_filestore"
+        }
+
+        # Créer l'archive finale combinant SQL et filestore
+        print "📦 Création de l'archive finale..."
+        let archive_command = $"cd /tmp && tar -czf ($backup_filename).tar.gz ($backup_filename).sql ($backup_filename)_filestore.tar.gz"
+        let archive_result = (connect $environment odoo $archive_command | complete)
+
+        if $archive_result.exit_code != 0 {
+            error make {msg: $"❌ Échec de la création de l'archive finale: ($archive_result.stderr)"}
+        }
+
+        # Vérifier que l'archive finale existe
+        let archive_check = (connect $environment odoo $"ls -la /tmp/($backup_filename).tar.gz" | complete)
+        if $archive_check.exit_code != 0 {
+            error make {msg: $"❌ Archive finale non trouvée: ($archive_check.stderr)"}
+        }
+
+        print $"📋 Archive créée : ($archive_check.stdout)"
+
+        # Copier l'archive vers l'hôte
+        print "📋 Copie de l'archive vers l'hôte..."
+        let backup_path = $"($backup_env_dir)/($backup_filename).tar.gz"
+        let copy_result = (docker cp $"($container):/tmp/($backup_filename).tar.gz" $backup_path | complete)
+
+        if $copy_result.exit_code != 0 {
+            error make {msg: $"❌ Échec de la copie: ($copy_result.stderr)"}
+        }
+
+        # Nettoyer les fichiers temporaires
+        print "🧹 Nettoyage..."
+        connect $environment odoo $"rm -f /tmp/($backup_filename)*"
+
+        # Afficher les résultats
+        print ""
+        print "🎉 SAUVEGARDE TERMINÉE !"
+        print "============================================"
+        print $"📄 Fichier : ($backup_path)"
+
+        # Calculer la taille du fichier
+        if ($backup_path | path exists) {
+            let file_info = (ls $backup_path | get 0)
+            let size = ($file_info.size | into string)
+            print $"📊 Taille : ($size)"
+        }
+
+        print ""
+        print "💡 Commandes suivantes possibles :"
+        print $"   mb restore ($environment) ($backup_filename).tar.gz <target_db>"
+        print $"   mb list_backups ($environment)"
 
     } catch { |e|
-        print $"❌ Backup failed: ($e.msg)"
-        print "💡 Check master password and database name"
+        print $"❌ Erreur lors de la sauvegarde : ($e.msg)"
     }
 }
 
-# Restore via API Odoo
-export def restore [
-    target_environment: string,
-    --from-env (-e): string,          # Restaurer depuis un autre environnement
-    --from-file (-f): string,         # Restaurer depuis un fichier local
-    --new-name (-n): string           # Nouveau nom de DB (optionnel)
-] {
-    # Configuration par environnement
-    let config = {
-        dev: {
-            url: "https://dev.multibikes.fr"
-        },
-        staging: {
-            url: "https://staging.multibikes.fr"
-        },
-        prod: {
-            url: "https://odoo.multibikes.fr"
-        }
+export def list_backups [...args] {
+    let environment = $args | get 0?
+
+    if $environment == null {
+        error make {msg: "Usage: list_backups <environment>"}
     }
 
-    let target_config = ($config | get $target_environment)
+    let backup_dir = $"/home/ngner/multibikes/odoo-deployment/backups/($environment)"
 
-    # Vérifier les options
-    if ($from_env == null and $from_file == null) {
-        print "❌ You must specify either --from-env or --from-file"
+    if not ($backup_dir | path exists) {
+        print $"📂 Aucune sauvegarde trouvée pour ($environment)"
         return
     }
 
-    if ($from_env != null and $from_file != null) {
-        print "❌ Please use only one option: --from-env OR --from-file"
-        return
-    }
+    print $"📦 Sauvegardes disponibles pour ($environment) :"
+    print "============================================"
 
-    print $"🔄 Starting restore to ($target_environment)..."
-    print $"🌐 Target URL: ($target_config.url)"
+    let backups = (ls $backup_dir | where type == file and name =~ ".*\\.tar\\.gz$" | sort-by modified | reverse)
 
-    let backup_file = if $from_env != null {
-        # Backup depuis un autre environnement
-        let source_config = ($config | get $from_env)
-        print $"📥 Creating backup from ($from_env)..."
-
-        print $"🔐 Please enter master password for SOURCE ($from_env):"
-        let source_master_password = (input --suppress-output)
-
-        print "🗃️ Please enter source database name:"
-        let source_db = (input)
-
-        let timestamp = (date now | format date "%Y%m%d_%H%M%S")
-        let temp_backup = $"temp_backup_($timestamp).zip"
-
-        # Créer le backup temporaire
-        let backup_url = $"($source_config.url)/web/database/backup"
-        let form_data = {
-            master_pwd: $source_master_password,
-            name: $source_db,
-            backup_format: "zip"
-        }
-
-        try {
-            http post $backup_url $form_data --content-type "application/x-www-form-urlencoded" | save $temp_backup
-            print $"✅ Temporary backup created: ($temp_backup)"
-            $temp_backup
-        } catch { |e|
-            print $"❌ Backup failed: ($e.msg)"
-            return
-        }
+    if ($backups | length) == 0 {
+        print "📂 Aucune sauvegarde .tar.gz trouvée"
     } else {
-        # Utiliser fichier existant
-        if not ($from_file | path exists) {
-            print $"❌ File not found: ($from_file)"
-            return
+        $backups | each { |backup|
+            let filename = ($backup.name | path basename)
+            let size = ($backup.size | into string)
+            let date = ($backup.modified | format date "%Y-%m-%d %H:%M:%S")
+            print $"📦 ($filename) - ($size) - ($date)"
         }
-        $from_file
+    }
+}
+
+
+export def restore [...args] {
+    let environment = $args | get 0?
+    let backup_file = $args | get 1?
+    let target_database = $args | get 2?
+
+    if $environment == null or $backup_file == null or $target_database == null {
+        error make {msg: "Usage: restore <environment> <backup_file> <target_database>"}
     }
 
-    # Demander le mot de passe master pour la cible
-    print $"🔐 Please enter master password for TARGET ($target_environment):"
-    let target_master_password = (input --suppress-output)
-
-    # Demander le nom de la DB de destination
-    let target_db = if $new_name != null {
-        $new_name
+    # Configuration des chemins
+    let backup_base_dir = "/home/ngner/multibikes/odoo-deployment/backups"
+    let backup_path = if ($backup_file | path exists) {
+        $backup_file
     } else {
-        print "🗃️ Please enter target database name:"
-        input
+        $"($backup_base_dir)/($environment)/($backup_file)"
     }
 
-    print $"⏳ Restoring to database ($target_db)..."
+    print "🔄 RESTAURATION ODOO"
+    print "============================================"
+    print $"📋 Environnement   : ($environment)"
+    print $"📋 Base de données : ($target_database)"
+    print $"📋 Backup          : ($backup_file | path basename)"
 
-    # URL de l'API restore
-    let restore_url = $"($target_config.url)/web/database/restore"
+    # Vérifications
+    if not ($backup_path | path exists) {
+        error make {msg: $"❌ Fichier de sauvegarde introuvable : ($backup_path)"}
+    }
 
     try {
-        # Utiliser curl pour le multipart/form-data (plus fiable pour les fichiers)
-        let curl_result = (
-            ^curl -X POST $restore_url
-            -F $"master_pwd=($target_master_password)"
-            -F $"name=($target_db)"
-            -F $"backup_file=@($backup_file)"
-            -F "copy=true"
-            --silent
-            --show-error
-        )
+        let container = ($CONTAINERS | get $environment | get odoo)
+        print $"📋 Conteneur       : ($container)"
 
-        print $"✅ Restore completed successfully!"
-        print $"🗃️ Database: ($target_db)"
-        print $"🌐 Environment: ($target_environment)"
-
-        # Nettoyer le fichier temporaire si créé
-        if $from_env != null {
-            rm $backup_file
-            print $"🧹 Temporary backup file cleaned"
+        # Vérifier que le conteneur existe et tourne
+        let container_check = (docker ps -q -f $"name=^($container)$" | complete)
+        if ($container_check.stdout | str trim | is-empty) {
+            error make {msg: $"❌ Le conteneur '($container)' n'existe pas ou n'est pas démarré"}
         }
 
-    } catch { |e|
-        print $"❌ Restore failed: ($e.msg)"
-        print "💡 Check master password, database name and backup file"
-        print "🔍 Debug: trying alternative method..."
+        # Confirmation
+        print ""
+        print "⚠️  ATTENTION ⚠️"
+        print "Cette opération va :"
+        print $"   🗑️  SUPPRIMER la base '($target_database)' si elle existe"
+        print $"   📦 RESTAURER depuis ($backup_file | path basename)"
+        print ""
+        print "Continuer ? (tapez 'OUI')"
 
-        # Méthode alternative avec http post
-        try {
-            let backup_content = (open $backup_file)
-            let form_data = {
-                master_pwd: $target_master_password,
-                name: $target_db,
-                backup_file: $backup_content
+        let confirm = (input)
+        if $confirm != "OUI" {
+            print "🛑 Restauration annulée"
+            return
+        }
+
+        # Récupérer la configuration DB
+        print "🔍 Récupération de la configuration..."
+        let config_result = (connect $environment odoo "cat /etc/odoo/odoo.conf" | complete)
+
+        if $config_result.exit_code != 0 {
+            error make {msg: "❌ Impossible de récupérer la configuration Odoo"}
+        }
+
+        let odoo_config = (parse_odoo_config $config_result.stdout)
+
+        let db_host = ($odoo_config | get db_host? | default "localhost")
+        let db_port = ($odoo_config | get db_port? | default "5432")
+        let db_user = ($odoo_config | get db_user? | default "odoo")
+        let db_password = ($odoo_config | get db_password? | default "")
+
+        if ($db_password | is-empty) {
+            error make {msg: "❌ Mot de passe de base de données introuvable"}
+        }
+
+        # Arrêter Odoo
+        print "🛑 Arrêt d'Odoo..."
+        let stop_result = (docker stop $container | complete)
+        if $stop_result.exit_code != 0 {
+            error make {msg: "❌ Impossible d'arrêter le conteneur"}
+        }
+
+        # Copier le backup
+        let timestamp = (date now | format date "%s")
+        let temp_backup = $"/tmp/restore_($timestamp).tar.gz"
+        print "📋 Copie de l'archive..."
+        docker cp $backup_path $"($container):($temp_backup)"
+
+        # Démarrer temporairement le conteneur
+        print "🚀 Démarrage temporaire du conteneur..."
+        docker start $container
+        sleep 5sec
+
+        # Extraire l'archive
+        print "📦 Extraction de l'archive..."
+        let extract_result = (connect $environment odoo $"cd /tmp && tar -xzf ($temp_backup)" | complete)
+        if $extract_result.exit_code != 0 {
+            error make {msg: $"❌ Échec de l'extraction: ($extract_result.stderr)"}
+        }
+
+        # Identifier les fichiers
+        let sql_file_result = (connect $environment odoo "ls /tmp/*_backup_*.sql 2>/dev/null | head -1" | complete)
+        let filestore_result = (connect $environment odoo "ls /tmp/*_filestore.tar.gz 2>/dev/null | head -1" | complete)
+
+        if $sql_file_result.exit_code != 0 or ($sql_file_result.stdout | str trim | is-empty) {
+            error make {msg: "❌ Fichier SQL introuvable dans l'archive"}
+        }
+
+        let sql_file = ($sql_file_result.stdout | str trim)
+        let filestore_archive = if $filestore_result.exit_code == 0 {
+            ($filestore_result.stdout | str trim)
+        } else {
+            ""
+        }
+
+        # Supprimer la base existante
+        print "🗑️ Suppression de la base existante..."
+        let drop_command = $"PGPASSWORD='($db_password)' psql -h '($db_host)' -p '($db_port)' -U '($db_user)' -d postgres -c \"DROP DATABASE IF EXISTS \\\"($target_database)\\\"\""
+        connect $environment odoo $drop_command
+
+        # Créer la nouvelle base
+        print "🆕 Création de la nouvelle base..."
+        let create_command = $"PGPASSWORD='($db_password)' psql -h '($db_host)' -p '($db_port)' -U '($db_user)' -d postgres -c \"CREATE DATABASE \\\"($target_database)\\\" WITH OWNER \\\"($db_user)\\\" ENCODING 'UTF8'\""
+        let create_result = (connect $environment odoo $create_command | complete)
+        if $create_result.exit_code != 0 {
+            error make {msg: $"❌ Échec de la création de base: ($create_result.stderr)"}
+        }
+
+        # Restaurer le dump SQL
+        print "💾 Restauration du dump SQL..."
+        let restore_command = $"PGPASSWORD='($db_password)' psql -h '($db_host)' -p '($db_port)' -U '($db_user)' -d \"($target_database)\" -f ($sql_file)"
+        let restore_result = (connect $environment odoo $restore_command | complete)
+        if $restore_result.exit_code != 0 {
+            error make {msg: $"❌ Échec de la restauration SQL: ($restore_result.stderr)"}
+        }
+
+        # Restaurer le filestore si disponible
+        if not ($filestore_archive | is-empty) {
+            print "📁 Restauration du filestore..."
+            # D'abord, créer le répertoire de destination et nettoyer
+            connect $environment odoo $"mkdir -p /var/lib/odoo/filestore && rm -rf /var/lib/odoo/filestore/($target_database)"
+
+            # Extraire dans un répertoire temporaire pour examiner la structure
+            connect $environment odoo $"mkdir -p /tmp/filestore_extract"
+            connect $environment odoo $"cd /tmp/filestore_extract && tar -xzf ($filestore_archive)"
+
+            # Vérifier la structure et copier correctement
+            let structure_check = (connect $environment odoo "ls -la /tmp/filestore_extract/" | complete)
+            print $"🔍 Structure du filestore : ($structure_check.stdout)"
+
+            # Si la structure contient déjà 'filestore/', utiliser directement
+            let has_filestore_dir = (connect $environment odoo "[ -d \"/tmp/filestore_extract/filestore\" ] && echo yes || echo no" | complete)
+
+            if ($has_filestore_dir.stdout | str trim) == "yes" {
+                # Structure correcte : filestore/database/
+                connect $environment odoo $"cp -r /tmp/filestore_extract/filestore/*/. /var/lib/odoo/filestore/($target_database)/ || cp -r /tmp/filestore_extract/filestore/ /var/lib/odoo/ && mv /var/lib/odoo/filestore/*/ /var/lib/odoo/filestore/($target_database)/"
+            } else {
+                # Structure directe : fichiers directement dans l'archive
+                connect $environment odoo $"mkdir -p /var/lib/odoo/filestore/($target_database) && cp -r /tmp/filestore_extract/* /var/lib/odoo/filestore/($target_database)/"
             }
 
-            http post $restore_url $form_data --content-type "multipart/form-data"
-            print $"✅ Restore completed with alternative method!"
+            # Corriger les permissions
+            connect $environment odoo $"chown -R odoo:odoo /var/lib/odoo/filestore/($target_database) 2>/dev/null || true"
 
-        } catch { |e2|
-            print $"❌ Alternative method also failed: ($e2.msg)"
-            print "💡 You may need to restore manually via Odoo interface"
+            # Nettoyer le répertoire temporaire
+            connect $environment odoo $"rm -rf /tmp/filestore_extract"
         }
 
-        # Nettoyer en cas d'erreur aussi
-        if ($from_env != null and ($backup_file | path exists)) {
-            rm $backup_file
+
+        # Nettoyer (version améliorée)
+        print "🧹 Nettoyage..."
+        connect $environment odoo $"rm -f /tmp/*_backup_* /tmp/*_filestore.tar.gz 2>/dev/null || true"
+        # Le fichier temporaire de restore sera nettoyé par le système
+
+
+        # Redémarrer Odoo
+        print "🚀 Redémarrage d'Odoo..."
+        docker restart $container
+
+        print "⏳ Attente du démarrage (30 secondes)..."
+        sleep 30sec
+
+        print ""
+        print "🎉 RESTAURATION TERMINÉE !"
+        print "============================================"
+        print $"✅ Base '($target_database)' restaurée depuis ($backup_file | path basename)"
+        print ""
+        print "💡 Commandes suivantes possibles :"
+        print $"   mb connect ($environment) odoo"
+        print $"   mb backup ($environment) ($target_database)"
+
+    } catch { |e|
+        print $"❌ Erreur lors de la restauration : ($e.msg)"
+        # Tentative de redémarrage du conteneur en cas d'erreur
+        try {
+            let container = ($CONTAINERS | get $environment | get odoo)
+            docker start $container
         }
     }
+}
+
+
+export def verify_restore [environment: string, database: string] {
+    print $"🔍 Vérification de la restauration pour ($database)..."
+
+    # Vérifier la base de données
+    let db_check = (connect $environment odoo $"PGPASSWORD='odoo' psql -h 'db-staging' -p '5432' -U 'odoo' -d \"($database)\" -c \"SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public';\"" | complete)
+    print $"📊 Tables dans la base : ($db_check.stdout)"
+
+    # Vérifier le filestore
+    let filestore_check = (connect $environment odoo $"ls -la /var/lib/odoo/filestore/($database)/ | head -10" | complete)
+    print $"📁 Contenu du filestore :"
+    print $filestore_check.stdout
 }

@@ -3,7 +3,16 @@
 use config.nu CONTAINERS
 
 # Se connecter au container
-export def connect [environment: string, service?: string] {
+export def connect [...args] {
+    let environment = $args | get 0?
+    let service = $args | get 1?
+    let command = $args | skip 2 | str join " "  # Récupère tout le reste comme commande
+
+    # Validation
+    if $environment == null {
+        error make {msg: "Usage: connect <environment> [service] [command...]"}
+    }
+
     let service_name = if $service == null { "odoo" } else { $service }
 
     try {
@@ -11,13 +20,22 @@ export def connect [environment: string, service?: string] {
 
         match $service_name {
             "odoo" => {
-                print $"🔗 Connecting to Odoo ($container_name)..."
-                docker exec -it $container_name bash
+                if ($command | is-empty) {
+                    print $"🔗 Connecting to Odoo ($container_name)..."
+                    docker exec -it $container_name bash
+                } else {
+                    print $"🚀 Executing command in Odoo ($container_name): ($command)"
+                    docker exec $container_name bash -c $command
+                }
             }
             "db" => {
-                print $"🗄️ Connecting to Database ($container_name)..."
-                # Se connecter directement à PostgreSQL
-                docker exec -it $container_name psql -U odoo -d multibikes
+                if ($command | is-empty) {
+                    print $"🗄️ Connecting to Database ($container_name)..."
+                    docker exec -it $container_name psql -U odoo -d multibikes
+                } else {
+                    print $"🗄️ Executing SQL in Database ($container_name): ($command)"
+                    docker exec $container_name psql -U odoo -d multibikes -c $command
+                }
             }
             _ => {
                 print $"❌ Unknown service: ($service_name). Available: odoo, db"
@@ -29,19 +47,18 @@ export def connect [environment: string, service?: string] {
     }
 }
 
-# Arrêter la stack
-# 🛑 Stop Docker Compose stack
-#
-# This command stops all services defined in the docker-compose file
-# for the specified environment. Use --volumes to also remove named volumes
-# which will delete persistent data.
-def down [
-    environment: string,    # Target environment (dev, staging, prod)
-    --volumes (-v)         # Also remove named volumes (WARNING: deletes data!)
-] {
+export def down [...args] {
+    let environment = $args | get 0?
+    let volumes = "--volumes" in $args  # Check si --volumes est dans les args
+
+    if $environment == null {
+        error make {msg: "Usage: down <environment> [--volumes]"}
+    }
+
     let compose_file = $"docker-compose_($environment).yaml"
     print $"🛑 Stopping ($environment) stack..."
     cd /home/ngner/multibikes/odoo-deployment/
+
     if $volumes {
         print "⚠️  Also removing volumes..."
         docker compose -f $compose_file down --volumes
@@ -52,8 +69,13 @@ def down [
 }
 
 
-# Démarrer la stack
-export def up [environment: string] {
+export def up [...args] {
+    let environment = $args | get 0?
+
+    if $environment == null {
+        error make {msg: "Usage: up <environment>"}
+    }
+
     let compose_file = $"docker-compose_($environment).yaml"
     print $"🚀 Starting ($environment) stack..."
     cd /home/ngner/multibikes/odoo-deployment/
@@ -62,7 +84,13 @@ export def up [environment: string] {
 }
 
 # Redémarrer la stack
-export def restart [environment: string] {
+export def restart [...args] {
+    let environment = $args | get 0?
+
+    if $environment == null {
+        error make {msg: "Usage: restart <environment>"}
+    }
+
     print $"🔄 Restarting ($environment) stack..."
     down $environment
     sleep 2sec  # Petite pause entre le down et le up
@@ -70,7 +98,19 @@ export def restart [environment: string] {
     print $"🎉 ($environment) stack restarted!"
 }
 
-export def build [target?: string] {
+
+export def build [...args] {
+    let target = $args | get 0?
+
+    if $target == null {
+        print "❌ Please specify target: prod, staging, base, test, or all"
+        print "Examples:"
+        print "  ./mb-cli.nu build base"
+        print "  ./mb-cli.nu build test"
+        print "  ./mb-cli.nu build all"
+        return
+    }
+
     cd /home/ngner/multibikes/odoo-deployment/
 
     match $target {
@@ -82,7 +122,7 @@ export def build [target?: string] {
         "dev" => {
             print "🔨 Building dev image..."
             docker compose -f docker-compose_dev.yaml build
-            print "✅ dev image built!"
+            print "✅ Dev image built!"
         }
         "staging" => {
             print "🔨 Building staging image..."
@@ -105,27 +145,35 @@ export def build [target?: string] {
             docker compose -f docker-compose_test.yaml build
             print "✅ All images built!"
         }
-        null => {
-            print "❌ Please specify target: base, test, or all"
-            print "Examples:"
-            print "  ./mb-cli.nu build base"
-            print "  ./mb-cli.nu build test"
-            print "  ./mb-cli.nu build all"
-        }
         _ => {
             print $"❌ Unknown build target: ($target)"
-            print "Available targets: base, test, all"
+            print "Available targets: prod, dev, staging, base, test, all"
         }
     }
 }
 
-export def status [environment: string] {
+
+export def status [...args] {
+    let environment = $args | get 0?
+
+    if $environment == null {
+        error make {msg: "Usage: status <environment>"}
+    }
+
     print $"📊 Status of ($environment) containers:"
     docker ps --filter $"name=($environment)" --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
 }
 
+
 # Afficher les logs
-export def logs [environment: string, service?: string] {
+export def logs [...args] {
+    let environment = $args | get 0?
+    let service = $args | get 1?
+
+    if $environment == null {
+        error make {msg: "Usage: logs <environment> [service]"}
+    }
+
     if $service == null {
         # Afficher tous les containers de l'environnement
         let env_containers = ($CONTAINERS | get $environment | values)

@@ -15,3 +15,10 @@ export const CONTAINERS = {
         db: "odoo-deployment-db-prod-1"
     }
 }
+export const MODULES = {
+    base: "multibikes_base"
+    signature: "multibikes_signature"
+    prolongation: "multibikes_prolongation"
+    website: "multibikes_website"
+    web_sign: "multibikes_web_digital_sign"
+}
