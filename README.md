@@ -1,4 +1,4 @@
-```markdown
+
 # Déploiement Odoo Enterprise MultiBikes
 
 Ce projet contient les fichiers de configuration nécessaires pour déployer Odoo 18.0 Enterprise dans un environnement Docker pour MultiBikes.
