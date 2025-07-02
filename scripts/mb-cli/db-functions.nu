@@ -1,6 +1,7 @@
 #!/usr/bin/env nu
 
 use config.nu CONTAINERS
+use docker-functions.nu *
 
 # Fonction utilitaire pour parser la config Odoo
 def parse_odoo_config [config_content: string] {
@@ -13,12 +14,17 @@ def parse_odoo_config [config_content: string] {
 export def backup [
     environment: string,  # Environnement (dev/staging/prod)
     database: string      # Base de données à sauvegarder
+    --cron                # Pour identifier les backup automatique
 ] {
     # Configuration des chemins
     let backup_base_dir = "/home/ngner/multibikes/odoo-deployment/backups"
     let backup_env_dir = $"($backup_base_dir)/($environment)"
     let timestamp = (date now | format date "%Y%m%d_%H%M%S")
-    let backup_filename = $"($database)_backup_($timestamp)"
+    let backup_filename = if $cron {
+        $"cron_($database)_backup_($timestamp)"
+    } else {
+        $"($database)_backup_($timestamp)"
+    }
 
     # Créer le répertoire de backup pour l'environnement
     mkdir $backup_env_dir
