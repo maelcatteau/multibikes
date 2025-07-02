@@ -129,8 +129,8 @@ export def backup [
 
         print ""
         print "💡 Commandes suivantes possibles :"
-        print $"   mb restore ($environment) ($backup_filename).tar.gz <target_db>"
-        print $"   mb list_backups ($environment)"
+        print $"   mod restore ($environment) ($backup_filename).tar.gz <target_db>"
+        print $"   mod list_backups ($environment)"
 
     } catch { |e|
         print $"❌ Erreur lors de la sauvegarde : ($e.msg)"
@@ -344,8 +344,8 @@ export def restore [
         print $"✅ Base '($target_database)' restaurée depuis ($backup_file | path basename)"
         print ""
         print "💡 Commandes suivantes possibles :"
-        print $"   mb connect ($environment) odoo"
-        print $"   mb backup ($environment) ($target_database)"
+        print $"   mod connect ($environment) odoo"
+        print $"   mod backup ($environment) ($target_database)"
 
     } catch { |e|
         print $"❌ Erreur lors de la restauration : ($e.msg)"
@@ -462,8 +462,8 @@ export def transfer [
         print $"📦 Backup conservé dans les deux environnements"
         print ""
         print "💡 Commandes utiles :"
-        print $"   mb connect ($target_env) odoo"
-        print $"   mb list_db ($target_env)"
+        print $"   mod connect ($target_env) odoo"
+        print $"   mod list_db ($target_env)"
 
     } catch { |e|
         print ""
@@ -473,7 +473,7 @@ export def transfer [
         print ""
         print "🔧 Actions recommandées :"
         print "   1. Vérifier que les containers sont démarrés"
-        print $"   2. mb list_backups ($source_env)  # Vérifier les backups"
+        print $"   2. mod list_backups ($source_env)  # Vérifier les backups"
         print $"   3. Restauration manuelle si nécessaire"
     }
 }
