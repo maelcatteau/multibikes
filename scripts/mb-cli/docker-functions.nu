@@ -6,8 +6,8 @@ use config.nu CONTAINERS
 export def connect [
     environment: string,           # Environnement (dev/staging/prod)
     service: string = "odoo",      # Service (odoo/db) - défaut: odoo
-    database?: string,
-    ...command: string             # Commande à exécuter (optionnel)
+    ...command: string,            # Commande à exécuter (optionnel)
+    --database(-d): string         # Base de données (pour le service db)
 ] {
     # Reconstruction de la commande complète
     let full_command = if ($command | is-empty) {
@@ -30,12 +30,13 @@ export def connect [
                 }
             }
             "db" => {
+                let db_name = if ($database | is-empty) { "odoo" } else { $database }
                 if ($full_command | is-empty) {
                     print $"🗄️ Connecting to Database ($container_name)..."
-                    docker exec -it $container_name psql -U odoo -d $database
+                    docker exec -it $container_name psql -U odoo -d $db_name
                 } else {
                     print $"🗄️ Executing SQL in Database ($container_name): ($full_command)"
-                    docker exec $container_name psql -U odoo -d $database -c $full_command
+                    docker exec $container_name psql -U odoo -d $db_name -c $full_command
                 }
             }
             _ => {
