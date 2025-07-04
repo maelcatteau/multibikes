@@ -1,16 +1,9 @@
 FROM ghcr.io/maelcatteau/odoo-ee-base_2:18.0
 
-# Variables d'environnement pour le développement
-ENV DEV_MODE=true \
-    DEBUG_MODE=true \
-    TEST_ENABLE=true \
-    LOG_LEVEL=debug \
-    ODOO_WORKERS=0 \
-    LIMIT_MEMORY_HARD=1073741824 \
-    LIMIT_MEMORY_SOFT=805306368
-
-# Copier le script en tant que root (avant USER odoo)
+# Installer pdfminer.six
 USER root
+RUN pip3 install pdfminer.six
+# Copier le script en tant que root (avant USER odoo)
 COPY scripts/entrypoint_staging.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && chown odoo:odoo /entrypoint.sh
 
