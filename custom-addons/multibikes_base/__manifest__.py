@@ -14,6 +14,7 @@
         "views/product_template_views.xml",
         "views/sale_order_views.xml",
         "report/sale_report_caution.xml",
+        "report/sale_report_contract.xml",
         "wizard/sale_order_discount.xml",
     ],
     # Configuration d'installation

@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Action pour le contrat de location -->
+    <record id="action_report_rental_contract" model="ir.actions.report">
+        <field name="name">Contrat de location</field>
+        <field name="model">sale.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">multibikes_base.report_rental_contract</field>
+        <field name="report_file">multibikes_base.report_rental_contract</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_rental_contract">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div class="oe_structure"/>
+
+                        <!-- En-tête du contrat -->
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <h2><strong>CONTRAT DE LOCATION</strong></h2>
+                                <h3>MULTIBIKES - M. Roux Julien, Gérant</h3>
+                                <hr/>
+                            </div>
+                        </div>
+
+                        <!-- Informations du contrat -->
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <strong>Contrat N° : </strong><span t-field="doc.name"/>
+                            </div>
+                            <div class="col-6">
+                                <strong>Date : </strong><span t-field="doc.date_order" t-options='{"widget": "date"}'/>
+                            </div>
+                        </div>
+
+                        <!-- Informations client -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <strong>Locataire :</strong><br/>
+                                <span t-field="doc.partner_id.name"/><br/>
+                                <span t-field="doc.partner_id.street"/>
+                                <span t-field="doc.partner_id.street2"/><br/>
+                                <span t-field="doc.partner_id.zip"/> <span t-field="doc.partner_id.city"/><br/>
+                                <span t-if="doc.partner_id.phone">Tél : <span t-field="doc.partner_id.phone"/></span>
+                                <span t-if="doc.partner_id.email">Email : <span t-field="doc.partner_id.email"/></span>
+                            </div>
+                        </div>
+
+                        <!-- Tableau des produits avec cautions -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <table class="table table-sm o_main_table">
+                                    <thead>
+                                        <tr>
+                                            <th name="th_description">Description</th>
+                                            <th name="th_quantity" class="text-end">Qty</th>
+                                            <th name="th_price_unit" class="text-end">Unit Price</th>
+                                            <th name="th_price_subtotal" class="text-end">Amount</th>
+                                            <th name="th_caution_unit" class="text-end">Unit Deposit</th>
+                                            <th name="th_caution_subtotal" class="text-end">Total Deposit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="doc.order_line" t-as="line">
+                                            <tr>
+                                                <td name="td_description"><span t-field="line.name"/></td>
+                                                <td name="td_quantity" class="text-end">
+                                                    <span t-field="line.product_uom_qty"/>
+                                                    <span t-field="line.product_uom"/>
+                                                </td>
+                                                <td name="td_price_unit" class="text-end">
+                                                    <span t-field="line.price_unit"/>
+                                                </td>
+                                                <td name="td_price_subtotal" class="text-end">
+                                                    <span t-field="line.price_subtotal"/>
+                                                </td>
+                                                <td name="td_caution_unit" class="text-end">
+                                                    <span t-if="line.mb_caution_unit != 0" t-field="line.mb_caution_unit"
+                                                        t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                                </td>
+                                                <td name="td_caution_subtotal" class="text-end">
+                                                    <span t-if="line.mb_caution_subtotal != 0" t-field="line.mb_caution_subtotal"
+                                                        t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Totaux -->
+                        <div class="row">
+                            <div class="col-6"/>
+                            <div class="col-6">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Total location :</strong></td>
+                                        <td class="text-end">
+                                            <span t-field="doc.amount_total" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="doc.mb_caution_total != 0" class="border-black o_total">
+                                        <td><strong>Total caution :</strong></td>
+                                        <td class="text-end">
+                                            <span t-field="doc.mb_caution_total"
+                                                  t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Saut de page avant les conditions générales -->
+                        <div style="page-break-before: always;"></div>
+
+                        <!-- CONDITIONS GÉNÉRALES DE LOCATION -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h3 class="text-center"><strong>CONDITIONS GÉNÉRALES DE LOCATION</strong></h3>
+                                <p class="text-center"><strong>MULTIBIKES - M. Roux Julien, Gérant</strong></p>
+                                <hr/>
+
+                                <h5><strong>Article 1 - Durée et tarification</strong></h5>
+                                <ul>
+                                    <li>La demi-journée de location : 9h30 à 13h30/14h00 ou 14h00/14h30 à 18h00/18h30</li>
+                                    <li>La journée complète : 9h30 à 18h30</li>
+                                    <li>Toute journée commencée est due en entier pour les locations de plusieurs jours</li>
+                                </ul>
+
+                                <h5><strong>Article 2 - Matériel et état des lieux</strong></h5>
+                                <ul>
+                                    <li>Le locataire dispose de 20 minutes après le début de la location pour signaler tout problème</li>
+                                    <li>Passé ce délai, aucun remboursement ne sera accordé</li>
+                                    <li>Le matériel est fourni en parfait état de fonctionnement et conforme au code de la route</li>
+                                </ul>
+
+                                <h5><strong>Article 3 - Dépôt de garantie</strong></h5>
+                                <ul>
+                                    <li>Restitué intégralement si le matériel est rendu en bon état au siège du loueur</li>
+                                    <li>Ne peut pas servir à prolonger la location sans accord préalable du loueur</li>
+                                </ul>
+
+                                <h5><strong>Article 4 - Obligations du locataire</strong></h5>
+                                <ul>
+                                    <li>Utiliser le matériel avec soin et selon sa destination</li>
+                                    <li>Interdiction de sous-louer ou prêter sans autorisation écrite du loueur</li>
+                                    <li>Respecter le code de la route et les règles de sécurité</li>
+                                </ul>
+
+                                <h5><strong>Article 5 - Responsabilités et assurances</strong></h5>
+                                <ul>
+                                    <li>Le locataire assume l'entière responsabilité des dommages causés aux tiers et aux cycles</li>
+                                    <li>Multibikes décline toute responsabilité en cas d'accident matériel ou corporel</li>
+                                    <li>Aucune assistance n'est prévue en cas de panne ou accident</li>
+                                    <li>Le locataire doit disposer d'une assurance responsabilité civile</li>
+                                </ul>
+
+                                <h5><strong>Article 6 - Vol et dégradations</strong></h5>
+                                <ul>
+                                    <li>Déclaration obligatoire sous 24h auprès des autorités de police ET du loueur</li>
+                                    <li>Dégradations facturées selon barème : de 50€ à la valeur totale du vélo</li>
+                                    <li>En cas de vol : paiement intégral de la "valeur en cas de vol" indiquée au contrat</li>
+                                    <li>Accessoires volés : panier (15€), siège bébé (40€), antivol (8,50€)</li>
+                                </ul>
+
+                                <h5><strong>Article 7 - Résiliation</strong></h5>
+                                <p>Multibikes se réserve le droit de résilier le contrat sans compensation financière en cas de mauvaise utilisation du matériel par le locataire</p>
+
+                                <h5><strong>Article 8 - Signature du contrat</strong></h5>
+                                <p>En signant son contrat de location, le locataire reconnaît :</p>
+                                <ul>
+                                    <li>Louer des cycles en parfait état de fonctionnement</li>
+                                    <li>Que les vélos sont réglés à sa taille et conformes au code de la route</li>
+                                    <li>S'engager à respecter le code de la route et les règles de sécurité</li>
+                                </ul>
+
+                                <h5><strong>LITIGE – MÉDIATION DE LA CONSOMMATION</strong></h5>
+                                <p>En cas de litige entre le Client et l'entreprise, ceux-ci s'efforceront de le résoudre à l'amiable (le Client adressera une réclamation écrite auprès du professionnel ou, le cas échéant, auprès du Service Relations Clientèle du professionnel).</p>
+                                <p>À défaut d'accord amiable ou en l'absence de réponse du professionnel dans un délai raisonnable d'un (1) mois, le Client consommateur au sens de l'article L.612-2 du code de la consommation a la possibilité de saisir gratuitement, si un désaccord subsiste, le médiateur compétent inscrit sur la liste des médiateurs établie par la Commission d'évaluation et de contrôle de la médiation de la consommation en application de l'article L.615-1 du code de la consommation, à savoir :</p>
+                                <p><strong>La Société Médiation Professionnelle</strong><br/>
+                                   <a href="http://www.mediateur-consommation-smp.fr">http://www.mediateur-consommation-smp.fr</a><br/>
+                                   Alteritae 5 rue Salvaing 12000 Rodez</p>
+                            </div>
+                        </div>
+
+                        <!-- Saut de page avant les conditions générales -->
+                        <div style="page-break-before: always;"></div>
+
+                         <!-- Horaires de retour -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="border p-3 bg-light">
+                                    <h5><strong>Horaires de retour</strong></h5>
+                                    <ul>
+                                        <li>Du lundi au jeudi : dans la période d'une heure avant à une heure après l'heure indiquée sur le contrat</li>
+                                        <li>Le vendredi : entre 9h30 et 18h30</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Engagement contractuel -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="border p-3">
+                                    <h5><strong>Engagement contractuel</strong></h5>
+                                    <p>En signant ce contrat, je m'engage à :</p>
+                                    <ul>
+                                        <li>Respecter les conditions générales de location</li>
+                                        <li>Respecter les consignes de sécurité</li>
+                                        <li>Respecter les règles d'utilisation du matériel</li>
+                                        <li>Ramener le matériel au jour correspondant à la date de fin de location</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="oe_structure"/>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
