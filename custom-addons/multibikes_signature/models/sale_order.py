@@ -254,7 +254,7 @@ class SaleOrder(models.Model):
 
             # Générer le PDF depuis le rapport QWeb
             pdf_content, _ = self.env['ir.actions.report']._render_qweb_pdf(
-                'sale.report_saleorder', self.ids
+                'multibikes_base.report_rental_contract', self.ids
             )
             _logger.info(f"PDF généré: {len(pdf_content)} bytes")
 
@@ -286,34 +286,121 @@ class SaleOrder(models.Model):
             raise
 
     def _add_signature_field(self, template):
-        """Votre logique existante - ajout zone signature"""
+        """Ajouter zone signature + case à cocher sur la dernière page"""
         try:
             signature_type = self.env.ref('sign.sign_item_type_signature', raise_if_not_found=False)
+            checkbox_type = self.env.ref('sign.sign_item_type_checkbox', raise_if_not_found=False)
             customer_role = self.env.ref('sign.sign_item_role_customer', raise_if_not_found=False)
 
-            if not signature_type or not customer_role:
-                _logger.warning("Types de signature non trouvés")
+            if not signature_type or not customer_role or not checkbox_type:
+                _logger.warning("Types de signature/checkbox non trouvés")
                 return
 
-            _logger.info(f"Types trouvés - Signature: {signature_type.id}, Customer: {customer_role.id}")
+            _logger.info(f"Types trouvés - Signature: {signature_type.id}, Checkbox: {checkbox_type.id}, Customer: {customer_role.id}")
 
+            # Déterminer le nombre de pages du PDF
+            last_page = self._get_pdf_page_count(template)
+
+            _logger.info(f"Nombre de pages détecté: {last_page}")
+
+            # 1. Créer la case à cocher AVANT la signature
+            checkbox_item = self.env['sign.item'].create({
+                'template_id': template.id,
+                'type_id': checkbox_type.id,
+                'required': True,
+                'responsible_id': customer_role.id,
+                'page': last_page,
+                'posX': 0.06,  # Position à gauche
+                'posY': 0.475,  # Un peu plus haut que la signature
+                'width': 0.019,  # Petite case
+                'height': 0.019,
+                'name': 'accept_conditions',  # Nom unique pour la case
+            })
+
+            # 2. Créer la zone de signature
             signature_item = self.env['sign.item'].create({
                 'template_id': template.id,
                 'type_id': signature_type.id,
                 'required': True,
                 'responsible_id': customer_role.id,
-                'page': 2,
-                'posX': 0.7,
-                'posY': 0.8,
+                'page': last_page,
+                'posX': 0.66,   # Position à droite
+                'posY': 0.75,   # En dessous de la case
                 'width': 0.2,
                 'height': 0.05,
+                'name': 'customer_signature',  # Nom unique pour la signature
             })
 
+            _logger.info(f"Case à cocher créée: {checkbox_item.id}")
             _logger.info(f"Zone de signature créée: {signature_item.id}")
 
         except Exception as e:
-            _logger.error(f"Erreur ajout signature: {e}")
+            _logger.error(f"Erreur ajout signature/checkbox: {e}")
             raise
+
+
+    def _get_pdf_page_count(self, template):
+        """Déterminer le nombre de pages du PDF avec pdfminer"""
+        try:
+            if not template.attachment_id:
+                _logger.warning("Aucun attachment trouvé sur le template")
+                return self._estimate_last_page()
+
+            # Utiliser pdfminer pour compter les pages
+            try:
+                from pdfminer.high_level import extract_pages
+                import io
+
+                # Décoder le PDF
+                pdf_data = base64.b64decode(template.attachment_id.datas)
+                pdf_file = io.BytesIO(pdf_data)
+
+                # Compter les pages avec pdfminer
+                pages = list(extract_pages(pdf_file))
+                page_count = len(pages)
+
+                _logger.info(f"Nombre de pages via pdfminer: {page_count}")
+                return page_count
+
+            except ImportError:
+                _logger.warning("pdfminer non disponible, utilisation de l'estimation")
+                return self._estimate_last_page()
+            except Exception as e:
+                _logger.error(f"Erreur pdfminer: {e}")
+                return self._estimate_last_page()
+
+        except Exception as e:
+            _logger.error(f"Erreur détection pages PDF: {e}")
+            return self._estimate_last_page()
+
+    def _estimate_last_page(self):
+        """Estimer la dernière page basée sur le contenu du contrat"""
+        try:
+            # Logique d'estimation basée sur le nombre de lignes de commande
+            line_count = len(self.order_line)
+
+            # Estimation basée sur la structure de ton rapport :
+            # Page 1 : En-tête + informations client + début tableau
+            # Page 2 : Suite tableau + conditions générales
+            # Page 3+ : Fin conditions générales + médiation + signatures
+
+            if line_count <= 8:
+                # Commande simple : tout tient sur 3 pages
+                return 3
+            elif line_count <= 15:
+                # Commande moyenne : 4 pages
+                return 4
+            elif line_count <= 25:
+                # Grosse commande : 5 pages
+                return 5
+            else:
+                # Très grosse commande : 6 pages
+                return 6
+
+        except Exception as e:
+            _logger.error(f"Erreur estimation pages: {e}")
+            return 3  # Valeur par défaut sécurisée
+
 
     def _create_sign_request(self, sign_template):
         """Votre logique existante - création demande avec items"""
