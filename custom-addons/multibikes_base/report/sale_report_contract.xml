@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Action pour le contrat de location -->
     <record id="action_report_rental_contract" model="ir.actions.report">
         <field name="name">Contrat de location</field>
         <field name="model">sale.order</field>
@@ -19,7 +18,6 @@
                     <div class="page">
                         <div class="oe_structure"/>
 
-                        <!-- En-tête du contrat -->
                         <div class="row">
                             <div class="col-12 text-center">
                                 <h2><strong>CONTRAT DE LOCATION</strong></h2>
@@ -28,7 +26,6 @@
                             </div>
                         </div>
 
-                        <!-- Informations du contrat -->
                         <div class="row mt-3">
                             <div class="col-6">
                                 <strong>Contrat N° : </strong><span t-field="doc.name"/>
@@ -38,7 +35,6 @@
                             </div>
                         </div>
 
-                        <!-- Informations client -->
                         <div class="row mt-3">
                             <div class="col-12">
                                 <strong>Locataire :</strong><br/>
@@ -51,7 +47,6 @@
                             </div>
                         </div>
 
-                        <!-- Tableau des produits avec cautions -->
                         <div class="row mt-4">
                             <div class="col-12">
                                 <table class="table table-sm o_main_table">
@@ -94,7 +89,6 @@
                             </div>
                         </div>
 
-                        <!-- Totaux -->
                         <div class="row">
                             <div class="col-6"/>
                             <div class="col-6">
@@ -116,10 +110,8 @@
                             </div>
                         </div>
 
-                        <!-- Saut de page avant les conditions générales -->
                         <div style="page-break-before: always;"></div>
 
-                        <!-- CONDITIONS GÉNÉRALES DE LOCATION -->
                         <div class="row">
                             <div class="col-12">
                                 <h3 class="text-center"><strong>CONDITIONS GÉNÉRALES DE LOCATION</strong></h3>
@@ -143,6 +135,8 @@
                                 <h5><strong>Article 3 - Dépôt de garantie</strong></h5>
                                 <ul>
                                     <li>Restitué intégralement si le matériel est rendu en bon état au siège du loueur</li>
+                                    <li>En cas de dégradation, le montant des réparations sera déduit du dépôt de garantie selon le barème établi (CF. Article 6)</li>
+                                    <li>Si le montant des dégradations excède le dépôt de garantie, le locataire devra s'acquitter du complément</li>
                                     <li>Ne peut pas servir à prolonger la location sans accord préalable du loueur</li>
                                 </ul>
 
@@ -184,32 +178,85 @@
                                 <p>En cas de litige entre le Client et l'entreprise, ceux-ci s'efforceront de le résoudre à l'amiable (le Client adressera une réclamation écrite auprès du professionnel ou, le cas échéant, auprès du Service Relations Clientèle du professionnel).</p>
                                 <p>À défaut d'accord amiable ou en l'absence de réponse du professionnel dans un délai raisonnable d'un (1) mois, le Client consommateur au sens de l'article L.612-2 du code de la consommation a la possibilité de saisir gratuitement, si un désaccord subsiste, le médiateur compétent inscrit sur la liste des médiateurs établie par la Commission d'évaluation et de contrôle de la médiation de la consommation en application de l'article L.615-1 du code de la consommation, à savoir :</p>
                                 <p><strong>La Société Médiation Professionnelle</strong><br/>
-                                   <a href="http://www.mediateur-consommation-smp.fr">http://www.mediateur-consommation-smp.fr</a><br/>
-                                   Alteritae 5 rue Salvaing 12000 Rodez</p>
+                                <a href="http://www.mediateur-consommation-smp.fr">http://www.mediateur-consommation-smp.fr</a><br/>
+                                Alteritae 5 rue Salvaing 12000 Rodez</p>
                             </div>
                         </div>
 
-                        <!-- Saut de page avant les conditions générales -->
                         <div style="page-break-before: always;"></div>
 
-                         <!-- Horaires de retour -->
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="border p-3 bg-light">
-                                    <h5><strong>Horaires de retour</strong></h5>
-                                    <ul>
-                                        <li>Du lundi au jeudi : dans la période d'une heure avant à une heure après l'heure indiquée sur le contrat</li>
-                                        <li>Le vendredi : entre 9h30 et 18h30</li>
-                                    </ul>
+                                    <h5><strong>Horaires de location</strong></h5>
+
+                                    <table class="table table-sm table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Jour</th>
+                                                <th>Horaires de départ</th>
+                                                <th>Horaires de retour</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Lundi</strong></td>
+                                                <td>09h30 - 14h30</td>
+                                                <td>16h30 - 18h30</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Mardi</strong></td>
+                                                <td>09h30 - 14h30</td>
+                                                <td>16h30 - 18h30</td>
+                                            </tr>
+                                            <tr class="table-warning">
+                                                <td><strong>Mercredi</strong></td>
+                                                <td><em>Fermé départs</em></td>
+                                                <td>16h30 - 18h30</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Jeudi</strong></td>
+                                                <td>09h30 - 14h30</td>
+                                                <td>16h30 - 18h30</td>
+                                            </tr>
+                                            <tr class="table-info">
+                                                <td><strong>Vendredi</strong></td>
+                                                <td><em>Fermé départs</em></td>
+                                                <td>09h30 - 18h30</td>
+                                            </tr>
+                                            <tr class="table-info">
+                                                <td><strong>Samedi</strong></td>
+                                                <td>09h30 - 18h30</td>
+                                                <td><em>Pas de retour</em></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Dimanche</strong></td>
+                                                <td>09h30 - 14h30</td>
+                                                <td>16h30 - 18h30</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Engagement contractuel -->
+
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="border p-3">
-                                    <h5><strong>Engagement contractuel</strong></h5>
+                                    <h5>
+                                        <span style="
+                                            border: 1px solid black;
+                                            display: inline-block;
+                                            width: 15px;
+                                            height: 15px;
+                                            vertical-align: middle;
+                                            margin-right: 8px;
+                                            background-color: white;
+                                            border-radius: 3px;
+                                        "></span>
+                                        <strong>Engagement contractuel</strong>
+                                    </h5>
                                     <p>En signant ce contrat, je m'engage à :</p>
                                     <ul>
                                         <li>Respecter les conditions générales de location</li>
@@ -218,6 +265,13 @@
                                         <li>Ramener le matériel au jour correspondant à la date de fin de location</li>
                                     </ul>
                                 </div>
+                            </div>
+                        </div>
+
+
+                        <div style="position: relative; height: 250px;">
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; text-align: center; padding: 20px;">
+                                <p style="margin-bottom: 30px; font-weight: bold; font-size: 1.1em;">Signature du Locataire :</p>
                             </div>
                         </div>
 
